@@ -217,11 +217,15 @@ export function validateUpdateInvoiceInput(input) {
   }
 
   if (input?.customer_email !== undefined) {
-    const customerEmail = asTrimmedString(input.customer_email).toLowerCase();
-    if (!EMAIL_PATTERN.test(customerEmail)) {
-      errors.customer_email = "Enter a valid customer email address.";
+    if (input.customer_email === null || asTrimmedString(input.customer_email) === "") {
+      data.customer_email = null;
     } else {
-      data.customer_email = customerEmail;
+      const customerEmail = asTrimmedString(input.customer_email).toLowerCase();
+      if (!EMAIL_PATTERN.test(customerEmail)) {
+        errors.customer_email = "Enter a valid customer email address.";
+      } else {
+        data.customer_email = customerEmail;
+      }
     }
   }
 
@@ -257,11 +261,15 @@ export function validateUpdateInvoiceInput(input) {
   }
 
   if (input?.due_date !== undefined) {
-    const dueDate = parseDate(input.due_date);
-    if (!dueDate) {
-      errors.due_date = "Due date must be a valid date in YYYY-MM-DD format.";
+    if (input.due_date === null || asTrimmedString(input.due_date) === "") {
+      data.due_date = null;
     } else {
-      data.due_date = dueDate;
+      const dueDate = parseDate(input.due_date);
+      if (!dueDate) {
+        errors.due_date = "Due date must be a valid date in YYYY-MM-DD format.";
+      } else {
+        data.due_date = dueDate;
+      }
     }
   }
 

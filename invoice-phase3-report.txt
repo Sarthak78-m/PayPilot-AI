@@ -1,0 +1,213 @@
+PAYPILOT AI — INVOICE MANAGEMENT PHASE 3 VERIFICATION REPORT
+==============================================================
+
+Date: 2026-11-03
+Scope: Invoice Management Phase 3 — Update and Cancellation APIs
+Status: COMPLETE & VERIFIED (44 / 44 Tests Passed)
+
+
+1. ENDPOINTS IMPLEMENTED
+-------------------------
+
+  Method | Endpoint              | Purpose
+  -------|-----------------------|-------------------------------------------
+  PATCH  | /api/invoices/[id]    | Update an invoice (partial updates, status transitions)
+  DELETE | /api/invoices/[id]    | Safe invoice deletion (DRAFT) or cancellation (PENDING/OVERDUE)
+
+
+2. REQUEST AND RESPONSE EXAMPLES
+---------------------------------
+
+2a. PATCH /api/invoices/[id] (Partial Update)
+  Headers:
+    Content-Type: application/json
+    Cookie: <supabase_session_cookie>
+
+  Request Body:
+    {
+      "description": "Updated website consulting services",
+      "amount": 2500.50
+    }
+
+  Response (200 OK):
+    {
+      "status": "ok",
+      "data": {
+        "id": "e2f1837a-d021-4d37-97d8-21d4512419ef",
+        "user_id": "9720f3ae-eff1-4286-8047-be8500777e65",
+        "customer_name": "Acme Corp",
+        "customer_email": "billing@acme.com",
+        "description": "Updated website consulting services",
+        "amount": 2500.50,
+        "currency": "USD",
+        "due_date": "2026-12-15",
+        "status": "DRAFT",
+        "created_at": "2026-11-03T09:17:23.947512+00:00",
+        "updated_at": "2026-11-03T09:26:37.104231+00:00"
+      }
+    }
+
+2b. PATCH /api/invoices/[id] (Status Transition DRAFT -> PENDING)
+  Request Body:
+    {
+      "status": "PENDING"
+    }
+
+  Response (200 OK):
+    {
+      "status": "ok",
+      "data": {
+        "id": "e2f1837a-d021-4d37-97d8-21d4512419ef",
+        "status": "PENDING",
+        ...
+      }
+    }
+
+2c. PATCH /api/invoices/[id] (Modifying a PAID or CANCELLED Invoice)
+  Response (409 Conflict):
+    {
+      "status": "error",
+      "message": "Cannot modify an invoice that is already PAID."
+    }
+
+2d. DELETE /api/invoices/[id] (DRAFT Invoice Permanent Deletion)
+  Response (200 OK):
+    {
+      "status": "ok",
+      "message": "Invoice deleted permanently."
+    }
+
+2e. DELETE /api/invoices/[id] (PENDING Invoice Cancellation / Soft Delete)
+  Response (200 OK):
+    {
+      "status": "ok",
+      "message": "Invoice cancelled successfully.",
+      "data": {
+        "id": "4d168532-a549-418a-a437-9bc6494a821e",
+        "status": "CANCELLED",
+        ...
+      }
+    }
+
+2f. DELETE /api/invoices/[id] (Attempt to Delete a PAID Invoice)
+  Response (409 Conflict):
+    {
+      "status": "error",
+      "message": "Cannot delete or cancel a PAID invoice."
+    }
+
+
+3. STATUS TRANSITION RULES
+---------------------------
+
+  Current Status | Allowed Next Statuses
+  ---------------|---------------------------------------------
+  DRAFT          | PENDING, CANCELLED
+  PENDING        | CANCELLED, OVERDUE (PAID via payment processing only)
+  OVERDUE        | CANCELLED (PAID via payment processing only)
+  PAID           | NONE (Terminal status — immutable)
+  CANCELLED      | NONE (Terminal status — immutable)
+
+  Enforcement:
+  - Ordinary invoice APIs reject any attempt by the client to directly set status to "PAID" (HTTP 400).
+  - Only verified payment processing (PayPal Phase 4) may transition an invoice to PAID.
+  - Invoices in PAID status cannot have any fields modified or deleted (HTTP 409).
+  - Invoices in CANCELLED status cannot be edited, revived, or cancelled again (HTTP 409).
+
+
+4. DELETION AND CANCELLATION BEHAVIOR
+---------------------------------------
+
+  - DRAFT Invoices: Checked against the `payments` table. If no payment records are associated, the invoice row is physically deleted from `public.invoices`. If dependent records exist, it is soft-cancelled.
+  - PENDING & OVERDUE Invoices: Soft-deleted by updating `status` to `CANCELLED` and `updated_at` to current timestamp. This preserves the legal and financial audit trail.
+  - PAID Invoices: Protected against deletion and cancellation (HTTP 409).
+  - CANCELLED Invoices: Attempting repeated cancellation returns HTTP 409.
+
+
+5. FILES CREATED AND MODIFIED
+-------------------------------
+
+  Action   | Path
+  ---------|------------------------------------------------
+  MODIFIED | backend/src/app/api/invoices/[id]/route.js (Added PATCH and DELETE handlers)
+  MODIFIED | backend/src/lib/invoices/validation.js (Enhanced update input validation with nullable handling)
+  CREATED  | invoice-phase3-report.txt (This report)
+
+
+6. TESTS EXECUTED AND RESULTS
+-------------------------------
+
+Total test suite: 44 tests (Phase 3 tests + Phase 2 regression suite)
+Passed: 44
+Failed: 0
+
+Breakdown of Phase 3 tests executed:
+
+  Endpoint | Test Case Description                                  | Status
+  ---------|--------------------------------------------------------|-------
+  PATCH    | Setup: Create test invoice (201)                       | PASS
+  PATCH    | Valid partial update (description only) -> 200 OK      | PASS
+  PATCH    | Description updated and customer_name preserved        | PASS
+  PATCH    | Customer details updated (name & email) -> 200 OK      | PASS
+  PATCH    | Customer name and email accurately updated             | PASS
+  PATCH    | Amount update -> 200 OK                                | PASS
+  PATCH    | Invalid negative amount rejected -> 400 Bad Request    | PASS
+  PATCH    | Invalid currency rejected -> 400 Bad Request           | PASS
+  PATCH    | Invalid UUID rejected -> 400 Bad Request               | PASS
+  PATCH    | Missing invoice returns 404 Not Found                  | PASS
+  PATCH    | Cross-user update rejected -> 404 Not Found            | PASS
+  PATCH    | Unauthenticated request rejected -> 401 Unauthorized   | PASS
+  PATCH    | Attempt to modify user_id rejected -> 400 Bad Request  | PASS
+  PATCH    | Attempt to directly set status=PAID rejected -> 400    | PASS
+  PATCH    | Valid status transition DRAFT -> PENDING -> 200 OK     | PASS
+  PATCH    | Status confirmed as PENDING                            | PASS
+  PATCH    | Attempt to modify a PAID invoice -> 409 Conflict       | PASS
+  PATCH    | Attempt to modify a CANCELLED invoice -> 409 Conflict   | PASS
+  DELETE   | Delete eligible DRAFT invoice -> 200 OK                | PASS
+  DELETE   | Permanent deletion message confirmed                   | PASS
+  DELETE   | Permanently deleted invoice returns 404 on GET         | PASS
+  DELETE   | Cancel eligible PENDING invoice -> 200 OK              | PASS
+  DELETE   | PENDING invoice transitioned to CANCELLED              | PASS
+  DELETE   | Cancelled invoice persists on GET as CANCELLED         | PASS
+  DELETE   | Repeated cancellation rejected -> 409 Conflict         | PASS
+  DELETE   | Attempt to delete a PAID invoice -> 409 Conflict       | PASS
+  DELETE   | Attempt to delete another user's invoice -> 404        | PASS
+  DELETE   | Invalid UUID on DELETE rejected -> 400 Bad Request     | PASS
+  DELETE   | Missing invoice on DELETE returns 404 Not Found        | PASS
+  DELETE   | Unauthenticated DELETE rejected -> 401 Unauthorized    | PASS
+
+
+7. REGRESSION TEST RESULTS (Phase 2 Verification)
+--------------------------------------------------
+
+  Endpoint | Feature Verified                                       | Status
+  ---------|--------------------------------------------------------|-------
+  POST     | Regression: Invoice creation (201 Created)             | PASS
+  GET      | Regression: List invoices (200 OK)                     | PASS
+  GET      | Regression: Pagination metadata verified               | PASS
+  GET      | Regression: Pagination limit=2 verified                | PASS
+  GET      | Regression: Status filter (CANCELLED) verified         | PASS
+  GET      | Regression: Filtered results match status CANCELLED    | PASS
+  GET      | Regression: Search by customer name finds invoice      | PASS
+  GET      | Regression: Retrieve invoice by ID (200 OK)            | PASS
+  GET      | Regression: Cross-user retrieve rejected (404)         | PASS
+
+
+8. BUILD & QUALITY VERIFICATION
+---------------------------------
+
+  - ESLint: PASS (0 errors, 0 warnings across `validation.js` and `invoices/[id]/route.js`).
+  - Next.js Webpack Production Build: PASS (`✓ Compiled successfully in 6.8s`, all routes prerendered / dynamic traces verified).
+
+
+9. REMAINING LIMITATIONS / NEXT PHASES
+---------------------------------------
+
+In strict accordance with Phase 3 instructions:
+  - Gemini AI Invoice Generation: Deferred to Phase 4 / next milestone.
+  - PayPal Payment Processing & Webhook Verification: Deferred to Phase 4.
+  - Dashboard & Analytics APIs: Deferred to later phase.
+  - AI Financial Assistant APIs: Deferred to later phase.
+
+READINESS:
+Invoice Management Phase 3 (Update and Cancellation APIs) is fully verified, operational, and ready for development handover upon approval.
