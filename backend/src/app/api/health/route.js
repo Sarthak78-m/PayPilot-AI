@@ -1,8 +1,8 @@
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { createSupabasePublicServerClient } from "@/lib/supabase/server";
 
 export async function GET() {
   try {
-    const supabase = createSupabaseBrowserClient();
+    const supabase = createSupabasePublicServerClient();
     const { error } = await supabase.from("profiles").select("id").limit(1);
 
     if (error) {

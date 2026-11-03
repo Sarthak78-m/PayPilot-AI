@@ -3,22 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "@supabase/supabase-js": "^2.118.0",
-    "next": "16.4.4",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
-  },
-  "devDependencies": {
-    "@tailwindcss/turbopack": "^4",
-    "eslint": "^9",
-    "eslint-config-next": "16.4.4",
-    "tailwindcss": "^4"
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "build:frontend": "npm run build --prefix frontend"
   }
 }
