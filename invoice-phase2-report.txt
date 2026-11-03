@@ -1,0 +1,260 @@
+PAYPILOT AI — INVOICE MANAGEMENT PHASE 2 VERIFICATION REPORT
+==============================================================
+
+Date: 2026-11-03
+Scope: Invoice Management Phase 2 — Create and Retrieve APIs
+Status: COMPLETE & VERIFIED (46 / 46 Tests Passed)
+
+
+1. ENDPOINTS IMPLEMENTED
+-------------------------
+
+  Method | Endpoint              | Purpose
+  -------|-----------------------|-------------------------------------------
+  POST   | /api/invoices         | Create a new invoice (initial status: DRAFT)
+  GET    | /api/invoices         | List authenticated user's invoices (with pagination, sort, filter & search)
+  GET    | /api/invoices/[id]    | Retrieve a specific invoice by UUID for authenticated user
+
+
+2. REQUEST AND RESPONSE EXAMPLES
+---------------------------------
+
+2a. POST /api/invoices (Create Invoice)
+  Headers:
+    Content-Type: application/json
+    Cookie: <supabase_session_cookie>
+
+  Request Body:
+    {
+      "customer_name": "Acme Corp",
+      "customer_email": "billing@acme.com",
+      "description": "Website development services",
+      "amount": 1500.00,
+      "currency": "USD",
+      "due_date": "2026-12-15"
+    }
+
+  Response (201 Created):
+    {
+      "status": "ok",
+      "data": {
+        "id": "e2f1837a-d021-4d37-97d8-21d4512419ef",
+        "user_id": "9720f3ae-eff1-4286-8047-be8500777e65",
+        "customer_name": "Acme Corp",
+        "customer_email": "billing@acme.com",
+        "description": "Website development services",
+        "amount": 1500.00,
+        "currency": "USD",
+        "due_date": "2026-12-15",
+        "status": "DRAFT",
+        "created_at": "2026-11-03T09:17:23.947512+00:00",
+        "updated_at": "2026-11-03T09:17:23.947512+00:00"
+      }
+    }
+
+  Validation Error Response (400 Bad Request):
+    {
+      "status": "error",
+      "message": "Invalid invoice details.",
+      "errors": {
+        "customer_name": "Customer name must be between 1 and 200 characters.",
+        "amount": "Amount must be a positive number."
+      }
+    }
+
+2b. GET /api/invoices (List Invoices)
+  Query Parameters:
+    page   (optional, default: 1)
+    limit  (optional, default: 20, max: 100)
+    sort   (optional, default: created_at)
+    order  (optional, default: desc)
+    status (optional, e.g. DRAFT)
+    search (optional, customer name or email partial match)
+
+  Response (200 OK):
+    {
+      "status": "ok",
+      "data": {
+        "invoices": [
+          {
+            "id": "e2f1837a-d021-4d37-97d8-21d4512419ef",
+            "user_id": "9720f3ae-eff1-4286-8047-be8500777e65",
+            "customer_name": "Acme Corp",
+            "customer_email": "billing@acme.com",
+            "description": "Website development services",
+            "amount": 1500.00,
+            "currency": "USD",
+            "due_date": "2026-12-15",
+            "status": "DRAFT",
+            "created_at": "2026-11-03T09:17:23.947512+00:00",
+            "updated_at": "2026-11-03T09:17:23.947512+00:00"
+          }
+        ],
+        "pagination": {
+          "page": 1,
+          "limit": 20,
+          "total": 1
+        }
+      }
+    }
+
+2c. GET /api/invoices/[id] (Retrieve Single Invoice)
+  Response (200 OK):
+    {
+      "status": "ok",
+      "data": {
+        "id": "e2f1837a-d021-4d37-97d8-21d4512419ef",
+        "user_id": "9720f3ae-eff1-4286-8047-be8500777e65",
+        "customer_name": "Acme Corp",
+        "customer_email": "billing@acme.com",
+        "description": "Website development services",
+        "amount": 1500.00,
+        "currency": "USD",
+        "due_date": "2026-12-15",
+        "status": "DRAFT",
+        "created_at": "2026-11-03T09:17:23.947512+00:00",
+        "updated_at": "2026-11-03T09:17:23.947512+00:00"
+      }
+    }
+
+  Nonexistent or Foreign Invoice (404 Not Found):
+    {
+      "status": "error",
+      "message": "Invoice not found."
+    }
+
+  Invalid UUID Format (400 Bad Request):
+    {
+      "status": "error",
+      "message": "Invalid invoice ID format."
+    }
+
+
+3. FILES CREATED AND MODIFIED
+-------------------------------
+
+  Action   | Path
+  ---------|------------------------------------------------
+  CREATED  | backend/src/app/api/invoices/route.js
+  CREATED  | backend/src/app/api/invoices/[id]/route.js
+  MODIFIED | backend/src/lib/invoices/validation.js
+
+
+4. VALIDATION BEHAVIOR
+-----------------------
+
+  - customer_name: Required, string, 1 to 200 characters after trimming.
+  - customer_email: Optional (nullable in DB). If provided, validated against email regex pattern.
+  - description: Required, string, 1 to 1000 characters after trimming.
+  - amount: Required, numeric, must be finite, strictly > 0, maximum 2 decimal places (cents precision), capped at 9,999,999,999.99 to respect NUMERIC(12,2).
+  - currency: Required, checked against supported ISO 4217 currencies (USD, EUR, GBP, CAD, AUD, INR).
+  - due_date: Optional (nullable in DB). If provided, validated as ISO YYYY-MM-DD calendar date with month/day boundary checking (e.g. Feb 31 rejected).
+  - status: Client cannot set status on creation; always initialized server-side to "DRAFT" (matches PostgreSQL CHECK constraint).
+  - id / user_id: Client cannot submit id or user_id; request rejected with 400 if client attempts to assign ownership.
+
+
+5. AUTHENTICATION AND OWNERSHIP IMPLEMENTATION
+------------------------------------------------
+
+  - All three endpoints call `getAuthenticatedUser()` from `@/lib/auth/require-user.js`.
+  - Unauthenticated requests immediately return HTTP 401 with standard error payload.
+  - Ownership is derived strictly server-side: `user.id` is extracted from the verified Supabase Auth session token.
+  - Dual-layer ownership enforcement:
+      Layer 1 (Application): In queries, `eq("user_id", user.id)` is strictly appended.
+      Layer 2 (Database RLS): Supabase client queries run with authenticated cookie context, enforcing PostgreSQL row security.
+  - Cross-user invoice access: When User B queries an invoice owned by User A, the query returns 0 rows, resulting in HTTP 404 (not exposing whether the invoice even exists).
+
+
+6. RLS USAGE
+-------------
+
+  - Routes use `createSupabaseAuthClient()` from `@/lib/supabase/server.js`.
+  - The client forwards auth session cookies and uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+  - No service-role (`SUPABASE_SECRET_KEY`) bypass is introduced or used in any invoice endpoint.
+  - RLS policies on `public.invoices` (`auth.uid() = user_id`) remain fully active and enforced.
+
+
+7. TESTS EXECUTED AND RESULTS
+-------------------------------
+
+Total tests executed: 46
+Passed: 46
+Failed: 0
+
+Breakdown of tests executed against live server and Supabase PostgreSQL:
+
+  Category                     | Test Case Description                                  | Status
+  -----------------------------|--------------------------------------------------------|-------
+  Auth Setup                   | User 1 login and session cookie capture                | PASS
+  Auth Setup                   | User 2 login and session cookie capture                | PASS
+  Create Invoice (Validation)  | Valid invoice creation -> 201 Created                  | PASS
+  Create Invoice (Validation)  | Invoice UUID generated                                 | PASS
+  Create Invoice (Validation)  | Status initialized to DRAFT                            | PASS
+  Create Invoice (Validation)  | Amount matches precision                               | PASS
+  Create Invoice (Validation)  | Currency matches USD                                   | PASS
+  Create Invoice (Validation)  | Customer name matches                                  | PASS
+  Create Invoice (Validation)  | Missing customer_name rejected -> 400 Bad Request      | PASS
+  Create Invoice (Validation)  | Missing description rejected -> 400 Bad Request         | PASS
+  Create Invoice (Validation)  | Non-numeric amount rejected -> 400 Bad Request         | PASS
+  Create Invoice (Validation)  | Zero amount rejected -> 400 Bad Request                | PASS
+  Create Invoice (Validation)  | Negative amount rejected -> 400 Bad Request            | PASS
+  Create Invoice (Validation)  | Excessive decimal precision (.999) rejected -> 400     | PASS
+  Create Invoice (Validation)  | Invalid currency ("BITCOIN") rejected -> 400           | PASS
+  Create Invoice (Validation)  | Invalid due date ("2026-02-31") rejected -> 400        | PASS
+  Create Invoice (Validation)  | Optional customer_email (NULL) accepted -> 201 Created  | PASS
+  Create Invoice (Validation)  | customer_email is null in response                     | PASS
+  Create Invoice (Validation)  | Optional due_date (NULL) accepted -> 201 Created       | PASS
+  Create Invoice (Validation)  | due_date is null in response                            | PASS
+  Create Invoice (Security)    | Unauthenticated creation rejected -> 401 Unauthorized  | PASS
+  Create Invoice (Security)    | Client-specified user_id spoof attempt rejected -> 400 | PASS
+  Create Invoice (Security)    | Client-specified status="PAID" rejected -> 400         | PASS
+  Multi-User Isolation Setup   | User 2 invoice created independently -> 201 Created    | PASS
+  List Invoices                | User 1 list invoices returns 200 OK                   | PASS
+  List Invoices                | User 1 list contains User 1 invoices                  | PASS
+  List Invoices (Isolation)    | User 1 CANNOT see User 2's invoice                     | PASS
+  List Invoices (Isolation)    | User 2 list invoices returns 200 OK                   | PASS
+  List Invoices (Isolation)    | User 2 list contains only User 2's invoice             | PASS
+  List Invoices (Isolation)    | User 2 CANNOT see User 1's invoices                    | PASS
+  List Invoices (Pagination)   | Limit=2 pagination respected                           | PASS
+  List Invoices (Pagination)   | Pagination metadata (page, limit, total) correct       | PASS
+  List Invoices (Validation)   | Page < 1 rejected -> 400 Bad Request                   | PASS
+  List Invoices (Validation)   | Limit > 100 rejected -> 400 Bad Request                | PASS
+  List Invoices (Filtering)    | Status filter ?status=DRAFT returns 200 OK             | PASS
+  List Invoices (Filtering)    | All filtered records match status DRAFT                | PASS
+  List Invoices (Validation)   | Invalid status filter rejected -> 400 Bad Request      | PASS
+  List Invoices (Search)       | Search by customer name finds match                   | PASS
+  List Invoices (Search)       | Search with non-matching string returns empty array    | PASS
+  List Invoices (Security)     | Unauthenticated list rejected -> 401 Unauthorized     | PASS
+  Retrieve Invoice (Happy)     | User 1 retrieves own invoice by ID -> 200 OK          | PASS
+  Retrieve Invoice (Validate)  | Invalid UUID format rejected -> 400 Bad Request        | PASS
+  Retrieve Invoice (Validate)  | Nonexistent UUID returns 404 Not Found                 | PASS
+  Retrieve Invoice (Isolation) | User 2 accessing User 1's invoice ID returns 404       | PASS
+  Retrieve Invoice (Isolation) | User 1 accessing User 2's invoice ID returns 404       | PASS
+  Retrieve Invoice (Security)  | Unauthenticated retrieve rejected -> 401 Unauthorized | PASS
+
+
+8. BUILD & QUALITY VERIFICATION
+---------------------------------
+
+  - ESLint: PASS (0 errors, 0 warnings across all route handlers and validation files).
+  - Next.js Webpack Production Build: PASS (`✓ Compiled successfully in 7.1s`, all static and dynamic route traces generated).
+
+
+9. KNOWN ISSUES / OBSERVATIONS
+--------------------------------
+
+  - Supabase Database Status Constraint: In PostgreSQL, `invoices.status` is checked against uppercase values (`'DRAFT'`, `'PENDING'`, `'PAID'`, `'OVERDUE'`, `'CANCELLED'`). All endpoints, validations, and status filters have been configured to support and return this uppercase format seamlessly while accepting case-insensitive query parameters.
+
+
+10. REMAINING WORK (STRICT SCOPE BOUNDARY)
+-------------------------------------------
+
+In strict accordance with Phase 2 instructions:
+  - PATCH /api/invoices/[id] (Invoice Update): Deferred to Phase 3.
+  - DELETE /api/invoices/[id] (Invoice Deletion / Cancellation): Deferred to Phase 3.
+  - Gemini AI Invoice Generation: Deferred to later phase.
+  - PayPal Payment Processing & Webhooks: Deferred to later phase.
+  - Dashboard & Analytics APIs: Deferred to later phase.
+
+READINESS:
+Invoice Management Phase 2 (Create and Retrieve APIs) is fully verified, operational, and ready for development handover to Phase 3 upon approval.

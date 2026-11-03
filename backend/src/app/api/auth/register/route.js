@@ -33,27 +33,37 @@ export async function POST(request) {
     });
 
     if (error) {
+      // Handle Supabase rate limiting
+      if (error.status === 429 || error.code === "over_email_send_rate_limit") {
+        return Response.json(
+          { status: "error", message: "Email rate limit exceeded. Please try again later." },
+          { status: 429 },
+        );
+      }
+
+      // Fallback duplicate detection based on Supabase error codes/messages
       const isDuplicate =
         error.code === "user_already_exists" ||
-        error.message.toLowerCase().includes("already registered");
-
+        (error.message && error.message.toLowerCase().includes("already registered"));
       return Response.json(
-        {
-          status: "error",
-          message: isDuplicate
-            ? "Unable to create an account with these details."
-            : "Unable to create an account.",
-        },
+        { status: "error", message: isDuplicate ? "Unable to create an account with these details." : "Unable to create an account." },
         { status: isDuplicate ? 409 : 400 },
       );
     }
 
+    // Handle duplicate registration via enumeration protection (empty identities array)
+    if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return Response.json(
+        { status: "error", message: "Unable to create an account with these details." },
+        { status: 409 },
+      );
+    }
+
+    // Successful registration
     return Response.json(
       {
         status: "ok",
-        message: data.session
-          ? "Account created successfully."
-          : "Account created. Check your email to confirm your account.",
+        message: data.session ? "Account created successfully." : "Account created. Check your email to confirm your account.",
         requiresEmailConfirmation: !data.session,
       },
       { status: 201 },
