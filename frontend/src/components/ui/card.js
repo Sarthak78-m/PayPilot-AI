@@ -20,7 +20,7 @@ export function Card({
 
   return (
     <Component
-      className={`p-5 sm:p-6 text-[#172033] ${variantStyles[variant] || variantStyles.raised} ${className}`}
+      className={`p-4 sm:p-5 text-[#172033] ${variantStyles[variant] || variantStyles.raised} ${className}`}
       {...props}
     >
       {children}
@@ -30,7 +30,7 @@ export function Card({
 
 export function CardHeader({ children, className = "", ...props }) {
   return (
-    <div className={`flex flex-col gap-1 mb-4 ${className}`} {...props}>
+    <div className={`flex flex-col gap-1 mb-3 ${className}`} {...props}>
       {children}
     </div>
   );
@@ -38,7 +38,7 @@ export function CardHeader({ children, className = "", ...props }) {
 
 export function CardTitle({ children, className = "", as: Component = "h3", ...props }) {
   return (
-    <Component className={`text-lg font-bold text-[#172033] tracking-tight ${className}`} {...props}>
+    <Component className={`text-base sm:text-lg font-bold text-[#172033] tracking-tight ${className}`} {...props}>
       {children}
     </Component>
   );
@@ -54,7 +54,7 @@ export function CardDescription({ children, className = "", ...props }) {
 
 export function CardContent({ children, className = "", ...props }) {
   return (
-    <div className={`space-y-4 ${className}`} {...props}>
+    <div className={`space-y-3.5 ${className}`} {...props}>
       {children}
     </div>
   );
@@ -63,7 +63,7 @@ export function CardContent({ children, className = "", ...props }) {
 export function CardFooter({ children, className = "", ...props }) {
   return (
     <div
-      className={`flex items-center justify-between pt-4 mt-4 border-t border-[#CBD5E1]/60 ${className}`}
+      className={`flex items-center justify-between pt-3.5 mt-3.5 border-t border-[#CBD5E1]/60 ${className}`}
       {...props}
     >
       {children}

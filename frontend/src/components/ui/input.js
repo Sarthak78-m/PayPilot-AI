@@ -12,6 +12,7 @@ export function Input({
   required = false,
   leadingIcon: LeadingIcon,
   trailingIcon: TrailingIcon,
+  trailingAction,
   isCurrency = false,
   className = "",
   inputClassName = "",
@@ -66,15 +67,19 @@ export function Input({
           aria-describedby={errorId || helperId}
           className={`w-full bg-[#E8EDF4] text-[#172033] placeholder-[#94A3B8] text-sm rounded-xl py-2.5 shadow-inset-sm transition-all duration-150 focus:outline-none disabled:opacity-50 disabled:bg-[#DCE3EC] disabled:cursor-not-allowed ${
             LeadingIcon || isCurrency ? "pl-9" : "pl-3.5"
-          } ${TrailingIcon ? "pr-9" : "pr-3.5"} ${isCurrency ? "font-mono font-medium tracking-tight" : ""} ${stateClasses} ${inputClassName}`}
+          } ${trailingAction || TrailingIcon ? "pr-10" : "pr-3.5"} ${isCurrency ? "font-mono font-medium tracking-tight" : ""} ${stateClasses} ${inputClassName}`}
           {...props}
         />
 
-        {TrailingIcon && (
+        {trailingAction ? (
+          <div className="absolute right-3.5 flex items-center text-[#64748B]">
+            {trailingAction}
+          </div>
+        ) : TrailingIcon ? (
           <div className="absolute right-3.5 flex items-center pointer-events-none text-[#64748B]">
             {typeof TrailingIcon === "function" ? <TrailingIcon className="h-4 w-4" /> : TrailingIcon}
           </div>
-        )}
+        ) : null}
       </div>
 
       {error ? (
