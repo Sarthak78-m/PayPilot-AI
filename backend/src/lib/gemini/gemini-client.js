@@ -1,6 +1,6 @@
 import "server-only";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 let geminiClient;
 
@@ -12,7 +12,7 @@ export function getGeminiClient() {
   }
 
   if (!geminiClient) {
-    geminiClient = new GoogleGenerativeAI(apiKey);
+    geminiClient = new GoogleGenAI({ apiKey });
   }
 
   return geminiClient;

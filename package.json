@@ -2,6 +2,10 @@
   "name": "paypilot-ai",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
