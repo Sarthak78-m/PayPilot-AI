@@ -37,7 +37,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# reports
+# reports and scratch files
 *-report.txt
+*report*.txt
 invoice-phase*.txt
+*.report
+scratch/
+
 
