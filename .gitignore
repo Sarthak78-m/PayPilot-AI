@@ -44,4 +44,12 @@ invoice-phase*.txt
 *.report
 scratch/
 
+# agent files
+AGENTS.md
+AGENT.md
+agents.md
+agent.md
+[aA][gG][eE][nN][tT]*.md
+
+
 
