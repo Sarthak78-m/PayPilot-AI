@@ -96,44 +96,48 @@ export function FinancialSummarySection({ metrics }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5 lg:gap-4">
+      {/* Card 1: Paid Invoice Value (Honest semantic replacement for unverified revenue) */}
       <FinancialSummaryCard
         variant="revenue"
-        title="Total Revenue"
-        amount={metrics.totalRevenue?.formatted || "$0.00"}
-        trend={metrics.totalRevenue?.trend}
-        trendDirection={metrics.totalRevenue?.trendDirection}
-        period={metrics.totalRevenue?.period}
-        description={metrics.totalRevenue?.description}
+        title="Paid Invoice Value"
+        amount={metrics.paidInvoiceValue?.formatted || metrics.totalRevenue?.formatted || "$0.00"}
+        trend={metrics.paidInvoices?.count > 0 ? `${metrics.paidInvoices.count} settled` : undefined}
+        trendDirection="neutral"
+        period="Status = PAID"
+        description="Total value of invoices marked PAID (settlement unverified)"
       />
 
+      {/* Card 2: Outstanding Balance (Pending + Overdue) */}
       <FinancialSummaryCard
-        variant="paid"
-        title="Paid Invoices"
-        amount={metrics.paidInvoices?.formatted || "$0.00"}
-        count={metrics.paidInvoices?.count}
-        trend={metrics.paidInvoices?.trend}
-        period={metrics.paidInvoices?.period}
-        description={metrics.paidInvoices?.description}
+        variant="pending"
+        title="Outstanding Balance"
+        amount={metrics.outstanding?.formatted || "$0.00"}
+        count={metrics.outstanding?.count}
+        trend={metrics.outstanding?.count > 0 ? `${metrics.outstanding.count} unpaid` : undefined}
+        period="Pending + Overdue"
+        description="Receivables awaiting client settlement"
       />
 
+      {/* Card 3: Pending Invoices */}
       <FinancialSummaryCard
         variant="pending"
         title="Pending Invoices"
         amount={metrics.pendingInvoices?.formatted || "$0.00"}
         count={metrics.pendingInvoices?.count}
-        trend={metrics.pendingInvoices?.trend}
-        period={metrics.pendingInvoices?.period}
-        description={metrics.pendingInvoices?.description}
+        trend={metrics.pendingInvoices?.count > 0 ? `${metrics.pendingInvoices.count} active` : undefined}
+        period="Awaiting payment"
+        description="Pending client receivables"
       />
 
+      {/* Card 4: Overdue Invoices */}
       <FinancialSummaryCard
         variant="overdue"
         title="Overdue Invoices"
         amount={metrics.overdueInvoices?.formatted || "$0.00"}
         count={metrics.overdueInvoices?.count}
-        trend={metrics.overdueInvoices?.trend}
-        period={metrics.overdueInvoices?.period}
-        description={metrics.overdueInvoices?.description}
+        trend={metrics.overdueInvoices?.count > 0 ? `${metrics.overdueInvoices.count} past due` : undefined}
+        period="Past due date"
+        description="Requires payment follow-up"
       />
     </div>
   );

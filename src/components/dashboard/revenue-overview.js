@@ -28,13 +28,13 @@ export function RevenueOverview({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <CardTitle className="text-base sm:text-lg">Revenue Overview</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Invoiced Value Overview</CardTitle>
             <Badge variant="primary" size="sm">
-              Live Trends
+              Paid Invoices
             </Badge>
           </div>
           <p className="text-xs text-[#64748B] mt-0.5">
-            Total for selected period:{" "}
+            Total paid invoice value for selected period:{" "}
             <span className="font-mono font-bold text-[#172033]">
               ${totalInPeriod.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </span>
@@ -94,7 +94,7 @@ export function RevenueOverview({
                         ${item.revenue.toLocaleString()}
                       </p>
                       <p className="text-[10px] text-zinc-300">
-                        {item.invoices} {item.invoices === 1 ? "invoice" : "invoices"}
+                        {item.invoices} {item.invoices === 1 ? "invoice marked paid" : "invoices marked paid"}
                       </p>
                     </div>
                   )}
@@ -130,7 +130,7 @@ export function RevenueOverview({
       <div className="flex items-center justify-between text-xs text-[#64748B] pt-2 border-t border-[#CBD5E1]/60">
         <span className="flex items-center gap-1.5 font-medium text-[#16A34A] text-[11px] sm:text-xs">
           <TrendingUp className="h-3.5 w-3.5" />
-          <span>Consistent positive billing momentum</span>
+          <span>Settled invoice value trajectory</span>
         </span>
         <span className="font-mono text-[10px] sm:text-[11px]">Hover bars for details</span>
       </div>

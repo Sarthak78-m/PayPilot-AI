@@ -2,10 +2,13 @@
 
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardTitle, CardDescription, Badge, EmptyState } from "@/components/ui";
 import { ArrowRight, FileText, ChevronRight } from "@/components/icons";
 
 export function RecentInvoices({ invoices = [], searchQuery = "" }) {
+  const router = useRouter();
+
   const filtered = invoices.filter((inv) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
@@ -27,15 +30,20 @@ export function RecentInvoices({ invoices = [], searchQuery = "" }) {
   });
 
   const getStatusBadge = (status) => {
-    switch (status) {
+    const s = (status || "").toLowerCase();
+    switch (s) {
       case "paid":
         return <Badge variant="success" size="sm" dot>Paid</Badge>;
       case "pending":
         return <Badge variant="warning" size="sm" dot>Pending</Badge>;
       case "overdue":
         return <Badge variant="error" size="sm" dot>Overdue</Badge>;
+      case "draft":
+        return <Badge variant="neutral" size="sm" dot>Draft</Badge>;
+      case "cancelled":
+        return <Badge variant="neutral" size="sm">Cancelled</Badge>;
       default:
-        return <Badge variant="default" size="sm">{status}</Badge>;
+        return <Badge variant="neutral" size="sm">{status || "Unknown"}</Badge>;
     }
   };
 
@@ -69,7 +77,7 @@ export function RecentInvoices({ invoices = [], searchQuery = "" }) {
           }
           icon={FileText}
           actionLabel="Create Invoice"
-          onAction={() => (window.location.href = "/invoices/new")}
+          onAction={() => router.push("/invoices/new")}
         />
       ) : (
         <>
