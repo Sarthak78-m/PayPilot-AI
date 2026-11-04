@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   fetchDashboardMetrics,
   fetchRevenueOverview,
@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const [distribution, setDistribution] = useState(null);
   const [isMockMode, setIsMockMode] = useState(false);
 
-  const loadDashboardData = async (selectedPeriod = period) => {
+  const loadData = useCallback(async (selectedPeriod) => {
     try {
       const [metricsRes, revenueRes, invoicesRes, paymentsRes, distRes] =
         await Promise.all([
@@ -50,10 +50,12 @@ export default function DashboardPage() {
       setPayments(paymentsRes.data);
       setDistribution(distRes.data);
       setIsMockMode(
-        metricsRes.isMock ||
-          revenueRes.isMock ||
-          invoicesRes.isMock ||
-          paymentsRes.isMock
+        Boolean(
+          metricsRes.isMock ||
+            revenueRes.isMock ||
+            invoicesRes.isMock ||
+            paymentsRes.isMock
+        )
       );
     } catch (err) {
       console.error("Dashboard data load error:", err);
@@ -61,15 +63,21 @@ export default function DashboardPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadDashboardData(period);
-  }, [period]);
+    let ignore = false;
+    (async () => {
+      await loadData(period);
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, [loadData, period]);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
-    loadDashboardData(period);
+    await loadData(period);
   };
 
   if (loading) {
