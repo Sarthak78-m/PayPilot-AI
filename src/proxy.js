@@ -3,6 +3,12 @@ import { NextResponse } from "next/server";
 
 export async function proxy(request) {
   let response = NextResponse.next({ request });
+
+  // Strengthen Referrer-Policy on public payment routes
+  if (request.nextUrl.pathname.startsWith("/pay") || request.nextUrl.pathname.startsWith("/api/public")) {
+    response.headers.set("Referrer-Policy", "no-referrer");
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -21,6 +27,9 @@ export async function proxy(request) {
         });
 
         response = NextResponse.next({ request });
+        if (request.nextUrl.pathname.startsWith("/pay") || request.nextUrl.pathname.startsWith("/api/public")) {
+          response.headers.set("Referrer-Policy", "no-referrer");
+        }
         cookiesToSet.forEach(({ name, value, options }) => {
           response.cookies.set(name, value, options);
         });

@@ -34,3 +34,8 @@ export {
 export {
   captureCheckoutOrder,
 } from "./payment-capture-service";
+
+export {
+  isServerPaymentCheckoutEnabled,
+  checkServerPaymentFeatureGuard,
+} from "./server-feature-guard";

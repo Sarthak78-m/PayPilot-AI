@@ -29,7 +29,9 @@ import {
   DollarSign,
   Clock,
   CheckCircle2,
+  Link2,
 } from "@/components/icons";
+import { PaymentLinkModal } from "@/components/invoices/payment-link-modal";
 
 const STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },
@@ -114,6 +116,7 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedInvoiceForLink, setSelectedInvoiceForLink] = useState(null);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -430,6 +433,7 @@ export default function InvoicesPage() {
                     <th className="py-3 px-4">Due Date</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4">Created</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#CBD5E1]/40">
@@ -479,6 +483,21 @@ export default function InvoicesPage() {
                       <td className="py-3.5 px-4 text-[#64748B] font-mono text-[11px]">
                         {formatDate(inv.created_at)}
                       </td>
+
+                      {/* Actions */}
+                      <td className="py-3.5 px-4 text-right">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          icon={Link2}
+                          iconPosition="left"
+                          onClick={() => setSelectedInvoiceForLink(inv)}
+                          className="text-xs"
+                          title="Generate or view payment link"
+                        >
+                          Payment Link
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -518,6 +537,19 @@ export default function InvoicesPage() {
                         Due: {formatDate(inv.due_date)}
                       </p>
                     </div>
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={Link2}
+                      iconPosition="left"
+                      onClick={() => setSelectedInvoiceForLink(inv)}
+                      className="w-full text-xs justify-center"
+                    >
+                      Payment Link
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -562,6 +594,14 @@ export default function InvoicesPage() {
           </>
         )}
       </Card>
+
+      {/* Payment Link Modal */}
+      <PaymentLinkModal
+        isOpen={Boolean(selectedInvoiceForLink)}
+        onClose={() => setSelectedInvoiceForLink(null)}
+        invoice={selectedInvoiceForLink}
+        onInvoiceUpdated={() => fetchInvoices(page, statusFilter, search)}
+      />
     </div>
   );
 }

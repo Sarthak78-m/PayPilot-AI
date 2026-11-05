@@ -64,11 +64,29 @@ describe("PayPal REST Client & Configuration", () => {
 
     // 15c: Custom PAYPAL_BASE_URL override takes precedence and trims trailing slashes
     assert.equal(
-      resolvePayPalBaseUrl("https://custom-proxy.internal.paypilot.ai/paypal///", "production"),
-      "https://custom-proxy.internal.paypilot.ai/paypal"
+      resolvePayPalBaseUrl("https://custom-proxy.sandbox.paypal.com/paypal///", "production"),
+      "https://custom-proxy.sandbox.paypal.com/paypal"
     );
 
-    // 15d: getPayPalConfig integrates environment resolution
+    // 15d: Rejects non-HTTPS or non-paypal.com URLs
+    assert.throws(
+      () => resolvePayPalBaseUrl("http://api-m.sandbox.paypal.com", "sandbox"),
+      (err) => {
+        assert.ok(err instanceof PayPalError);
+        assert.equal(err.code, "UNTRUSTED_PAYPAL_BASE_URL");
+        return true;
+      }
+    );
+    assert.throws(
+      () => resolvePayPalBaseUrl("https://evil-paypal.com", "sandbox"),
+      (err) => {
+        assert.ok(err instanceof PayPalError);
+        assert.equal(err.code, "UNTRUSTED_PAYPAL_BASE_URL");
+        return true;
+      }
+    );
+
+    // 15e: getPayPalConfig integrates environment resolution
     process.env.PAYPAL_CLIENT_ID = "client_abc";
     process.env.PAYPAL_CLIENT_SECRET = "secret_xyz";
     delete process.env.PAYPAL_BASE_URL;

@@ -4,10 +4,23 @@ import {
   extractClientIp,
   buildRateLimitKey,
   enforceRateLimit,
+  checkServerPaymentFeatureGuard,
 } from "@/lib/payments";
+
+const PUBLIC_SECURITY_HEADERS = {
+  "Referrer-Policy": "no-referrer",
+  "Cache-Control": "no-store, no-cache, must-revalidate",
+};
 
 export async function GET(request, { params }) {
   try {
+    // 0. Server-side payment feature guard
+    const featureGuardResponse = checkServerPaymentFeatureGuard();
+    if (featureGuardResponse) {
+      featureGuardResponse.headers.set("Referrer-Policy", "no-referrer");
+      return featureGuardResponse;
+    }
+
     const { token } = await params;
 
     const supabaseClient = createSupabaseServerClient();
@@ -23,6 +36,22 @@ export async function GET(request, { params }) {
     });
 
     if (!rateLimit.allowed) {
+      if (rateLimit.isServiceUnavailable) {
+        return Response.json(
+          {
+            success: false,
+            error: "Payment service is temporarily unavailable. Please try again shortly.",
+            code: "SERVICE_UNAVAILABLE",
+          },
+          {
+            status: 503,
+            headers: {
+              ...PUBLIC_SECURITY_HEADERS,
+              "Retry-After": String(rateLimit.retryAfter || 60),
+            },
+          }
+        );
+      }
       return Response.json(
         {
           success: false,
@@ -31,7 +60,10 @@ export async function GET(request, { params }) {
         },
         {
           status: 429,
-          headers: { "Retry-After": String(rateLimit.retryAfter) },
+          headers: {
+            ...PUBLIC_SECURITY_HEADERS,
+            "Retry-After": String(rateLimit.retryAfter),
+          },
         }
       );
     }
@@ -42,7 +74,10 @@ export async function GET(request, { params }) {
     if (!result.success) {
       return Response.json(
         { success: false, error: result.error, code: result.code },
-        { status: result.statusCode }
+        {
+          status: result.statusCode,
+          headers: PUBLIC_SECURITY_HEADERS,
+        }
       );
     }
 
@@ -51,12 +86,18 @@ export async function GET(request, { params }) {
         success: true,
         data: result.data,
       },
-      { status: 200 }
+      {
+        status: 200,
+        headers: PUBLIC_SECURITY_HEADERS,
+      }
     );
   } catch {
     return Response.json(
       { success: false, error: "Payment link is invalid or has expired.", code: "INTERNAL_ERROR" },
-      { status: 500 }
+      {
+        status: 500,
+        headers: PUBLIC_SECURITY_HEADERS,
+      }
     );
   }
 }

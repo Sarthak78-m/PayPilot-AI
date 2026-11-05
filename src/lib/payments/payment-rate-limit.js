@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import "server-only";
 
-// In-memory rate limiter fallback for testing or before database migration execution
+// In-memory rate limiter fallback strictly restricted to non-production/test environments
 const fallbackStore = new Map();
 
 /**
@@ -22,18 +22,82 @@ export function buildRateLimitKey(scope, identifier, ip = "127.0.0.1") {
 }
 
 /**
- * Executes fixed-window rate limit evaluation. First attempts the privileged
- * database function public.check_rate_limit; if database migration is pending,
- * seamlessly falls back to an in-memory fixed window.
+ * Executes rate limit evaluation. In production, exclusively uses the PostgreSQL
+ * distributed rate limiter public.check_rate_limit and FAILS CLOSED (HTTP 503) if
+ * the database is unavailable. Never silently falls back to in-memory store in production.
  *
  * @param {object} params
  * @param {string} params.key - Sanitized rate limit key.
  * @param {number} params.limit - Maximum permitted requests within window.
  * @param {number} params.windowSeconds - Window duration in seconds.
  * @param {object} [params.supabaseClient] - Trusted Supabase service-role client.
- * @returns {Promise<{ allowed: boolean, currentPoints: number, limit: number, retryAfter: number }>}
+ * @returns {Promise<{
+ *   allowed: boolean,
+ *   isServiceUnavailable: boolean,
+ *   currentPoints: number,
+ *   limit: number,
+ *   retryAfter: number,
+ *   error?: string
+ * }>}
  */
 export async function enforceRateLimit({ key, limit, windowSeconds, supabaseClient }) {
+  const isProduction = process.env.NODE_ENV === "production";
+  const allowMemoryFallback = !isProduction || process.env.ALLOW_MEMORY_RATE_LIMIT === "true";
+
+  // 1. Production Mode: PostgreSQL distributed rate limiter is strictly required
+  if (isProduction && !allowMemoryFallback) {
+    if (!supabaseClient || typeof supabaseClient.rpc !== "function") {
+      // Fail closed immediately in production if DB client is missing
+      return {
+        allowed: false,
+        isServiceUnavailable: true,
+        currentPoints: 0,
+        limit,
+        retryAfter: 60,
+        error: "Rate limiting service is unavailable.",
+      };
+    }
+
+    try {
+      const { data, error } = await supabaseClient.rpc("check_rate_limit", {
+        p_key: key,
+        p_limit: limit,
+        p_window_seconds: windowSeconds,
+      });
+
+      if (error || !data || typeof data.allowed !== "boolean") {
+        // Fail closed in production on database failure
+        return {
+          allowed: false,
+          isServiceUnavailable: true,
+          currentPoints: 0,
+          limit,
+          retryAfter: 60,
+          error: "Rate limiting service query failed.",
+        };
+      }
+
+      return {
+        allowed: data.allowed,
+        isServiceUnavailable: false,
+        currentPoints: data.current_points || 1,
+        limit: data.limit || limit,
+        retryAfter: data.retry_after || 0,
+      };
+    } catch {
+      // Fail closed in production on network / RPC exception
+      return {
+        allowed: false,
+        isServiceUnavailable: true,
+        currentPoints: 0,
+        limit,
+        retryAfter: 60,
+        error: "Rate limiting service connection error.",
+      };
+    }
+  }
+
+  // 2. Non-Production Mode (development / unit tests): Attempt DB RPC first
   if (supabaseClient && typeof supabaseClient.rpc === "function") {
     try {
       const { data, error } = await supabaseClient.rpc("check_rate_limit", {
@@ -45,17 +109,18 @@ export async function enforceRateLimit({ key, limit, windowSeconds, supabaseClie
       if (!error && data && typeof data.allowed === "boolean") {
         return {
           allowed: data.allowed,
+          isServiceUnavailable: false,
           currentPoints: data.current_points || 1,
           limit: data.limit || limit,
-          retryAfter: data.retry_after || windowSeconds,
+          retryAfter: data.retry_after || 0,
         };
       }
     } catch {
-      // Fall through to in-memory fallback
+      // Fall through to in-memory fallback in test/dev
     }
   }
 
-  // In-memory fallback
+  // Fallback to in-memory fixed-window store in non-production environments
   const now = Date.now();
   const entry = fallbackStore.get(key);
 
@@ -66,18 +131,19 @@ export async function enforceRateLimit({ key, limit, windowSeconds, supabaseClie
 
     return {
       allowed,
+      isServiceUnavailable: false,
       currentPoints: entry.points,
       limit,
       retryAfter,
     };
   }
 
-  // New window
   const resetAt = now + windowSeconds * 1000;
   fallbackStore.set(key, { points: 1, resetAt });
 
   return {
     allowed: true,
+    isServiceUnavailable: false,
     currentPoints: 1,
     limit,
     retryAfter: 0,

@@ -65,14 +65,24 @@ describe("Merchant Payment Link Generation (Tests 1–8)", () => {
     assert.equal(res.code, "FORBIDDEN");
   });
 
-  it("4. DRAFT transition follows the explicit flag", async () => {
+  it("4. DRAFT transition follows the explicit flag (rejected by default)", async () => {
     const draftInvoice = db.seedInvoice({
       id: crypto.randomUUID(),
       user_id: merchantUser.id,
       status: "DRAFT",
     });
 
-    // 4a: Without allowDraftTransition flag -> rejected
+    // 4a: Default behavior without allowDraftTransition argument -> rejected
+    const defaultRes = await generateMerchantPaymentLink({
+      invoiceId: draftInvoice.id,
+      user: merchantUser,
+      supabaseClient: db.client,
+    });
+    assert.equal(defaultRes.success, false);
+    assert.equal(defaultRes.statusCode, 409);
+    assert.equal(defaultRes.code, "DRAFT_INVOICE_NOT_ISSUED");
+
+    // 4b: Explicit allowDraftTransition: false -> rejected
     const rejectedRes = await generateMerchantPaymentLink({
       invoiceId: draftInvoice.id,
       user: merchantUser,
@@ -82,7 +92,7 @@ describe("Merchant Payment Link Generation (Tests 1–8)", () => {
     assert.equal(rejectedRes.success, false);
     assert.equal(rejectedRes.code, "DRAFT_INVOICE_NOT_ISSUED");
 
-    // 4b: With allowDraftTransition: true -> transitions to PENDING and succeeds
+    // 4c: With explicit allowDraftTransition: true -> transitions to PENDING and succeeds atomically
     const allowedRes = await generateMerchantPaymentLink({
       invoiceId: draftInvoice.id,
       user: merchantUser,

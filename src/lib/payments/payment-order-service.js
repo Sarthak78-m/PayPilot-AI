@@ -207,29 +207,44 @@ export async function createCheckoutOrder({
       updated_at: new Date().toISOString(),
     })
     .eq("id", paymentId)
+    .eq("create_request_id", createRequestId)
     .eq("status", "CREATED")
     .is("paypal_order_id", null)
     .select()
     .single();
 
   if (persistError || !updatedPayment) {
-    // Check if another concurrent request already attached the order ID
+    // Check if the row in payments already exists with this orderId or a conflicting orderId
     const { data: existingCheck } = await supabaseClient
       .from("payments")
-      .select("id, status, paypal_order_id")
+      .select("id, status, paypal_order_id, create_request_id")
       .eq("id", paymentId)
       .maybeSingle();
 
-    if (existingCheck && existingCheck.paypal_order_id) {
-      return {
-        success: true,
-        paymentId: existingCheck.id,
-        orderId: existingCheck.paypal_order_id,
-        status: existingCheck.status,
-        statusCode: 200,
-      };
+    if (existingCheck) {
+      if (existingCheck.paypal_order_id === payPalOrder.orderId) {
+        // Idempotent retry: the order ID is already attached to this payment
+        return {
+          success: true,
+          paymentId: existingCheck.id,
+          orderId: existingCheck.paypal_order_id,
+          status: existingCheck.status,
+          statusCode: 200,
+        };
+      }
+
+      if (existingCheck.paypal_order_id && existingCheck.paypal_order_id !== payPalOrder.orderId) {
+        // Conflict: An existing different PayPal order ID is already attached! Must reject replacing it.
+        return {
+          success: false,
+          error: "A different PayPal order ID is already associated with this payment.",
+          code: "ORDER_ID_CONFLICT",
+          statusCode: 409,
+        };
+      }
     }
 
+    // Database update failed or timed out. Do NOT mark payment as FAILED.
     return {
       success: false,
       error: "Could not record payment order in database.",

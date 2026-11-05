@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from "node:test";
+import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import {
@@ -11,11 +11,17 @@ import { generatePaymentToken } from "@/lib/payments/payment-token";
 import { sanitizePayPalMessage } from "@/lib/paypal";
 import { createMockDatabase } from "../helpers/mock-database";
 
-describe("Security & Rate Limiting (Tests 36–40)", () => {
+describe("Security & Rate Limiting (Tests 36–43)", () => {
   let db;
+  const originalEnv = { ...process.env };
 
   beforeEach(() => {
     db = createMockDatabase();
+    clearRateLimitFallback();
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
     clearRateLimitFallback();
   });
 
@@ -98,5 +104,59 @@ describe("Security & Rate Limiting (Tests 36–40)", () => {
     assert.equal(r4.allowed, false);
     assert.ok(r4.retryAfter > 0);
     assert.equal(r4.currentPoints, 4);
+  });
+
+  it("41. Production database rate limiter failure returns controlled 503 error", async () => {
+    process.env.NODE_ENV = "production";
+    delete process.env.ALLOW_MEMORY_RATE_LIMIT;
+
+    // Simulate failing Supabase RPC
+    const failingClient = {
+      rpc: async () => ({ data: null, error: { message: "connection timeout" } }),
+    };
+
+    const key = buildRateLimitKey("create_order", "user_123", "10.0.0.1");
+    const res = await enforceRateLimit({
+      key,
+      limit: 10,
+      windowSeconds: 60,
+      supabaseClient: failingClient,
+    });
+
+    assert.equal(res.allowed, false);
+    assert.equal(res.isServiceUnavailable, true);
+    assert.equal(res.retryAfter, 60);
+    assert.match(res.error, /Rate limiting service/);
+  });
+
+  it("42. Production never falls back to in-memory rate limiting when database fails", async () => {
+    process.env.NODE_ENV = "production";
+    delete process.env.ALLOW_MEMORY_RATE_LIMIT;
+
+    // Client with null/missing RPC
+    const nullRpcClient = null;
+
+    const key = buildRateLimitKey("capture_order", "user_456", "10.0.0.2");
+    const res = await enforceRateLimit({
+      key,
+      limit: 5,
+      windowSeconds: 60,
+      supabaseClient: nullRpcClient,
+    });
+
+    assert.equal(res.allowed, false);
+    assert.equal(res.isServiceUnavailable, true);
+    assert.equal(res.retryAfter, 60);
+  });
+
+  it("43. Raw payment tokens are hashed and truncated in rate-limit keys, never logged raw", () => {
+    const rawSecretToken = "pay_tok_live_c0ffee99887766554433221100aabbcc";
+    const ip = "192.168.1.100";
+    const key = buildRateLimitKey("public_lookup", rawSecretToken, ip);
+
+    // Key must not expose raw token
+    assert.equal(key.includes(rawSecretToken), false);
+    // Key must follow standard format rate_limit:scope:hashPrefix:ip
+    assert.match(key, /^rate_limit:public_lookup:[0-9a-f]{16}:192\.168\.1\.100$/);
   });
 });

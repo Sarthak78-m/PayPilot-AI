@@ -5,10 +5,17 @@ import {
   extractClientIp,
   buildRateLimitKey,
   enforceRateLimit,
+  checkServerPaymentFeatureGuard,
 } from "@/lib/payments";
 
 export async function POST(request, { params }) {
   try {
+    // 0. Server-side payment feature guard
+    const featureGuardResponse = checkServerPaymentFeatureGuard();
+    if (featureGuardResponse) {
+      return featureGuardResponse;
+    }
+
     // 1. Authenticate merchant
     const user = await getAuthenticatedUser();
     if (!user) {
@@ -29,7 +36,7 @@ export async function POST(request, { params }) {
     }
 
     const expiresInDays = input.expiresInDays !== undefined ? input.expiresInDays : 7;
-    const allowDraftTransition = Boolean(input.allowDraftTransition);
+    const allowDraftTransition = input.allowDraftTransition === true;
 
     // 3. Rate limiting (20 link generations per minute per merchant)
     const supabaseClient = createSupabaseServerClient();
@@ -44,6 +51,19 @@ export async function POST(request, { params }) {
     });
 
     if (!rateLimit.allowed) {
+      if (rateLimit.isServiceUnavailable) {
+        return Response.json(
+          {
+            success: false,
+            error: "Payment service is temporarily unavailable. Please try again shortly.",
+            code: "SERVICE_UNAVAILABLE",
+          },
+          {
+            status: 503,
+            headers: { "Retry-After": String(rateLimit.retryAfter || 60) },
+          }
+        );
+      }
       return Response.json(
         {
           success: false,

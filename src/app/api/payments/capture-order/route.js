@@ -4,10 +4,17 @@ import {
   extractClientIp,
   buildRateLimitKey,
   enforceRateLimit,
+  checkServerPaymentFeatureGuard,
 } from "@/lib/payments";
 
 export async function POST(request) {
   try {
+    // 0. Server-side payment feature guard
+    const featureGuardResponse = checkServerPaymentFeatureGuard();
+    if (featureGuardResponse) {
+      return featureGuardResponse;
+    }
+
     let input;
     try {
       input = await request.json();
@@ -51,6 +58,19 @@ export async function POST(request) {
     });
 
     if (!rateLimit.allowed) {
+      if (rateLimit.isServiceUnavailable) {
+        return Response.json(
+          {
+            success: false,
+            error: "Payment service is temporarily unavailable. Please try again shortly.",
+            code: "SERVICE_UNAVAILABLE",
+          },
+          {
+            status: 503,
+            headers: { "Retry-After": String(rateLimit.retryAfter || 60) },
+          }
+        );
+      }
       return Response.json(
         {
           success: false,

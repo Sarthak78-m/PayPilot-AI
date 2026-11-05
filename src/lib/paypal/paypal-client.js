@@ -24,7 +24,33 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
  */
 export function resolvePayPalBaseUrl(baseUrlEnv = process.env.PAYPAL_BASE_URL, environmentEnv = process.env.PAYPAL_ENVIRONMENT) {
   if (baseUrlEnv && typeof baseUrlEnv === "string" && baseUrlEnv.trim()) {
-    return baseUrlEnv.trim().replace(/\/+$/, "");
+    const trimmed = baseUrlEnv.trim().replace(/\/+$/, "");
+    try {
+      const parsed = new URL(trimmed);
+      if (parsed.protocol !== "https:") {
+        throw new PayPalError(
+          `Untrusted PayPal base URL "${trimmed}": Protocol must be HTTPS.`,
+          { code: "UNTRUSTED_PAYPAL_BASE_URL" }
+        );
+      }
+      const isTrustedHost =
+        parsed.hostname === "paypal.com" ||
+        parsed.hostname.endsWith(".paypal.com");
+
+      if (!isTrustedHost) {
+        throw new PayPalError(
+          `Untrusted PayPal base URL "${trimmed}": Host must belong to paypal.com.`,
+          { code: "UNTRUSTED_PAYPAL_BASE_URL" }
+        );
+      }
+      return trimmed;
+    } catch (err) {
+      if (err instanceof PayPalError) throw err;
+      throw new PayPalError(
+        `Invalid PayPal base URL "${trimmed}": Must be a valid HTTPS URL.`,
+        { code: "UNTRUSTED_PAYPAL_BASE_URL" }
+      );
+    }
   }
 
   const env = (environmentEnv || "").trim().toLowerCase();
