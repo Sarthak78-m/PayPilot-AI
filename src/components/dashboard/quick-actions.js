@@ -60,7 +60,7 @@ export function QuickActions() {
             <Link
               key={act.title}
               href={act.href}
-              className={`p-3 rounded-xl bg-[#E8EDF4] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all duration-150 flex flex-col justify-between gap-2.5 group border border-transparent ${act.border}`}
+              className={`p-3 rounded-xl bg-[#E8EDF4] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all duration-150 flex flex-col justify-between gap-2.5 group border border-white/80 dark:border-white/10 ${act.border}`}
             >
               <div className="flex items-start justify-between">
                 <div

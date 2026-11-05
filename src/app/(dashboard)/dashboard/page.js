@@ -157,7 +157,7 @@ export default function DashboardPage() {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="p-2 rounded-xl bg-[#E8EDF4] text-[#64748B] hover:text-[#2563EB] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all disabled:opacity-50 flex items-center gap-1.5 text-xs font-semibold"
+            className="p-2 rounded-xl bg-[#E8EDF4] text-[#64748B] hover:text-[#2563EB] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm border border-white/80 dark:border-white/10 transition-all disabled:opacity-50 flex items-center gap-1.5 text-xs font-semibold"
             title="Refresh dashboard metrics"
             aria-label="Refresh dashboard metrics"
           >

@@ -15,7 +15,7 @@ import {
   X,
   User,
 } from "@/components/icons";
-import { Badge, Divider } from "@/components/ui";
+import { Badge, Divider, ThemeToggle } from "@/components/ui";
 import { getSessionUser, logoutUser } from "@/lib/auth/auth-client";
 
 const NAV_ITEMS = [
@@ -165,7 +165,12 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
       <div className="pt-4 space-y-2.5">
         <Divider />
 
-        <div className="p-2.5 rounded-xl bg-[#E8EDF4] shadow-raised-sm flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[11px] font-semibold text-[#64748B]">Theme</span>
+          <ThemeToggle variant="pill" size="sm" />
+        </div>
+
+        <div className="p-2.5 rounded-xl bg-[#E8EDF4] shadow-raised-sm border border-white/80 dark:border-white/10 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-primary-glow">
               {initials || <User className="h-4 w-4" />}

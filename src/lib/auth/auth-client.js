@@ -261,3 +261,36 @@ export async function signInWithGoogle({ nextUrl = "/dashboard" } = {}) {
     };
   }
 }
+
+export async function deleteAccount({ confirmation } = {}) {
+  try {
+    const res = await fetch("/api/auth/delete-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirmation }),
+      credentials: "include",
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      return {
+        success: false,
+        status: res.status,
+        message: data.message || "Failed to delete account.",
+      };
+    }
+
+    return {
+      success: true,
+      status: res.status,
+      message: data.message || "Your account has been permanently deleted.",
+    };
+  } catch {
+    return {
+      success: false,
+      status: 0,
+      message: "Network error while deleting account. Please check your connection.",
+    };
+  }
+}

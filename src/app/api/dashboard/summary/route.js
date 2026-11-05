@@ -18,7 +18,13 @@ function formatCurrency(amount, currency = "USD") {
 
 export async function GET() {
   try {
-    const user = await getAuthenticatedUser();
+    let user = null;
+    try {
+      user = await getAuthenticatedUser();
+    } catch {
+      user = null;
+    }
+
     if (!user) {
       return Response.json(
         { status: "error", message: "Authentication is required." },

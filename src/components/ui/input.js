@@ -23,11 +23,11 @@ export function Input({
   const errorId = error ? `${inputId}-error` : undefined;
   const helperId = helperText ? `${inputId}-helper` : undefined;
 
-  let stateClasses = "border border-[#D1D8E2] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]";
+  let stateClasses = "border border-[#D1D8E2] dark:border-[#1E293B] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-[#3B82F6]";
   if (error) {
-    stateClasses = "border-[#DC2626] text-[#DC2626] focus:border-[#DC2626] focus:ring-2 focus:ring-[#DC2626]";
+    stateClasses = "border-[#DC2626] dark:border-[#EF4444] text-[#DC2626] dark:text-[#EF4444] focus:border-[#DC2626] dark:focus:border-[#EF4444] focus:ring-2 focus:ring-[#DC2626]";
   } else if (success) {
-    stateClasses = "border-[#16A34A] focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]";
+    stateClasses = "border-[#16A34A] dark:border-[#22C55E] focus:border-[#16A34A] dark:focus:border-[#22C55E] focus:ring-2 focus:ring-[#16A34A]";
   }
 
   return (
@@ -35,24 +35,24 @@ export function Input({
       {label && (
         <label
           htmlFor={inputId}
-          className="text-xs font-semibold uppercase tracking-wider text-[#172033] flex items-center justify-between"
+          className="text-xs font-semibold uppercase tracking-wider text-[#172033] dark:text-[#F8FAFC] flex items-center justify-between"
         >
           <span>
             {label}
-            {required && <span className="text-[#DC2626] ml-1" aria-hidden="true">*</span>}
+            {required && <span className="text-[#DC2626] dark:text-[#EF4444] ml-1" aria-hidden="true">*</span>}
           </span>
         </label>
       )}
 
       <div className="relative flex items-center">
         {LeadingIcon && (
-          <div className="absolute left-3.5 flex items-center pointer-events-none text-[#64748B]">
+          <div className="absolute left-3.5 flex items-center pointer-events-none text-[#64748B] dark:text-[#94A3B8]">
             {typeof LeadingIcon === "function" ? <LeadingIcon className="h-4 w-4" /> : LeadingIcon}
           </div>
         )}
 
         {isCurrency && !LeadingIcon && (
-          <div className="absolute left-3.5 flex items-center pointer-events-none font-semibold text-[#64748B] text-sm">
+          <div className="absolute left-3.5 flex items-center pointer-events-none font-semibold text-[#64748B] dark:text-[#94A3B8] text-sm">
             $
           </div>
         )}
@@ -65,7 +65,7 @@ export function Input({
           required={required}
           aria-invalid={Boolean(error)}
           aria-describedby={errorId || helperId}
-          className={`w-full bg-[#E8EDF4] text-[#172033] placeholder-[#94A3B8] text-sm rounded-xl py-2.5 shadow-inset-sm transition-all duration-150 focus:outline-none disabled:opacity-50 disabled:bg-[#DCE3EC] disabled:cursor-not-allowed ${
+          className={`w-full bg-[#E8EDF4] dark:bg-[#0D121D] text-[#172033] dark:text-[#F8FAFC] placeholder-[#94A3B8] dark:placeholder-[#64748B] text-sm rounded-xl py-2.5 shadow-inset-sm transition-all duration-150 focus:outline-none disabled:opacity-50 disabled:bg-[#DCE3EC] dark:disabled:bg-[#141C2E] disabled:cursor-not-allowed ${
             LeadingIcon || isCurrency ? "pl-9" : "pl-3.5"
           } ${trailingAction || TrailingIcon ? "pr-10" : "pr-3.5"} ${isCurrency ? "font-mono font-medium tracking-tight" : ""} ${stateClasses} ${inputClassName}`}
           {...props}

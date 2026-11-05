@@ -14,7 +14,7 @@ import {
   X,
   Sparkles,
 } from "@/components/icons";
-import { Button, Badge, Divider } from "@/components/ui";
+import { Button, Badge, Divider, ThemeToggle } from "@/components/ui";
 import { getSessionUser, logoutUser } from "@/lib/auth/auth-client";
 import { useDashboardSearch } from "@/lib/context/search-context";
 
@@ -117,7 +117,7 @@ export function Header({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Filter invoices, clients, payments..."
-              className="w-full bg-[#E8EDF4] text-[#172033] placeholder-[#94A3B8] text-xs sm:text-sm rounded-xl py-2 pl-9 pr-8 shadow-inset-sm border border-[#D1D8E2] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] focus:outline-none transition-all"
+              className="w-full bg-[#E8EDF4] text-[#172033] placeholder-[#64748B] dark:placeholder-[#94A3B8] text-xs sm:text-sm rounded-xl py-2 pl-9 pr-8 shadow-inset-sm border border-[#D1D8E2] dark:border-[#1E293B] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] focus:outline-none transition-all"
             />
 
             {searchQuery && (
@@ -146,6 +146,9 @@ export function Header({
               New Invoice
             </Button>
           </Link>
+
+          {/* Theme Toggle (Light / Black Theme) */}
+          <ThemeToggle size="sm" />
 
           {/* Notifications Dropdown */}
           <div className="relative" ref={notificationsRef}>

@@ -107,9 +107,7 @@ export function FinancialSummaryCard({
 }
 
 export function FinancialSummarySection({ metrics }) {
-  if (!metrics) return null;
-
-  const hasRecords = Boolean(metrics.totalCount && metrics.totalCount > 0);
+  const hasRecords = Boolean(metrics?.totalCount && metrics.totalCount > 0);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5 lg:gap-4">
@@ -117,10 +115,10 @@ export function FinancialSummarySection({ metrics }) {
       <FinancialSummaryCard
         variant="revenue"
         title="Paid Invoice Value"
-        amount={hasRecords ? (metrics.paidInvoiceValue?.formatted || metrics.totalRevenue?.formatted || "$0.00") : null}
+        amount={hasRecords ? (metrics?.paidInvoiceValue?.formatted || metrics?.totalRevenue?.formatted || "$0.00") : "$0.00"}
         empty={!hasRecords}
         emptyMessage="No revenue data available yet."
-        trend={hasRecords && metrics.paidInvoices?.count > 0 ? `${metrics.paidInvoices.count} settled` : undefined}
+        trend={hasRecords && metrics?.paidInvoices?.count > 0 ? `${metrics.paidInvoices.count} settled` : undefined}
         trendDirection="neutral"
         period={hasRecords ? "Status = PAID" : "Awaiting first invoice"}
         description={hasRecords ? "Total value of invoices marked PAID (settlement unverified)" : "No invoices created yet"}
@@ -130,11 +128,11 @@ export function FinancialSummarySection({ metrics }) {
       <FinancialSummaryCard
         variant="pending"
         title="Outstanding Balance"
-        amount={hasRecords ? (metrics.outstanding?.formatted || "$0.00") : null}
+        amount={hasRecords ? (metrics?.outstanding?.formatted || "$0.00") : "$0.00"}
         empty={!hasRecords}
         emptyMessage="No receivables recorded"
-        count={hasRecords ? metrics.outstanding?.count : undefined}
-        trend={hasRecords && metrics.outstanding?.count > 0 ? `${metrics.outstanding.count} unpaid` : undefined}
+        count={hasRecords ? metrics?.outstanding?.count : 0}
+        trend={hasRecords && metrics?.outstanding?.count > 0 ? `${metrics.outstanding.count} unpaid` : undefined}
         period={hasRecords ? "Pending + Overdue" : "No open balances"}
         description="Receivables awaiting client settlement"
       />
@@ -143,11 +141,11 @@ export function FinancialSummarySection({ metrics }) {
       <FinancialSummaryCard
         variant="pending"
         title="Pending Invoices"
-        amount={hasRecords ? (metrics.pendingInvoices?.formatted || "$0.00") : null}
+        amount={hasRecords ? (metrics?.pendingInvoices?.formatted || "$0.00") : "$0.00"}
         empty={!hasRecords}
         emptyMessage="No pending invoices"
-        count={hasRecords ? metrics.pendingInvoices?.count : undefined}
-        trend={hasRecords && metrics.pendingInvoices?.count > 0 ? `${metrics.pendingInvoices.count} active` : undefined}
+        count={hasRecords ? metrics?.pendingInvoices?.count : 0}
+        trend={hasRecords && metrics?.pendingInvoices?.count > 0 ? `${metrics.pendingInvoices.count} active` : undefined}
         period={hasRecords ? "Awaiting payment" : "All clear"}
         description="Pending client receivables"
       />
@@ -156,11 +154,11 @@ export function FinancialSummarySection({ metrics }) {
       <FinancialSummaryCard
         variant="overdue"
         title="Overdue Invoices"
-        amount={hasRecords ? (metrics.overdueInvoices?.formatted || "$0.00") : null}
+        amount={hasRecords ? (metrics?.overdueInvoices?.formatted || "$0.00") : "$0.00"}
         empty={!hasRecords}
         emptyMessage="No overdue invoices"
-        count={hasRecords ? metrics.overdueInvoices?.count : undefined}
-        trend={hasRecords && metrics.overdueInvoices?.count > 0 ? `${metrics.overdueInvoices.count} past due` : undefined}
+        count={hasRecords ? metrics?.overdueInvoices?.count : 0}
+        trend={hasRecords && metrics?.overdueInvoices?.count > 0 ? `${metrics.overdueInvoices.count} past due` : undefined}
         period={hasRecords ? "Past due date" : "No overdue accounts"}
         description="Requires payment follow-up"
       />

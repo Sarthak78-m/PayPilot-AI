@@ -19,6 +19,7 @@ import {
   Divider,
   Skeleton,
   EmptyState,
+  ThemeToggle,
 } from "@/components/ui";
 
 export default function DesignSystemPreviewPage() {
@@ -41,9 +42,12 @@ export default function DesignSystemPreviewPage() {
               PayPilot AI — Component & Token Primitives
             </h1>
           </div>
-          <Badge variant="primary" size="md" dot>
-            Modern Neumorphism + Minimalist Fintech
-          </Badge>
+          <div className="flex items-center gap-3">
+            <ThemeToggle variant="pill" size="md" />
+            <Badge variant="primary" size="md" dot>
+              Modern Neumorphism + Minimalist Fintech
+            </Badge>
+          </div>
         </div>
         <p className="text-sm sm:text-base text-[#64748B] max-w-3xl leading-relaxed">
           Standardized visual tokens, typography scale, tactile neumorphic surfaces, and accessible UI primitives for enterprise-grade invoicing and payment workflows.

@@ -2,7 +2,14 @@ import React from "react";
 import { Card, CardTitle, CardDescription } from "@/components/ui";
 
 export function InvoiceStatusDistribution({ distribution }) {
-  if (!distribution) return null;
+  const dist = distribution || {
+    paid: { count: 0, percent: 0 },
+    pending: { count: 0, percent: 0 },
+    overdue: { count: 0, percent: 0 },
+    draft: { count: 0, percent: 0 },
+    cancelled: { count: 0, percent: 0 },
+    totalCount: 0,
+  };
 
   const {
     paid = { count: 0, percent: 0 },
@@ -10,8 +17,8 @@ export function InvoiceStatusDistribution({ distribution }) {
     overdue = { count: 0, percent: 0 },
     draft = { count: 0, percent: 0 },
     cancelled = { count: 0, percent: 0 },
-    totalCount = 0,
-  } = distribution;
+    totalCount = dist.totalCount || 0,
+  } = dist;
 
   const statusCards = [
     { label: "Paid", count: paid.count, percent: paid.percent, color: "#16A34A", dotBg: "bg-[#16A34A]", textColor: "text-[#16A34A]" },

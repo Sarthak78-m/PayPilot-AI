@@ -33,6 +33,7 @@ function LoginContent() {
 
   const errorParam = searchParams.get("error");
   const confirmedParam = searchParams.get("confirmed");
+  const messageParam = searchParams.get("message");
 
   const [formData, setFormData] = useState({
     email: "",
@@ -52,6 +53,7 @@ function LoginContent() {
   const displayedError = serverError || (errorParam ? decodeURIComponent(errorParam) : "");
   const displayedSuccess =
     serverSuccess ||
+    (messageParam ? decodeURIComponent(messageParam) : "") ||
     (confirmedParam === "true"
       ? "Your email has been verified successfully! You can now sign in."
       : "");

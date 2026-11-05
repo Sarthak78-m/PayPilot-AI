@@ -13,6 +13,7 @@ import {
   Badge,
   Skeleton,
   Divider,
+  ThemeToggle,
 } from "@/components/ui";
 import {
   PayPilotLogo,
@@ -152,9 +153,12 @@ export default function CustomerPaymentPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8EDF4] border border-white/80 shadow-raised-sm text-xs font-semibold text-[#172033]">
-            <ShieldCheck className="h-4 w-4 text-[#16A34A]" />
-            <span>Secure Checkout</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle size="sm" />
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8EDF4] border border-white/80 shadow-raised-sm text-xs font-semibold text-[#172033]">
+              <ShieldCheck className="h-4 w-4 text-[#16A34A]" />
+              <span>Secure Checkout</span>
+            </div>
           </div>
         </div>
       </header>

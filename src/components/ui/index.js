@@ -10,3 +10,4 @@ export * from "./tooltip";
 export * from "./divider";
 export * from "./skeleton";
 export * from "./empty-state";
+export * from "./theme-toggle";

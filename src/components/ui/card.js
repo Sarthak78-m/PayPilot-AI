@@ -8,14 +8,14 @@ export function Card({
   ...props
 }) {
   const variantStyles = {
-    raised: "bg-[#E8EDF4] shadow-raised rounded-2xl border border-white/60",
-    "raised-sm": "bg-[#E8EDF4] shadow-raised-sm rounded-xl border border-white/60",
-    "raised-lg": "bg-[#E8EDF4] shadow-raised-lg rounded-3xl border border-white/60",
-    inset: "bg-[#E8EDF4] shadow-inset rounded-2xl border border-[#D1D8E2]/60",
-    "inset-sm": "bg-[#E8EDF4] shadow-inset-sm rounded-xl border border-[#D1D8E2]/60",
-    flat: "bg-[#E8EDF4] rounded-2xl border border-[#D1D8E2]",
+    raised: "bg-[#E8EDF4] shadow-raised rounded-2xl border border-white/80 dark:border-white/10",
+    "raised-sm": "bg-[#E8EDF4] shadow-raised-sm rounded-xl border border-white/80 dark:border-white/10",
+    "raised-lg": "bg-[#E8EDF4] shadow-raised-lg rounded-3xl border border-white/80 dark:border-white/10",
+    inset: "bg-[#E8EDF4] shadow-inset rounded-2xl border border-[#CBD5E1]/60 dark:border-white/10",
+    "inset-sm": "bg-[#E8EDF4] shadow-inset-sm rounded-xl border border-[#CBD5E1]/60 dark:border-white/10",
+    flat: "bg-[#E8EDF4] rounded-2xl border border-[#CBD5E1] dark:border-white/10",
     interactive:
-      "bg-[#E8EDF4] shadow-raised hover:shadow-raised-lg active:shadow-inset-sm rounded-2xl border border-white/60 cursor-pointer transition-all duration-200",
+      "bg-[#E8EDF4] shadow-raised hover:shadow-raised-lg active:shadow-inset-sm rounded-2xl border border-white/80 dark:border-white/10 cursor-pointer transition-all duration-200",
   };
 
   return (

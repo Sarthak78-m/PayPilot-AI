@@ -6,6 +6,7 @@ import {
   CardDescription,
   Button,
   Divider,
+  ThemeToggle,
 } from "@/components/ui";
 import {
   PayPilotLogo,
@@ -35,6 +36,7 @@ export default function HomePage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle size="sm" />
           <Link href="/dashboard">
             <Button
               variant="primary"

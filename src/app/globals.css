@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *, .dark, .dark *));
+
 :root {
-  /* Core Palette Tokens */
+  /* Core Palette Tokens — Light Neumorphic Daylight */
   --color-bg: #E8EDF4;
   --color-surface: #E8EDF4;
   --color-surface-elevated: #E8EDF4;
@@ -11,8 +13,8 @@
   --color-primary-hover: #1D4ED8;
 
   --color-text-primary: #172033;
-  --color-text-secondary: #64748B;
-  --color-text-muted: #94A3B8;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
 
   --color-success: #16A34A;
   --color-warning: #F59E0B;
@@ -25,14 +27,17 @@
   --color-disabled: #94A3B8;
   --color-disabled-bg: #DCE3EC;
 
-  /* Neumorphic Shadows */
-  --shadow-raised: 8px 8px 16px #c5cad1, -8px -8px 16px #ffffff;
-  --shadow-raised-sm: 4px 4px 8px #c5cad1, -4px -4px 8px #ffffff;
-  --shadow-raised-lg: 12px 12px 24px #b8bec7, -12px -12px 24px #ffffff;
-  --shadow-inset: inset 5px 5px 10px #c5cad1, inset -5px -5px 10px #ffffff;
-  --shadow-inset-sm: inset 2px 2px 4px #c5cad1, inset -2px -2px 4px #ffffff;
+  /* Neumorphic Shadows — Light */
+  --shadow-raised: 6px 6px 14px #b8bec7, -6px -6px 14px #ffffff;
+  --shadow-raised-sm: 3px 3px 8px #b8bec7, -3px -3px 8px #ffffff;
+  --shadow-raised-lg: 12px 12px 24px #aab2be, -12px -12px 24px #ffffff;
+  --shadow-inset: inset 4px 4px 8px #b8bec7, inset -4px -4px 8px #ffffff;
+  --shadow-inset-sm: inset 2px 2px 5px #b8bec7, inset -2px -2px 5px #ffffff;
   --shadow-primary-glow: 0 4px 14px rgba(37, 99, 235, 0.35);
   --shadow-primary-active: inset 2px 2px 5px rgba(0, 0, 0, 0.25);
+
+  --divider-groove: linear-gradient(to bottom, #c5cad1 50%, #ffffff 50%);
+  --divider-groove-v: linear-gradient(to right, #c5cad1 50%, #ffffff 50%);
 
   /* Border Radii */
   --radius-sm: 6px;
@@ -41,6 +46,47 @@
   --radius-card: 16px;
   --radius-container: 24px;
   --radius-pill: 9999px;
+}
+
+/* Core Palette Tokens — Black / Dark Obsidian Neumorphic */
+html.dark,
+html[data-theme="dark"],
+:root[data-theme="dark"],
+.dark {
+  --color-bg: #0A0D14;
+  --color-surface: #111726;
+  --color-surface-elevated: #161F33;
+  --color-surface-inset: #0D121D;
+
+  --color-primary: #3B82F6;
+  --color-primary-hover: #2563EB;
+
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+
+  --color-success: #22C55E;
+  --color-warning: #FBBF24;
+  --color-error: #EF4444;
+  --color-white: #FFFFFF;
+
+  --color-border: #1E293B;
+  --color-border-subtle: #192233;
+  --color-focus: #3B82F6;
+  --color-disabled: #475569;
+  --color-disabled-bg: #131A29;
+
+  /* Neumorphic Shadows — Black Theme: Deep obsidian base with soft edge luminosity */
+  --shadow-raised: 8px 8px 20px #04060A, -8px -8px 20px rgba(255, 255, 255, 0.035);
+  --shadow-raised-sm: 4px 4px 10px #04060A, -4px -4px 10px rgba(255, 255, 255, 0.035);
+  --shadow-raised-lg: 14px 14px 30px #020407, -14px -14px 30px rgba(255, 255, 255, 0.045);
+  --shadow-inset: inset 4px 4px 8px #04060A, inset -4px -4px 8px rgba(255, 255, 255, 0.025);
+  --shadow-inset-sm: inset 2px 2px 5px #04060A, inset -2px -2px 5px rgba(255, 255, 255, 0.025);
+  --shadow-primary-glow: 0 4px 18px rgba(59, 130, 246, 0.4);
+  --shadow-primary-active: inset 2px 2px 5px rgba(0, 0, 0, 0.6);
+
+  --divider-groove: linear-gradient(to bottom, #1E293B 50%, rgba(255, 255, 255, 0.06) 50%);
+  --divider-groove-v: linear-gradient(to right, #1E293B 50%, rgba(255, 255, 255, 0.06) 50%);
 }
 
 @theme {
@@ -65,47 +111,258 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Neumorphic Utility Classes */
 .shadow-raised {
-  box-shadow: 8px 8px 16px #c5cad1, -8px -8px 16px #ffffff;
+  box-shadow: var(--shadow-raised);
 }
 
 .shadow-raised-sm {
-  box-shadow: 4px 4px 8px #c5cad1, -4px -4px 8px #ffffff;
+  box-shadow: var(--shadow-raised-sm);
 }
 
 .shadow-raised-lg {
-  box-shadow: 12px 12px 24px #b8bec7, -12px -12px 24px #ffffff;
+  box-shadow: var(--shadow-raised-lg);
 }
 
 .shadow-inset {
-  box-shadow: inset 5px 5px 10px #c5cad1, inset -5px -5px 10px #ffffff;
+  box-shadow: var(--shadow-inset);
 }
 
 .shadow-inset-sm {
-  box-shadow: inset 2px 2px 4px #c5cad1, inset -2px -2px 4px #ffffff;
+  box-shadow: var(--shadow-inset-sm);
 }
 
 .shadow-primary-glow {
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  box-shadow: var(--shadow-primary-glow);
 }
 
 .shadow-primary-active {
-  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-primary-active);
 }
 
 /* Dual-line Neumorphic Grooved Dividers */
 .divider-groove {
   border: none;
   height: 2px;
-  background: linear-gradient(to bottom, #c5cad1 50%, #ffffff 50%);
+  background: var(--divider-groove);
 }
 
 .divider-groove-v {
   border: none;
   width: 2px;
-  background: linear-gradient(to right, #c5cad1 50%, #ffffff 50%);
+  background: var(--divider-groove-v);
 }
 
+/* ============================================================================
+   BLACK / DARK THEME GLOBAL COMPONENT MAPPINGS
+   Ensures 100% full-frontend visual transition without breaking tests or markup
+   ============================================================================ */
+
+html.dark,
+html[data-theme="dark"],
+body.dark,
+body[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* Full-viewport canvas backgrounds */
+html.dark body,
+html[data-theme="dark"] body,
+html.dark .min-h-screen,
+html[data-theme="dark"] .min-h-screen,
+html.dark .min-h-full,
+html[data-theme="dark"] .min-h-full {
+  background-color: var(--color-bg) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* Elevated neumorphic surfaces (Cards, Sidebar, Header, Modals, Toolbars) */
+html.dark .bg-\[\#E8EDF4\],
+html[data-theme="dark"] .bg-\[\#E8EDF4\] {
+  background-color: var(--color-surface) !important;
+}
+
+/* Semi-transparent surface headers & modals */
+html.dark .bg-\[\#E8EDF4\]\/90,
+html[data-theme="dark"] .bg-\[\#E8EDF4\]\/90 {
+  background-color: rgba(17, 23, 38, 0.92) !important;
+}
+
+html.dark .bg-\[\#E8EDF4\]\/60,
+html[data-theme="dark"] .bg-\[\#E8EDF4\]\/60 {
+  background-color: rgba(17, 23, 38, 0.65) !important;
+}
+
+html.dark .bg-\[\#E8EDF4\]\/40,
+html[data-theme="dark"] .bg-\[\#E8EDF4\]\/40 {
+  background-color: rgba(17, 23, 38, 0.4) !important;
+}
+
+/* Inset Wells & Pressed Elements (Inputs, Skeletons, Wells) */
+html.dark .shadow-inset,
+html[data-theme="dark"] .shadow-inset,
+html.dark .shadow-inset-sm,
+html[data-theme="dark"] .shadow-inset-sm {
+  background-color: var(--color-surface-inset) !important;
+}
+
+/* Primary text */
+html.dark .text-\[\#172033\],
+html[data-theme="dark"] .text-\[\#172033\] {
+  color: var(--color-text-primary) !important;
+}
+
+/* Secondary text */
+html.dark .text-\[\#64748B\],
+html[data-theme="dark"] .text-\[\#64748B\] {
+  color: var(--color-text-secondary) !important;
+}
+
+/* Muted text & Placeholders */
+html.dark .text-\[\#94A3B8\],
+html[data-theme="dark"] .text-\[\#94A3B8\] {
+  color: var(--color-text-muted) !important;
+}
+
+html.dark .placeholder-\[\#94A3B8\]::placeholder,
+html[data-theme="dark"] .placeholder-\[\#94A3B8\]::placeholder {
+  color: var(--color-text-muted) !important;
+}
+
+/* Borders */
+html.dark .border-\[\#D1D8E2\],
+html[data-theme="dark"] .border-\[\#D1D8E2\],
+html.dark .border-\[\#CBD5E1\],
+html[data-theme="dark"] .border-\[\#CBD5E1\],
+html.dark .border-\[\#D1D8E2\]\/60,
+html[data-theme="dark"] .border-\[\#D1D8E2\]\/60,
+html.dark .border-\[\#CBD5E1\]\/60,
+html[data-theme="dark"] .border-\[\#CBD5E1\]\/60,
+html.dark .border-\[\#CBD5E1\]\/50,
+html[data-theme="dark"] .border-\[\#CBD5E1\]\/50 {
+  border-color: var(--color-border) !important;
+}
+
+html.dark .border-white\/60,
+html[data-theme="dark"] .border-white\/60,
+html.dark .border-white\/70,
+html[data-theme="dark"] .border-white\/70,
+html.dark .border-white\/80,
+html[data-theme="dark"] .border-white\/80 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Table dividers & list lines */
+html.dark .divide-\[\#CBD5E1\]\/40,
+html[data-theme="dark"] .divide-\[\#CBD5E1\]\/40 {
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+html.dark .hover\:bg-\[\#CBD5E1\]\/20:hover,
+html[data-theme="dark"] .hover\:bg-\[\#CBD5E1\]\/20:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Disabled components & Skeletons */
+html.dark .bg-\[\#DCE3EC\],
+html[data-theme="dark"] .bg-\[\#DCE3EC\] {
+  background-color: #141c2e !important;
+}
+
+/* Badges in Dark Mode */
+html.dark .bg-\[\#DCFCE7\],
+html[data-theme="dark"] .bg-\[\#DCFCE7\] {
+  background-color: rgba(34, 197, 94, 0.16) !important;
+}
+html.dark .text-\[\#15803D\],
+html[data-theme="dark"] .text-\[\#15803D\] {
+  color: #4ade80 !important;
+}
+html.dark .border-\[\#86EFAC\],
+html[data-theme="dark"] .border-\[\#86EFAC\] {
+  border-color: rgba(74, 222, 128, 0.3) !important;
+}
+
+html.dark .bg-\[\#FEF3C7\],
+html[data-theme="dark"] .bg-\[\#FEF3C7\] {
+  background-color: rgba(245, 158, 11, 0.16) !important;
+}
+html.dark .text-\[\#B45309\],
+html[data-theme="dark"] .text-\[\#B45309\] {
+  color: #fbbf24 !important;
+}
+html.dark .border-\[\#FDE68A\],
+html[data-theme="dark"] .border-\[\#FDE68A\] {
+  border-color: rgba(251, 191, 36, 0.3) !important;
+}
+
+html.dark .bg-\[\#FEE2E2\],
+html[data-theme="dark"] .bg-\[\#FEE2E2\] {
+  background-color: rgba(239, 68, 68, 0.16) !important;
+}
+html.dark .text-\[\#B91C1C\],
+html[data-theme="dark"] .text-\[\#B91C1C\],
+html.dark .text-\[\#991B1B\],
+html[data-theme="dark"] .text-\[\#991B1B\] {
+  color: #f87171 !important;
+}
+html.dark .border-\[\#FCA5A5\],
+html[data-theme="dark"] .border-\[\#FCA5A5\] {
+  border-color: rgba(248, 113, 113, 0.3) !important;
+}
+
+html.dark .bg-\[\#DBEAFE\],
+html[data-theme="dark"] .bg-\[\#DBEAFE\] {
+  background-color: rgba(59, 130, 246, 0.16) !important;
+}
+html.dark .text-\[\#1D4ED8\],
+html[data-theme="dark"] .text-\[\#1D4ED8\] {
+  color: #93c5fd !important;
+}
+html.dark .border-\[\#93C5FD\],
+html[data-theme="dark"] .border-\[\#93C5FD\] {
+  border-color: rgba(147, 197, 253, 0.3) !important;
+}
+
+html.dark .bg-\[\#E2E8F0\],
+html[data-theme="dark"] .bg-\[\#E2E8F0\] {
+  background-color: rgba(148, 163, 184, 0.16) !important;
+}
+html.dark .text-\[\#475569\],
+html[data-theme="dark"] .text-\[\#475569\] {
+  color: #cbd5e1 !important;
+}
+
+/* Alert Banners & Soft Pills */
+html.dark .bg-red-50,
+html[data-theme="dark"] .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #fca5a5 !important;
+}
+
+html.dark .bg-blue-100,
+html[data-theme="dark"] .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+}
+html.dark .bg-emerald-100,
+html[data-theme="dark"] .bg-emerald-100 {
+  background-color: rgba(34, 197, 94, 0.2) !important;
+}
+html.dark .bg-amber-100,
+html[data-theme="dark"] .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+}
+html.dark .bg-red-100,
+html[data-theme="dark"] .bg-red-100 {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Dialog & Mobile Overlays */
+html.dark .bg-\[\#172033\]\/40,
+html[data-theme="dark"] .bg-\[\#172033\]\/40 {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}

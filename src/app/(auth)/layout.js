@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { PayPilotLogo, ShieldCheck } from "@/components/icons";
+import { ThemeToggle } from "@/components/ui";
 
 export const metadata = {
   title: "PayPilot AI — Authentication",
@@ -26,6 +27,8 @@ export default function AuthLayout({ children }) {
             </span>
           </div>
         </Link>
+
+        <ThemeToggle size="sm" />
       </header>
 
       {/* Main Auth Content Container */}
