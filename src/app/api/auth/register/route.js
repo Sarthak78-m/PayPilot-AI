@@ -1,5 +1,6 @@
 import { validateRegistrationInput } from "@/lib/auth/validation";
-import { createSupabaseAuthClient, createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAuthClient } from "@/lib/supabase/server";
+import { getSiteBaseUrl } from "@/lib/auth/url";
 
 export async function POST(request) {
   let input;
@@ -23,55 +24,21 @@ export async function POST(request) {
   }
 
   try {
-    // If Supabase service/secret key is available, use admin.createUser to register the user
-    // with email confirmed, completely bypassing Supabase free-tier SMTP email rate limits.
-    if (process.env.SUPABASE_SECRET_KEY) {
-      const serverClient = createSupabaseServerClient();
-      const { error } = await serverClient.auth.admin.createUser({
-        email: validation.data.email,
-        password: validation.data.password,
-        email_confirm: true,
-        user_metadata: { name: validation.data.name },
-      });
-
-      if (error) {
-        const isDuplicate =
-          error.code === "email_exists" ||
-          error.status === 422 ||
-          (error.message && error.message.toLowerCase().includes("already"));
-
-        return Response.json(
-          {
-            status: "error",
-            message: isDuplicate
-              ? "Unable to create an account with these details."
-              : error.message || "Unable to create an account.",
-          },
-          { status: isDuplicate ? 409 : 400 },
-        );
-      }
-
-      return Response.json(
-        {
-          status: "ok",
-          message: "Account created successfully.",
-          requiresEmailConfirmation: false,
-        },
-        { status: 201 },
-      );
-    }
-
     const supabase = await createSupabaseAuthClient();
+    const baseUrl = getSiteBaseUrl(request);
+    const emailRedirectTo = `${baseUrl}/auth/callback`;
+
     const { data, error } = await supabase.auth.signUp({
       email: validation.data.email,
       password: validation.data.password,
       options: {
         data: { name: validation.data.name },
+        emailRedirectTo,
       },
     });
 
     if (error) {
-      // Handle Supabase rate limiting
+      // Handle Supabase email rate limiting
       if (error.status === 429 || error.code === "over_email_send_rate_limit") {
         return Response.json(
           { status: "error", message: "Email rate limit exceeded. Please try again later." },
@@ -84,7 +51,12 @@ export async function POST(request) {
         error.code === "user_already_exists" ||
         (error.message && error.message.toLowerCase().includes("already registered"));
       return Response.json(
-        { status: "error", message: isDuplicate ? "Unable to create an account with these details." : "Unable to create an account." },
+        {
+          status: "error",
+          message: isDuplicate
+            ? "Unable to create an account with these details."
+            : error.message || "Unable to create an account.",
+        },
         { status: isDuplicate ? 409 : 400 },
       );
     }
@@ -101,8 +73,11 @@ export async function POST(request) {
     return Response.json(
       {
         status: "ok",
-        message: data.session ? "Account created successfully." : "Account created. Check your email to confirm your account.",
+        message: data.session
+          ? "Account created successfully."
+          : "Account created. Check your email to confirm your account.",
         requiresEmailConfirmation: !data.session,
+        email: validation.data.email,
       },
       { status: 201 },
     );

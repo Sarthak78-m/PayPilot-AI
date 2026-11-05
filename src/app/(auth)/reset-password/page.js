@@ -45,6 +45,7 @@ function ResetPasswordContent() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
+  const [isExpired, setIsExpired] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const passwordCriteria = getPasswordCriteria(formData.password);
@@ -62,6 +63,7 @@ function ResetPasswordContent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError("");
+    setIsExpired(false);
 
     const validation = validateResetPasswordForm(formData);
     if (!validation.isValid) {
@@ -77,10 +79,15 @@ function ResetPasswordContent() {
         token,
       });
 
-      if (res.isMissingEndpoint) {
-        setServerError("Password reset service is temporarily unavailable. Please try again later or contact support.");
-      } else if (!res.success) {
-        setServerError(res.message || "Failed to reset password.");
+      if (!res.success) {
+        if (res.status === 401 || (res.message && res.message.toLowerCase().includes("expired"))) {
+          setIsExpired(true);
+          setServerError(
+            "Your password reset link is invalid, expired, or has already been used. Please request a new recovery link.",
+          );
+        } else {
+          setServerError(res.message || "Failed to update password. Please try again.");
+        }
       } else {
         setIsSuccess(true);
       }
@@ -109,8 +116,6 @@ function ResetPasswordContent() {
             Your account password has been updated successfully. You can now use your new password to sign in to PayPilot AI.
           </CardDescription>
         </div>
-
-        
 
         <Divider />
 
@@ -151,9 +156,19 @@ function ResetPasswordContent() {
           className="mb-5 p-3.5 rounded-xl bg-red-50 border border-[#DC2626]/30 text-[#DC2626] text-xs leading-relaxed flex items-start gap-2.5 shadow-inset-sm"
         >
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold">Reset Error</p>
+          <div className="space-y-1.5 flex-1">
+            <p className="font-semibold">{isExpired ? "Session Expired" : "Reset Error"}</p>
             <p>{serverError}</p>
+            {isExpired && (
+              <div className="pt-1">
+                <Link
+                  href="/forgot-password"
+                  className="font-bold underline text-[#DC2626] hover:text-[#B91C1C]"
+                >
+                  Request a new password reset link →
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -287,6 +302,7 @@ function ResetPasswordContent() {
           variant="primary"
           size="lg"
           loading={loading}
+          disabled={loading}
           className="w-full mt-2"
           icon={ArrowRight}
           iconPosition="right"
@@ -325,4 +341,3 @@ export default function ResetPasswordPage() {
     </Suspense>
   );
 }
-

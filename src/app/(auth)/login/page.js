@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent,
   CardFooter,
   Button,
   Input,
@@ -23,12 +22,17 @@ import {
   AlertCircle,
   CheckCircle2,
   ArrowRight,
+  Google,
 } from "@/components/icons";
 import { validateLoginForm } from "@/lib/validation/auth";
-import { loginUser } from "@/lib/auth/auth-client";
+import { loginUser, signInWithGoogle } from "@/lib/auth/auth-client";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const errorParam = searchParams.get("error");
+  const confirmedParam = searchParams.get("confirmed");
 
   const [formData, setFormData] = useState({
     email: "",
@@ -38,10 +42,19 @@ export default function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const [serverSuccess, setServerSuccess] = useState("");
   const [unconfirmedEmail, setUnconfirmedEmail] = useState(false);
+
+  // Derive active message alerts directly from state or URL query parameters
+  const displayedError = serverError || (errorParam ? decodeURIComponent(errorParam) : "");
+  const displayedSuccess =
+    serverSuccess ||
+    (confirmedParam === "true"
+      ? "Your email has been verified successfully! You can now sign in."
+      : "");
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -53,6 +66,24 @@ export default function LoginPage() {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
     if (serverError) setServerError("");
+  };
+
+  const handleGoogleSignIn = async () => {
+    setServerError("");
+    setServerSuccess("");
+    setOauthLoading(true);
+
+    try {
+      const nextDest = searchParams.get("next") || "/dashboard";
+      const res = await signInWithGoogle({ nextUrl: nextDest });
+      if (!res.success) {
+        setServerError(res.message || "Failed to initiate Google Sign-In.");
+        setOauthLoading(false);
+      }
+    } catch {
+      setServerError("An unexpected error occurred with Google Sign-In. Please try again.");
+      setOauthLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -81,7 +112,7 @@ export default function LoginPage() {
         if (res.requiresConfirmation) {
           setUnconfirmedEmail(true);
           setServerError(
-            "Email confirmation is required before signing in. Please check your inbox for the confirmation link."
+            "Email confirmation is required before signing in. Please check your inbox for the confirmation link.",
           );
         } else {
           setServerError(res.message || "Invalid email or password.");
@@ -91,10 +122,10 @@ export default function LoginPage() {
         }
       } else {
         setServerSuccess("Welcome back! Redirecting to your dashboard...");
-        // Redirect after brief feedback
+        const nextDest = searchParams.get("next") || "/dashboard";
         setTimeout(() => {
-          router.push("/dashboard");
-        }, 800);
+          router.push(nextDest);
+        }, 600);
       }
     } catch {
       setServerError("An unexpected error occurred. Please try again.");
@@ -119,7 +150,7 @@ export default function LoginPage() {
       <Divider className="my-4" />
 
       {/* Server Alerts */}
-      {serverError && (
+      {displayedError && (
         <div
           role="alert"
           className="mb-5 p-3.5 rounded-xl bg-red-50 border border-[#DC2626]/30 text-[#DC2626] text-xs leading-relaxed flex items-start gap-2.5 shadow-inset-sm"
@@ -127,20 +158,44 @@ export default function LoginPage() {
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-semibold">{unconfirmedEmail ? "Verification Pending" : "Authentication Failed"}</p>
-            <p>{serverError}</p>
+            <p>{displayedError}</p>
           </div>
         </div>
       )}
 
-      {serverSuccess && (
+      {displayedSuccess && (
         <div
           role="status"
           className="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-[#16A34A]/30 text-[#16A34A] text-xs leading-relaxed flex items-center gap-2.5 shadow-inset-sm"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <p className="font-semibold">{serverSuccess}</p>
+          <p className="font-semibold">{displayedSuccess}</p>
         </div>
       )}
+
+      {/* Google OAuth Button */}
+      <div className="space-y-4">
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          loading={oauthLoading}
+          disabled={loading || oauthLoading}
+          onClick={handleGoogleSignIn}
+          className="w-full flex items-center justify-center gap-2.5 font-semibold text-[#172033]"
+          icon={Google}
+          iconPosition="left"
+        >
+          Sign in with Google
+        </Button>
+
+        <div className="relative my-4 flex items-center justify-center">
+          <div className="w-full border-t border-[#CBD5E1]" />
+          <span className="absolute bg-[#E8EDF4] px-3 text-xs uppercase tracking-wider text-[#64748B]">
+            or sign in with email
+          </span>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {/* Email Field */}
@@ -156,7 +211,7 @@ export default function LoginPage() {
           onChange={handleChange}
           error={errors.email}
           leadingIcon={Mail}
-          disabled={loading}
+          disabled={loading || oauthLoading}
         />
 
         {/* Password Field */}
@@ -172,7 +227,7 @@ export default function LoginPage() {
           onChange={handleChange}
           error={errors.password}
           leadingIcon={Lock}
-          disabled={loading}
+          disabled={loading || oauthLoading}
           trailingAction={
             <button
               type="button"
@@ -196,7 +251,7 @@ export default function LoginPage() {
             onChange={(checked) =>
               setFormData((prev) => ({ ...prev, rememberMe: checked }))
             }
-            disabled={loading}
+            disabled={loading || oauthLoading}
           />
 
           <Link
@@ -213,6 +268,7 @@ export default function LoginPage() {
           variant="primary"
           size="lg"
           loading={loading}
+          disabled={loading || oauthLoading}
           className="w-full mt-2"
           icon={ArrowRight}
           iconPosition="right"
@@ -234,3 +290,20 @@ export default function LoginPage() {
   );
 }
 
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <Card variant="raised-lg" className="w-full p-8 text-center text-[#64748B]">
+          <div className="animate-pulse space-y-4">
+            <div className="h-6 w-1/2 bg-[#CBD5E1] rounded mx-auto" />
+            <div className="h-4 w-3/4 bg-[#CBD5E1] rounded mx-auto" />
+            <div className="h-10 bg-[#CBD5E1] rounded" />
+          </div>
+        </Card>
+      }
+    >
+      <LoginContent />
+    </Suspense>
+  );
+}

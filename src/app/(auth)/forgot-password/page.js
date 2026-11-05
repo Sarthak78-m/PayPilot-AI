@@ -17,7 +17,6 @@ import {
 import {
   Mail,
   AlertCircle,
-  CheckCircle2,
   ArrowLeft,
   KeyRound,
   ArrowRight,
@@ -47,10 +46,8 @@ export default function ForgotPasswordPage() {
     try {
       const res = await requestPasswordReset({ email });
 
-      if (res.isMissingEndpoint) {
-        setError("Password reset service is temporarily unavailable. Please try again later or contact support.");
-      } else if (!res.success) {
-        setError(res.message || "Failed to send reset link.");
+      if (!res.success) {
+        setError(res.message || "Unable to process password reset request. Please try again.");
       } else {
         setIsSubmitted(true);
       }
@@ -76,12 +73,10 @@ export default function ForgotPasswordPage() {
             Reset Link Dispatched
           </CardTitle>
           <CardDescription className="text-sm max-w-sm mx-auto leading-relaxed">
-            If an account is registered with{" "}
-            <span className="font-semibold text-[#172033]">{email}</span>, you will receive password reset instructions within a few minutes.
+            If an account exists for{" "}
+            <span className="font-semibold text-[#172033]">{email}</span>, a password reset link has been sent. Please check your inbox and your spam or junk folder.
           </CardDescription>
         </div>
-
-        
 
         <Divider />
 
@@ -99,7 +94,10 @@ export default function ForgotPasswordPage() {
 
           <button
             type="button"
-            onClick={() => setIsSubmitted(false)}
+            onClick={() => {
+              setIsSubmitted(false);
+              setEmail("");
+            }}
             className="text-xs font-semibold text-[#64748B] hover:text-[#2563EB] transition-colors"
           >
             Didn&apos;t receive anything? Try another email
@@ -182,4 +180,3 @@ export default function ForgotPasswordPage() {
     </Card>
   );
 }
-

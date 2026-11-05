@@ -11,12 +11,17 @@ export async function GET() {
       );
     }
 
+    const name =
+      user.user_metadata?.name ||
+      user.user_metadata?.full_name ||
+      (user.email ? user.email.split("@")[0] : null);
+
     return Response.json({
       status: "ok",
       user: {
         id: user.id,
         email: user.email,
-        name: user.user_metadata?.name ?? null,
+        name,
       },
     });
   } catch {

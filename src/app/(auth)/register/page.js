@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -24,13 +24,14 @@ import {
   AlertCircle,
   CheckCircle2,
   ArrowRight,
-  ShieldCheck,
+  RefreshCw,
+  Google,
 } from "@/components/icons";
 import {
   validateRegisterForm,
   getPasswordCriteria,
 } from "@/lib/validation/auth";
-import { registerUser } from "@/lib/auth/auth-client";
+import { registerUser, resendVerificationEmail, signInWithGoogle } from "@/lib/auth/auth-client";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -46,11 +47,29 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [requiresConfirmation, setRequiresConfirmation] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+
+  // Resend verification cooldown state
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendFeedback, setResendFeedback] = useState(null);
+
+  useEffect(() => {
+    let timer;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => {
+        setResendCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [resendCooldown]);
 
   const passwordCriteria = getPasswordCriteria(formData.password);
 
@@ -64,6 +83,52 @@ export default function RegisterPage() {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
     if (serverError) setServerError("");
+  };
+
+  const handleGoogleSignUp = async () => {
+    setServerError("");
+    setOauthLoading(true);
+
+    try {
+      const res = await signInWithGoogle({ nextUrl: "/dashboard" });
+      if (!res.success) {
+        setServerError(res.message || "Failed to initiate Google Sign-Up.");
+        setOauthLoading(false);
+      }
+    } catch {
+      setServerError("An unexpected error occurred with Google Sign-Up. Please try again.");
+      setOauthLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (resendCooldown > 0 || resending || !registeredEmail) return;
+
+    setResending(true);
+    setResendFeedback(null);
+
+    try {
+      const res = await resendVerificationEmail({ email: registeredEmail });
+      if (res.success) {
+        setResendFeedback({
+          type: "success",
+          message: "A new activation link has been dispatched to your inbox.",
+        });
+        setResendCooldown(60); // 60-second cooldown
+      } else {
+        setResendFeedback({
+          type: "error",
+          message: res.message || "Failed to resend confirmation email.",
+        });
+      }
+    } catch {
+      setResendFeedback({
+        type: "error",
+        message: "Network error while resending confirmation. Please try again.",
+      });
+    } finally {
+      setResending(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -94,6 +159,9 @@ export default function RegisterPage() {
         setRegisteredEmail(formData.email);
         setIsSuccess(true);
         setRequiresConfirmation(res.requiresEmailConfirmation);
+        if (res.requiresEmailConfirmation) {
+          setResendCooldown(60); // Initial cooldown after signup dispatch
+        }
       }
     } catch {
       setServerError("An unexpected error occurred. Please try again.");
@@ -122,7 +190,7 @@ export default function RegisterPage() {
               <>
                 We have sent an activation link to{" "}
                 <span className="font-semibold text-[#172033]">{registeredEmail}</span>.
-                Please check your inbox to confirm your account.
+                Please check your inbox and click the link to confirm your account.
               </>
             ) : (
               "Your account has been created successfully. You can now log in to start issuing AI invoices."
@@ -130,9 +198,28 @@ export default function RegisterPage() {
           </CardDescription>
         </div>
 
+        {/* Resend Verification Feedback Alert */}
+        {resendFeedback && (
+          <div
+            role="alert"
+            className={`p-3 rounded-xl text-xs leading-relaxed max-w-sm mx-auto flex items-start gap-2 shadow-inset-sm ${
+              resendFeedback.type === "success"
+                ? "bg-emerald-50 border border-[#16A34A]/30 text-[#16A34A]"
+                : "bg-red-50 border border-[#DC2626]/30 text-[#DC2626]"
+            }`}
+          >
+            {resendFeedback.type === "success" ? (
+              <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            )}
+            <p className="text-left font-medium">{resendFeedback.message}</p>
+          </div>
+        )}
+
         <Divider />
 
-        <div className="pt-2">
+        <div className="space-y-3 pt-2">
           <Button
             variant="primary"
             size="lg"
@@ -143,6 +230,27 @@ export default function RegisterPage() {
           >
             Proceed to Sign In
           </Button>
+
+          {/* Resend Verification Action with Cooldown */}
+          {requiresConfirmation && (
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resending || resendCooldown > 0}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] hover:underline transition-colors disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`h-3 w-3 ${resending ? "animate-spin" : ""}`} />
+                <span>
+                  {resending
+                    ? "Dispatching new link..."
+                    : resendCooldown > 0
+                    ? `Resend confirmation link (${resendCooldown}s)`
+                    : "Didn't receive an email? Resend link"}
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       </Card>
     );
@@ -176,6 +284,30 @@ export default function RegisterPage() {
         </div>
       )}
 
+      {/* Google OAuth Sign-Up Button */}
+      <div className="space-y-4">
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          loading={oauthLoading}
+          disabled={loading || oauthLoading}
+          onClick={handleGoogleSignUp}
+          className="w-full flex items-center justify-center gap-2.5 font-semibold text-[#172033]"
+          icon={Google}
+          iconPosition="left"
+        >
+          Sign up with Google
+        </Button>
+
+        <div className="relative my-4 flex items-center justify-center">
+          <div className="w-full border-t border-[#CBD5E1]" />
+          <span className="absolute bg-[#E8EDF4] px-3 text-xs uppercase tracking-wider text-[#64748B]">
+            or register with email
+          </span>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {/* Full Name */}
         <Input
@@ -190,7 +322,7 @@ export default function RegisterPage() {
           onChange={handleChange}
           error={errors.name}
           leadingIcon={User}
-          disabled={loading}
+          disabled={loading || oauthLoading}
         />
 
         {/* Email Address */}
@@ -206,7 +338,7 @@ export default function RegisterPage() {
           onChange={handleChange}
           error={errors.email}
           leadingIcon={Mail}
-          disabled={loading}
+          disabled={loading || oauthLoading}
         />
 
         {/* Password */}
@@ -223,7 +355,7 @@ export default function RegisterPage() {
             onChange={handleChange}
             error={errors.password}
             leadingIcon={Lock}
-            disabled={loading}
+            disabled={loading || oauthLoading}
             trailingAction={
               <button
                 type="button"
@@ -318,7 +450,7 @@ export default function RegisterPage() {
           onChange={handleChange}
           error={errors.confirmPassword}
           leadingIcon={Lock}
-          disabled={loading}
+          disabled={loading || oauthLoading}
           trailingAction={
             <button
               type="button"
@@ -357,7 +489,7 @@ export default function RegisterPage() {
                 setErrors((prev) => ({ ...prev, acceptTerms: null }));
               }
             }}
-            disabled={loading}
+            disabled={loading || oauthLoading}
           />
           {errors.acceptTerms && (
             <p className="text-xs text-[#DC2626] font-medium mt-1">
@@ -372,6 +504,7 @@ export default function RegisterPage() {
           variant="primary"
           size="lg"
           loading={loading}
+          disabled={loading || oauthLoading}
           className="w-full mt-2"
           icon={ArrowRight}
           iconPosition="right"
@@ -392,4 +525,3 @@ export default function RegisterPage() {
     </Card>
   );
 }
-
