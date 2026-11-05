@@ -191,9 +191,6 @@ function AssistantChatView() {
             <h1 className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight">
               PayPilot AI Assistant
             </h1>
-            <Badge variant="primary" size="sm">
-              Conversational Copilot
-            </Badge>
           </div>
           <p className="text-xs text-[#64748B] mt-0.5">
             Real-time financial intelligence, accounts receivable insights, and collections advisory.
@@ -228,23 +225,6 @@ function AssistantChatView() {
         variant="raised"
         className="flex-1 flex flex-col min-h-0 p-0 overflow-hidden border border-[#CBD5E1]/60"
       >
-        {/* Architecture Notice Banner */}
-        <div className="px-4 py-2.5 bg-[#E8EDF4] border-b border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B] shrink-0">
-          <div className="flex items-center gap-2 truncate">
-            <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
-            <span className="truncate">
-              <strong>Backend Integration Notice:</strong> Client UI is wired to{" "}
-              <code className="text-[#172033] bg-[#CBD5E1]/50 px-1 py-0.5 rounded font-mono text-[11px]">
-                POST /api/assistant/chat
-              </code>
-              . Endpoint rollout pending.
-            </span>
-          </div>
-          <span className="text-[11px] font-mono shrink-0 hidden md:inline text-[#64748B]">
-            Zero Fabricated Data
-          </span>
-        </div>
-
         {/* Conversation Stream Container */}
         <div
           role="log"
@@ -361,7 +341,7 @@ function AssistantChatView() {
                   <span className="h-2 w-2 rounded-full bg-[#2563EB] animate-bounce" />
                 </div>
                 <span className="text-xs text-[#64748B] ml-1.5 font-medium">
-                  Connecting to Copilot service...
+                  Consulting AI Assistant...
                 </span>
               </div>
             </div>

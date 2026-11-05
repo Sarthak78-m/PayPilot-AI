@@ -236,9 +236,6 @@ export default function NewInvoicePage() {
             <h1 className="text-2xl font-extrabold text-[#172033] tracking-tight">
               Create New Invoice
             </h1>
-            <Badge variant="primary" size="sm">
-              Manual Form
-            </Badge>
           </div>
           <p className="text-xs text-[#64748B] mt-0.5">
             Set up an invoice draft with client information, billing amount, and due date.

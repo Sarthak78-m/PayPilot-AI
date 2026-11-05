@@ -26,14 +26,6 @@ export default function AuthLayout({ children }) {
             </span>
           </div>
         </Link>
-
-        <Link
-          href="/design-system"
-          className="text-xs font-semibold text-[#64748B] hover:text-[#2563EB] transition-colors py-1.5 px-3 rounded-lg shadow-raised-sm hover:shadow-raised active:shadow-inset-sm"
-          title="Inspect the Neumorphic Design System"
-        >
-          Design System
-        </Link>
       </header>
 
       {/* Main Auth Content Container */}
@@ -45,7 +37,7 @@ export default function AuthLayout({ children }) {
       <footer className="w-full max-w-md mx-auto pt-8 flex flex-col items-center gap-3 text-center text-xs text-[#64748B]">
         <div className="flex items-center gap-1.5 text-[#64748B] font-medium">
           <ShieldCheck className="h-4 w-4 text-[#16A34A]" />
-          <span>Bank-grade 256-bit SSL encryption & Supabase Auth</span>
+          <span>Encrypted Connection & Data Protection</span>
         </div>
         <div className="flex items-center gap-4 text-[11px]">
           <a href="#" className="hover:text-[#2563EB] transition-colors">
@@ -67,4 +59,3 @@ export default function AuthLayout({ children }) {
     </div>
   );
 }
-

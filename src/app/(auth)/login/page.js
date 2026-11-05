@@ -14,7 +14,6 @@ import {
   Input,
   Checkbox,
   Divider,
-  Badge,
 } from "@/components/ui";
 import {
   Mail,
@@ -82,7 +81,7 @@ export default function LoginPage() {
         if (res.requiresConfirmation) {
           setUnconfirmedEmail(true);
           setServerError(
-            "Email confirmation is required before signing in. Please check your inbox for the Supabase confirmation link."
+            "Email confirmation is required before signing in. Please check your inbox for the confirmation link."
           );
         } else {
           setServerError(res.message || "Invalid email or password.");
@@ -111,9 +110,6 @@ export default function LoginPage() {
           <CardTitle className="text-2xl font-bold text-[#172033]">
             Welcome Back
           </CardTitle>
-          <Badge variant="primary" size="sm">
-            Supabase Auth
-          </Badge>
         </div>
         <CardDescription className="text-sm mt-1">
           Sign in to manage your invoices, track payments, and access the AI financial pilot.

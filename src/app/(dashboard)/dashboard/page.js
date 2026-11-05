@@ -142,9 +142,6 @@ export default function DashboardPage() {
       {/* Live Data Control & Indicator Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
         <div className="flex items-center gap-2.5">
-          <Badge variant="primary" size="sm">
-            Live Database
-          </Badge>
           <span className="text-xs text-[#64748B]">
             Primary Currency: <strong className="text-[#172033]">{metrics?.primaryCurrency || "USD"}</strong>
           </span>

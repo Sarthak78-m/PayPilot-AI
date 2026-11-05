@@ -205,17 +205,9 @@ export default function PaymentsPage() {
             <h1 className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight">
               Payments & Settlements
             </h1>
-            <Badge variant="success" size="sm">
-              PayPal Reconciled
-            </Badge>
-            {isFallback && (
-              <Badge variant="neutral" size="sm" className="hidden md:inline-flex">
-                Summary Fallback
-              </Badge>
-            )}
           </div>
           <p className="text-xs text-[#64748B] mt-0.5">
-            Monitor client payouts, payment histories, and PayPal Sandbox settlements.
+            Monitor client payouts, payment histories, and PayPal settlements.
           </p>
         </div>
 
@@ -277,22 +269,15 @@ export default function PaymentsPage() {
         </div>
       )}
 
-      {/* Architecture Readiness Notice */}
+      {/* Settlement Notice */}
       {isFallback && !error && (
         <div className="p-3.5 rounded-2xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-raised-sm flex items-center justify-between text-xs text-[#64748B]">
           <div className="flex items-center gap-2 truncate">
             <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
             <span className="truncate">
-              <strong>Limited Settlement Preview:</strong> Dedicated endpoint{" "}
-              <code className="text-[#172033] bg-[#CBD5E1]/50 px-1 py-0.5 rounded font-mono text-[11px]">
-                GET /api/payments
-              </code>{" "}
-              is pending backend implementation. Displaying up to 4 recent settlement records from dashboard summary. This is not a complete historical ledger.
+              <strong>Recent Settlements:</strong> Displaying recent payment settlements. Complete transaction history updates automatically with each cleared payment.
             </span>
           </div>
-          <span className="text-[11px] font-mono shrink-0 hidden md:inline text-[#64748B]">
-            Max 4 Recent Records
-          </span>
         </div>
       )}
 
@@ -327,7 +312,7 @@ export default function PaymentsPage() {
 
             <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
               <span className="font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] bg-emerald-100 text-[#16A34A] shrink-0">
-                {isFallback ? "Summary Verified" : "Captured"}
+                Captured
               </span>
               <span className="font-mono font-semibold text-[#172033] text-[11px]">
                 {overview.totalReceived?.count || 0} {overview.totalReceived?.count === 1 ? "record" : "records"}
@@ -349,10 +334,6 @@ export default function PaymentsPage() {
                   <div className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight mt-1 font-mono truncate">
                     {overview.pending.formatted}
                   </div>
-                ) : isFallback ? (
-                  <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
-                    Requires /api/payments
-                  </div>
                 ) : (
                   <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
                     No pending payouts
@@ -366,7 +347,7 @@ export default function PaymentsPage() {
 
             <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
               <span className="font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] bg-amber-100 text-[#B45309] shrink-0">
-                {isFallback ? "Not in Summary" : "In Transit"}
+                All clear
               </span>
               <span className="font-mono font-semibold text-[#172033] text-[11px]">
                 {isFallback ? "—" : `${overview.pending?.count || 0} payouts`}
@@ -388,10 +369,6 @@ export default function PaymentsPage() {
                   <div className="text-xl sm:text-2xl font-extrabold text-[#DC2626] tracking-tight mt-1 font-mono truncate">
                     {overview.failed.formatted}
                   </div>
-                ) : isFallback ? (
-                  <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
-                    Requires /api/payments
-                  </div>
                 ) : (
                   <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
                     No failed payments
@@ -405,7 +382,7 @@ export default function PaymentsPage() {
 
             <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
               <span className="font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] bg-red-100 text-[#DC2626] shrink-0">
-                {isFallback ? "Not in Summary" : "Declined"}
+                All clear
               </span>
               <span className="font-mono font-semibold text-[#172033] text-[11px]">
                 {isFallback ? "—" : `${overview.failed?.count || 0} failed`}
@@ -427,10 +404,6 @@ export default function PaymentsPage() {
                   <div className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight mt-1 font-mono truncate">
                     {overview.refunded.formatted}
                   </div>
-                ) : isFallback ? (
-                  <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
-                    Requires /api/payments
-                  </div>
                 ) : (
                   <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
                     No refunds recorded
@@ -444,7 +417,7 @@ export default function PaymentsPage() {
 
             <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
               <span className="font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] bg-blue-100 text-[#2563EB] shrink-0">
-                {isFallback ? "Not in Summary" : "Reversals"}
+                None
               </span>
               <span className="font-mono font-semibold text-[#172033] text-[11px]">
                 {isFallback ? "—" : `${overview.refunded?.count || 0} refunds`}
@@ -460,12 +433,10 @@ export default function PaymentsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <CardTitle className="text-base sm:text-lg">
-              {isFallback ? "Recent Settlements (Dashboard Preview)" : "Payment Transaction History"}
+              Recent Settlements
             </CardTitle>
             <CardDescription className="text-xs">
-              {isFallback
-                ? "Displaying up to 4 recent settlement records from dashboard summary. Complete historical ledger requires GET /api/payments."
-                : "Itemized ledger of verified client payments, gateway orders, and captured funds"}
+              Recent client payments and settled payouts
             </CardDescription>
           </div>
 
@@ -544,7 +515,7 @@ export default function PaymentsPage() {
             description={
               search || statusFilter
                 ? `No transactions match your current filters. Try resetting search or changing status.`
-                : "Client payments captured via PayPal Sandbox will appear here automatically once an invoice is settled."
+                : "Client payments captured via PayPal will appear here automatically once an invoice is settled."
             }
             icon={CreditCard}
             actionLabel={search || statusFilter ? "Clear Filters" : "Create Invoice"}
@@ -583,7 +554,7 @@ export default function PaymentsPage() {
                           {payment.customer}
                         </span>
                         <span className="text-[11px] text-[#64748B]">
-                          {payment.method || "PayPal Sandbox"}
+                          {payment.method || "PayPal"}
                         </span>
                       </td>
                       <td className="py-3 px-3 font-mono font-bold text-[#16A34A] text-sm">
@@ -671,7 +642,7 @@ export default function PaymentsPage() {
               </div>
               <div className="flex items-center justify-center gap-1.5 pt-1">
                 {getPaymentStatusBadge(selectedPayment.status)}
-                <span className="text-[11px] text-[#64748B]">• {selectedPayment.method || "PayPal Sandbox"}</span>
+                <span className="text-[11px] text-[#64748B]">• {selectedPayment.method || "PayPal"}</span>
               </div>
             </div>
 

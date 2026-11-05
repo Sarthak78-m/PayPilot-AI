@@ -26,7 +26,7 @@ export function InvoiceStatusDistribution({ distribution }) {
       <div>
         <CardTitle className="text-lg">Status Distribution</CardTitle>
         <CardDescription className="text-xs">
-          Portfolio breakdown across {totalCount} total client invoices (all statuses sum to ~100%)
+          Portfolio breakdown across {totalCount} total client invoices
         </CardDescription>
       </div>
 

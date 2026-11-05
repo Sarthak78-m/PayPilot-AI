@@ -306,14 +306,90 @@ BEGIN
     ASSERT (v_err_time->>'success')::boolean = false, 'FAIL 4.4c: Future captured_at allowed';
     ASSERT (v_err_time->>'code') = 'INVALID_CAPTURED_AT', 'FAIL 4.4c: Code was ' || (v_err_time->>'code');
 
-    -- Test 4.5: Reject direct settlement from non-capturing/non-pending (e.g. ORDER_CREATED)
+    -- Test 4.5a: Reject direct settlement from CREATED
+    DECLARE
+        v_disallowed_id uuid;
+        v_disallowed_res jsonb;
+    BEGIN
+        INSERT INTO public.payments (invoice_id, amount, currency, status, provider, paypal_order_id)
+        VALUES ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 450.00, 'EUR', 'CREATED', 'paypal', 'ORDER-BOB-CREATED')
+        RETURNING id INTO v_disallowed_id;
+
+        v_disallowed_res := public.settle_invoice_payment(v_disallowed_id, 'ORDER-BOB-CREATED', 'CAPTURE-BOB-1', 450.00, 'EUR', v_verified_time, 'paypal');
+        ASSERT (v_disallowed_res->>'success')::boolean = false, 'FAIL 4.5a: Succeeded settlement from CREATED';
+        ASSERT (v_disallowed_res->>'code') = 'INVALID_PAYMENT_STATUS', 'FAIL 4.5a: Code was ' || (v_disallowed_res->>'code');
+        DELETE FROM public.payments WHERE id = v_disallowed_id;
+    END;
+
+    -- Test 4.5b: Reject direct settlement from ORDER_CREATED
     INSERT INTO public.payments (invoice_id, amount, currency, status, provider, paypal_order_id)
     VALUES ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 450.00, 'EUR', 'ORDER_CREATED', 'paypal', 'ORDER-BOB-EARLY')
     RETURNING id INTO v_non_cap_pay_id;
 
     v_err_non_capturing := public.settle_invoice_payment(v_non_cap_pay_id, 'ORDER-BOB-EARLY', 'CAPTURE-BOB-EARLY', 450.00, 'EUR', v_verified_time, 'paypal');
-    ASSERT (v_err_non_capturing->>'success')::boolean = false, 'FAIL 4.5: Succeeded settlement from ORDER_CREATED';
-    ASSERT (v_err_non_capturing->>'code') = 'INVALID_PAYMENT_STATUS', 'FAIL 4.5: Code was ' || (v_err_non_capturing->>'code');
+    ASSERT (v_err_non_capturing->>'success')::boolean = false, 'FAIL 4.5b: Succeeded settlement from ORDER_CREATED';
+    ASSERT (v_err_non_capturing->>'code') = 'INVALID_PAYMENT_STATUS', 'FAIL 4.5b: Code was ' || (v_err_non_capturing->>'code');
+    DELETE FROM public.payments WHERE id = v_non_cap_pay_id;
+
+    -- Test 4.5c: Reject direct settlement from APPROVED
+    DECLARE
+        v_disallowed_id uuid;
+        v_disallowed_res jsonb;
+    BEGIN
+        INSERT INTO public.payments (invoice_id, amount, currency, status, provider, paypal_order_id)
+        VALUES ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 450.00, 'EUR', 'APPROVED', 'paypal', 'ORDER-BOB-APP')
+        RETURNING id INTO v_disallowed_id;
+
+        v_disallowed_res := public.settle_invoice_payment(v_disallowed_id, 'ORDER-BOB-APP', 'CAPTURE-BOB-APP', 450.00, 'EUR', v_verified_time, 'paypal');
+        ASSERT (v_disallowed_res->>'success')::boolean = false, 'FAIL 4.5c: Succeeded settlement from APPROVED';
+        ASSERT (v_disallowed_res->>'code') = 'INVALID_PAYMENT_STATUS', 'FAIL 4.5c: Code was ' || (v_disallowed_res->>'code');
+        DELETE FROM public.payments WHERE id = v_disallowed_id;
+    END;
+
+    -- Test 4.5d: Reject direct settlement from FAILED
+    DECLARE
+        v_disallowed_id uuid;
+        v_disallowed_res jsonb;
+    BEGIN
+        INSERT INTO public.payments (invoice_id, amount, currency, status, provider, paypal_order_id)
+        VALUES ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 450.00, 'EUR', 'FAILED', 'paypal', 'ORDER-BOB-FAIL')
+        RETURNING id INTO v_disallowed_id;
+
+        v_disallowed_res := public.settle_invoice_payment(v_disallowed_id, 'ORDER-BOB-FAIL', 'CAPTURE-BOB-FAIL', 450.00, 'EUR', v_verified_time, 'paypal');
+        ASSERT (v_disallowed_res->>'success')::boolean = false, 'FAIL 4.5d: Succeeded settlement from FAILED';
+        ASSERT (v_disallowed_res->>'code') = 'INVALID_PAYMENT_STATUS', 'FAIL 4.5d: Code was ' || (v_disallowed_res->>'code');
+        DELETE FROM public.payments WHERE id = v_disallowed_id;
+    END;
+
+    -- Test 4.5e: Reject direct settlement from DENIED
+    DECLARE
+        v_disallowed_id uuid;
+        v_disallowed_res jsonb;
+    BEGIN
+        INSERT INTO public.payments (invoice_id, amount, currency, status, provider, paypal_order_id)
+        VALUES ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 450.00, 'EUR', 'DENIED', 'paypal', 'ORDER-BOB-DENY')
+        RETURNING id INTO v_disallowed_id;
+
+        v_disallowed_res := public.settle_invoice_payment(v_disallowed_id, 'ORDER-BOB-DENY', 'CAPTURE-BOB-DENY', 450.00, 'EUR', v_verified_time, 'paypal');
+        ASSERT (v_disallowed_res->>'success')::boolean = false, 'FAIL 4.5e: Succeeded settlement from DENIED';
+        ASSERT (v_disallowed_res->>'code') = 'INVALID_PAYMENT_STATUS', 'FAIL 4.5e: Code was ' || (v_disallowed_res->>'code');
+        DELETE FROM public.payments WHERE id = v_disallowed_id;
+    END;
+
+    -- Test 4.5f: Reject direct settlement from CANCELLED
+    DECLARE
+        v_disallowed_id uuid;
+        v_disallowed_res jsonb;
+    BEGIN
+        INSERT INTO public.payments (invoice_id, amount, currency, status, provider, paypal_order_id)
+        VALUES ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 450.00, 'EUR', 'CANCELLED', 'paypal', 'ORDER-BOB-CANC')
+        RETURNING id INTO v_disallowed_id;
+
+        v_disallowed_res := public.settle_invoice_payment(v_disallowed_id, 'ORDER-BOB-CANC', 'CAPTURE-BOB-CANC', 450.00, 'EUR', v_verified_time, 'paypal');
+        ASSERT (v_disallowed_res->>'success')::boolean = false, 'FAIL 4.5f: Succeeded settlement from CANCELLED';
+        ASSERT (v_disallowed_res->>'code') = 'INVALID_PAYMENT_STATUS', 'FAIL 4.5f: Code was ' || (v_disallowed_res->>'code');
+        DELETE FROM public.payments WHERE id = v_disallowed_id;
+    END;
 
     -- Test 4.6: Reject duplicate capture ID associated with another payment
     v_err_conflict := public.settle_invoice_payment(v_payment_id, 'ORDER-ALICE-1001', 'CAPTURE-HISTORICAL-1', 500.00, 'USD', v_verified_time, 'paypal');
@@ -322,7 +398,7 @@ BEGIN
 
     -- Prepare active payment link to verify atomic revocation upon settlement
     INSERT INTO public.invoice_payment_links (invoice_id, token_hash, expires_at)
-    VALUES (v_inv_id, 'hash_alice_valid_settle', now() + interval '7 days');
+    VALUES (v_inv_id, '4444444444444444444444444444444444444444444444444444444444444441', now() + interval '7 days');
 
     -- Test 4.7: Valid settlement commits atomically and persists verified PayPal capture timestamp
     v_settle_res := public.settle_invoice_payment(v_payment_id, 'ORDER-ALICE-1001', 'CAPTURE-ALICE-VALID-1', 500.00, 'USD', v_verified_time, 'paypal');
@@ -345,7 +421,7 @@ BEGIN
     -- Verify that active payment link for settled invoice was atomically revoked
     ASSERT EXISTS (
         SELECT 1 FROM public.invoice_payment_links
-        WHERE invoice_id = v_inv_id AND token_hash = 'hash_alice_valid_settle' AND revoked_at IS NOT NULL
+        WHERE invoice_id = v_inv_id AND token_hash = '4444444444444444444444444444444444444444444444444444444444444441' AND revoked_at IS NOT NULL
     ), 'FAIL 4.7: Active payment link was not revoked atomically upon settlement';
 
     ASSERT NOT EXISTS (
@@ -379,6 +455,61 @@ BEGIN
     SELECT * INTO v_pay_record FROM public.payments WHERE id = v_payment_id;
     ASSERT v_pay_record.captured_at = v_verified_time, 'FAIL 4.10: Conflicting settlement attempt overwritten stored captured_at';
 
+    -- Test 4.7b: Successful settlement from gateway PENDING status (gateway clearance completion)
+    DECLARE
+        v_pending_pay_id uuid;
+        v_pending_inv_id uuid := '33333333-3333-3333-3333-333333333333';
+        v_settle_pending jsonb;
+    BEGIN
+        INSERT INTO public.payments (invoice_id, amount, currency, status, provider, paypal_order_id, create_request_id, capture_request_id)
+        VALUES (v_pending_inv_id, 350.00, 'GBP', 'PENDING', 'paypal', 'ORDER-PENDING-CLEAR', gen_random_uuid(), gen_random_uuid())
+        RETURNING id INTO v_pending_pay_id;
+
+        v_settle_pending := public.settle_invoice_payment(v_pending_pay_id, 'ORDER-PENDING-CLEAR', 'CAPTURE-PENDING-CLEAR-1', 350.00, 'GBP', v_verified_time, 'paypal');
+        ASSERT (v_settle_pending->>'success')::boolean = true, 'FAIL 4.7b: Settlement from PENDING failed: ' || (v_settle_pending->>'message');
+        ASSERT (v_settle_pending->>'already_settled')::boolean = false, 'FAIL 4.7b: already_settled wrong flag';
+        ASSERT (v_settle_pending->>'capture_id') = 'CAPTURE-PENDING-CLEAR-1', 'FAIL 4.7b: capture_id mismatch';
+
+        -- Verify payment COMPLETED and invoice PAID
+        ASSERT EXISTS (SELECT 1 FROM public.payments WHERE id = v_pending_pay_id AND status = 'COMPLETED'), 'FAIL 4.7b: Payment not COMPLETED';
+        ASSERT EXISTS (SELECT 1 FROM public.invoices WHERE id = v_pending_inv_id AND status = 'PAID'), 'FAIL 4.7b: Invoice not PAID';
+
+        -- Cleanup fixture so invoice 33333333 remains PENDING for subsequent tests
+        DELETE FROM public.payments WHERE id = v_pending_pay_id;
+        UPDATE public.invoices SET status = 'PENDING' WHERE id = v_pending_inv_id;
+    END;
+
+    -- Test 4.11: Separate failure transition verification (invoice remains payable, not PAID)
+    DECLARE
+        v_fail_pay_id uuid;
+        v_fail_inv_id uuid := '33333333-3333-3333-3333-333333333333';
+        v_res_retry jsonb;
+        v_settle_fail jsonb;
+    BEGIN
+        INSERT INTO public.payments (invoice_id, amount, currency, status, provider, paypal_order_id, create_request_id)
+        VALUES (v_fail_inv_id, 350.00, 'GBP', 'FAILED', 'paypal', 'ORDER-FAILED-PAY', gen_random_uuid())
+        RETURNING id INTO v_fail_pay_id;
+
+        -- Record failure reason as trusted backend operation
+        UPDATE public.payments SET failure_reason = 'PAYMENT_DENIED_BY_ISSUER' WHERE id = v_fail_pay_id;
+
+        -- Verify invoice status remains PENDING (never marked PAID on payment failure!)
+        ASSERT (SELECT status FROM public.invoices WHERE id = v_fail_inv_id) = 'PENDING', 'FAIL 4.11: Failed payment caused invoice to not be PENDING';
+
+        -- Verify settle_invoice_payment rejects settling this FAILED payment
+        v_settle_fail := public.settle_invoice_payment(v_fail_pay_id, 'ORDER-FAILED-PAY', 'CAPTURE-FAIL-ATTEMPT', 350.00, 'GBP', v_verified_time, 'paypal');
+        ASSERT (v_settle_fail->>'success')::boolean = false, 'FAIL 4.11: Succeeded settlement on FAILED payment';
+        ASSERT (v_settle_fail->>'code') = 'INVALID_PAYMENT_STATUS', 'FAIL 4.11: Code was ' || (v_settle_fail->>'code');
+
+        -- Verify customer/merchant can retry by reserving a new payment attempt on the still-PENDING invoice
+        v_res_retry := public.reserve_payment_attempt(v_fail_inv_id);
+        ASSERT (v_res_retry->>'success')::boolean = true, 'FAIL 4.11: Failed to reserve retry attempt after payment failure: ' || (v_res_retry->>'message');
+
+        -- Cleanup
+        DELETE FROM public.payments WHERE id = (v_res_retry->>'payment_id')::uuid;
+        DELETE FROM public.payments WHERE id = v_fail_pay_id;
+    END;
+
     RAISE NOTICE 'SUITE 4 PASS: Settle invoice payment logic verified.';
 END
 $$;
@@ -406,7 +537,7 @@ BEGIN
     RAISE NOTICE '=== SUITE 5: Payment Link Tests ===';
 
     -- Test 5.1: Non-owner cannot create payment link (Merchant Ownership validation rejects another user)
-    v_unauth := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_bob, 'hash_token_unauth', now() + interval '7 days');
+    v_unauth := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_bob, '5555555555555555555555555555555555555555555555555555555555555501', now() + interval '7 days');
     ASSERT (v_unauth->>'success')::boolean = false, 'FAIL 5.1: Unauthorized user created link';
     ASSERT (v_unauth->>'code') = 'FORBIDDEN', 'FAIL 5.1: Code was ' || (v_unauth->>'code');
 
@@ -414,33 +545,74 @@ BEGIN
     DECLARE
         v_notfound jsonb;
     BEGIN
-        v_notfound := public.create_or_regenerate_payment_link('00000000-0000-0000-0000-000000000000', v_user_alice, 'hash_token_404', now() + interval '7 days');
+        v_notfound := public.create_or_regenerate_payment_link('00000000-0000-0000-0000-000000000000', v_user_alice, '555555555555555555555555555555555555555555555555555555555555551b', now() + interval '7 days');
         ASSERT (v_notfound->>'success')::boolean = false, 'FAIL 5.1b: Allowed non-existent invoice';
         ASSERT (v_notfound->>'code') = 'INVOICE_NOT_FOUND', 'FAIL 5.1b: Code was ' || (v_notfound->>'code');
     END;
 
     -- Test 5.2: Expiration exceeding 30 days is rejected
-    v_excess_expiry := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_alice, 'hash_token_long', now() + interval '31 days');
+    v_excess_expiry := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_alice, '5555555555555555555555555555555555555555555555555555555555555502', now() + interval '31 days');
     ASSERT (v_excess_expiry->>'success')::boolean = false, 'FAIL 5.2: 31-day expiry allowed';
     ASSERT (v_excess_expiry->>'code') = 'EXPIRATION_EXCEEDS_MAXIMUM', 'FAIL 5.2: Code was ' || (v_excess_expiry->>'code');
 
+    -- Test 5.2a: Token Hash Format Validation (must be 64-character lowercase hexadecimal SHA-256 digest)
+    DECLARE
+        v_fmt_res jsonb;
+        v_chk_caught boolean := false;
+    BEGIN
+        -- Reject NULL token hash
+        v_fmt_res := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_alice, NULL, now() + interval '7 days');
+        ASSERT (v_fmt_res->>'success')::boolean = false, 'FAIL 5.2a: NULL token hash allowed';
+        ASSERT (v_fmt_res->>'code') = 'INVALID_TOKEN_HASH', 'FAIL 5.2a: Code was ' || (v_fmt_res->>'code');
+
+        -- Reject empty string token hash
+        v_fmt_res := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_alice, '', now() + interval '7 days');
+        ASSERT (v_fmt_res->>'success')::boolean = false, 'FAIL 5.2a: Empty token hash allowed';
+        ASSERT (v_fmt_res->>'code') = 'INVALID_TOKEN_HASH', 'FAIL 5.2a: Code was ' || (v_fmt_res->>'code');
+
+        -- Reject wrong length (63 characters)
+        v_fmt_res := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_alice, '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcde', now() + interval '7 days');
+        ASSERT (v_fmt_res->>'success')::boolean = false, 'FAIL 5.2a: 63-char token hash allowed';
+        ASSERT (v_fmt_res->>'code') = 'INVALID_TOKEN_HASH', 'FAIL 5.2a: Code was ' || (v_fmt_res->>'code');
+
+        -- Reject non-hex characters (contains 'g')
+        v_fmt_res := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_alice, 'g234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', now() + interval '7 days');
+        ASSERT (v_fmt_res->>'success')::boolean = false, 'FAIL 5.2a: Non-hex token hash allowed';
+        ASSERT (v_fmt_res->>'code') = 'INVALID_TOKEN_HASH', 'FAIL 5.2a: Code was ' || (v_fmt_res->>'code');
+
+        -- Reject uppercase hex characters (strictly requires lowercase)
+        v_fmt_res := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_alice, '1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF', now() + interval '7 days');
+        ASSERT (v_fmt_res->>'success')::boolean = false, 'FAIL 5.2a: Uppercase hex token hash allowed';
+        ASSERT (v_fmt_res->>'code') = 'INVALID_TOKEN_HASH', 'FAIL 5.2a: Code was ' || (v_fmt_res->>'code');
+
+        -- Enforce Database CHECK constraint on invoice_payment_links
+        BEGIN
+            INSERT INTO public.invoice_payment_links (invoice_id, token_hash, expires_at)
+            VALUES (v_overdue_inv, 'invalid_short_hash', now() + interval '7 days');
+        EXCEPTION
+            WHEN check_violation THEN
+                v_chk_caught := true;
+        END;
+        ASSERT v_chk_caught = true, 'FAIL 5.2a: Database check constraint failed to catch invalid token_hash format';
+    END;
+
     -- Test 5.3: Draft invoice without transition flag is rejected
-    v_draft_reject := public.create_or_regenerate_payment_link(v_draft_inv, v_user_alice, 'hash_token_draft_1', now() + interval '7 days', false);
+    v_draft_reject := public.create_or_regenerate_payment_link(v_draft_inv, v_user_alice, '5555555555555555555555555555555555555555555555555555555555555503', now() + interval '7 days', false);
     ASSERT (v_draft_reject->>'success')::boolean = false, 'FAIL 5.3: Draft allowed without transition flag';
     ASSERT (v_draft_reject->>'code') = 'DRAFT_INVOICE_NOT_ISSUED', 'FAIL 5.3: Code was ' || (v_draft_reject->>'code');
 
     -- Test 5.4: Draft invoice with transition flag atomically transitions to PENDING and generates link
-    v_draft_transition := public.create_or_regenerate_payment_link(v_draft_inv, v_user_alice, 'hash_token_draft_2', now() + interval '7 days', true);
+    v_draft_transition := public.create_or_regenerate_payment_link(v_draft_inv, v_user_alice, '5555555555555555555555555555555555555555555555555555555555555504', now() + interval '7 days', true);
     ASSERT (v_draft_transition->>'success')::boolean = true, 'FAIL 5.4: Draft transition failed';
     ASSERT (v_draft_transition->>'invoice_status') = 'PENDING', 'FAIL 5.4: Invoice status not PENDING';
 
     -- Test 5.5: Create link for overdue invoice
-    v_link1 := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_alice, 'hash_initial_link', now() + interval '7 days');
+    v_link1 := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_alice, '5555555555555555555555555555555555555555555555555555555555555505', now() + interval '7 days');
     ASSERT (v_link1->>'success')::boolean = true, 'FAIL 5.5: Link creation failed';
     v_link1_id := (v_link1->>'link_id')::uuid;
 
     -- Test 5.6: Regenerate link atomically revokes previous link
-    v_link2 := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_alice, 'hash_regenerated_link', now() + interval '14 days');
+    v_link2 := public.create_or_regenerate_payment_link(v_overdue_inv, v_user_alice, '5555555555555555555555555555555555555555555555555555555555555506', now() + interval '14 days');
     ASSERT (v_link2->>'success')::boolean = true, 'FAIL 5.6: Regeneration failed';
     v_link2_id := (v_link2->>'link_id')::uuid;
     ASSERT v_link2_id <> v_link1_id, 'FAIL 5.6: Link ID did not change on regeneration';
@@ -464,21 +636,21 @@ BEGIN
     BEGIN
         -- Manually insert an expired link (created 2 days ago, expired 1 day ago, unrevoked)
         INSERT INTO public.invoice_payment_links (invoice_id, token_hash, created_at, expires_at, revoked_at)
-        VALUES (v_exp_inv, 'hash_expired_unrevoked', now() - interval '2 days', now() - interval '1 day', NULL)
+        VALUES (v_exp_inv, '5555555555555555555555555555555555555555555555555555555555555507', now() - interval '2 days', now() - interval '1 day', NULL)
         RETURNING id INTO v_exp_link_id;
 
         -- Verify that this unrevoked expired link is NOT usable for public checkout
         SELECT count(*) INTO v_usable_count
         FROM public.invoice_payment_links l
         JOIN public.invoices i ON l.invoice_id = i.id
-        WHERE l.token_hash = 'hash_expired_unrevoked'
+        WHERE l.token_hash = '5555555555555555555555555555555555555555555555555555555555555507'
           AND l.revoked_at IS NULL
           AND l.expires_at > pg_catalog.now()
           AND i.status IN ('PENDING', 'OVERDUE');
         ASSERT v_usable_count = 0, 'FAIL 5.7: Expired unrevoked link was deemed usable for checkout!';
 
         -- Regenerate link for this invoice
-        v_link1 := public.create_or_regenerate_payment_link(v_exp_inv, v_user_alice, 'hash_replacement_after_expiry', now() + interval '7 days');
+        v_link1 := public.create_or_regenerate_payment_link(v_exp_inv, v_user_alice, '5555555555555555555555555555555555555555555555555555555555555572', now() + interval '7 days');
         ASSERT (v_link1->>'success')::boolean = true, 'FAIL 5.7: Failed to regenerate link after previous link expired: ' || (v_link1->>'message');
         v_new_link_id := (v_link1->>'link_id')::uuid;
 
@@ -495,7 +667,7 @@ BEGIN
         ASSERT v_active_links_count = 1, 'FAIL 5.7: Expected exactly 1 active link after replacement, found ' || v_active_links_count;
 
         -- Test 5.8: Rejects regeneration for paid invoice
-        v_paid_res := public.create_or_regenerate_payment_link('dddddddd-dddd-dddd-dddd-dddddddddddd', v_user_alice, 'hash_paid_inv', now() + interval '7 days');
+        v_paid_res := public.create_or_regenerate_payment_link('dddddddd-dddd-dddd-dddd-dddddddddddd', v_user_alice, '5555555555555555555555555555555555555555555555555555555555555508', now() + interval '7 days');
         ASSERT (v_paid_res->>'success')::boolean = false, 'FAIL 5.8: Allowed regeneration for PAID invoice';
         ASSERT (v_paid_res->>'code') = 'INVALID_INVOICE_STATUS', 'FAIL 5.8: Code was ' || (v_paid_res->>'code');
         ASSERT (v_paid_res->>'message') LIKE '%PAID%', 'FAIL 5.8: Message did not mention PAID: ' || (v_paid_res->>'message');
@@ -508,7 +680,7 @@ BEGIN
             INSERT INTO public.invoices (id, user_id, customer_name, customer_email, description, amount, currency, status)
             VALUES (v_canc_inv, v_user_alice, 'Cancelled Client', 'cancel@corp.com', 'Cancelled Service', 250.00, 'USD', 'CANCELLED');
 
-            v_canc_res := public.create_or_regenerate_payment_link(v_canc_inv, v_user_alice, 'hash_canc_inv', now() + interval '7 days');
+            v_canc_res := public.create_or_regenerate_payment_link(v_canc_inv, v_user_alice, '5555555555555555555555555555555555555555555555555555555555555509', now() + interval '7 days');
             ASSERT (v_canc_res->>'success')::boolean = false, 'FAIL 5.9: Allowed link generation for CANCELLED invoice';
             ASSERT (v_canc_res->>'code') = 'INVALID_INVOICE_STATUS', 'FAIL 5.9: Code was ' || (v_canc_res->>'code');
             ASSERT (v_canc_res->>'message') LIKE '%CANCELLED%', 'FAIL 5.9: Message did not mention CANCELLED: ' || (v_canc_res->>'message');
@@ -520,7 +692,7 @@ BEGIN
         DECLARE
             v_atomic_draft_inv uuid := '66666666-6666-6666-6666-666666666666';
             v_collision_inv uuid := '33333333-3333-3333-3333-333333333333';
-            v_collision_hash text := 'hash_preexisting_collision_for_atomic_test';
+            v_collision_hash text := '5555555555555555555555555555555555555555555555555555555555555510';
             v_err_caught boolean := false;
             v_reverted_status text;
             v_reverted_links integer;

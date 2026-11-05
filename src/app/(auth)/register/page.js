@@ -155,9 +155,6 @@ export default function RegisterPage() {
           <CardTitle className="text-2xl font-bold text-[#172033]">
             Get Started
           </CardTitle>
-          <Badge variant="primary" size="sm">
-            Free Freelance Tier
-          </Badge>
         </div>
         <CardDescription className="text-sm mt-1">
           Create your PayPilot AI account to generate invoices, automate billing, and get paid faster.

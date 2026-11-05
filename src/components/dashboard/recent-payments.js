@@ -11,7 +11,7 @@ export function RecentPayments({ payments = [] }) {
         <div>
           <CardTitle className="text-base sm:text-lg">Recent Settlements</CardTitle>
           <CardDescription className="text-xs">
-            Automated payment payouts reconciled with PayPal Sandbox
+            Automated payment payouts and settlements
           </CardDescription>
         </div>
 
@@ -29,7 +29,7 @@ export function RecentPayments({ payments = [] }) {
         <div className="py-8 px-4 text-center rounded-xl bg-[#E8EDF4]/60 border border-[#CBD5E1]/40 space-y-1">
           <p className="text-xs font-bold text-[#172033]">No Settled Payments Yet</p>
           <p className="text-[11px] text-[#64748B]">
-            Client payments captured via PayPal Sandbox will appear here automatically.
+            Client payments captured via PayPal will appear here automatically.
           </p>
         </div>
       ) : (

@@ -322,9 +322,6 @@ export default function AIInvoiceGeneratePage() {
             <h1 className="text-2xl font-extrabold text-[#172033] tracking-tight">
               AI Invoice Generator
             </h1>
-            <Badge variant="primary" size="sm">
-              Gemini 2.5 Flash
-            </Badge>
           </div>
           <p className="text-xs text-[#64748B] mt-0.5">
             Describe client work in plain English to extract structured line items and billing details.
@@ -431,7 +428,7 @@ export default function AIInvoiceGeneratePage() {
                 className="w-full bg-[#E8EDF4] text-[#172033] placeholder-[#94A3B8] text-sm rounded-xl p-3.5 shadow-inset-sm transition-all duration-150 focus:outline-none border border-[#D1D8E2] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] resize-y"
               />
               <div className="flex justify-between items-center text-[11px] text-[#64748B]">
-                <span>Gemini strictly extracts stated facts and will not fabricate missing values.</span>
+                <span>The assistant strictly extracts stated facts and will not fabricate missing details.</span>
                 <span>{prompt.length} / 5000 chars</span>
               </div>
             </div>
@@ -475,7 +472,7 @@ export default function AIInvoiceGeneratePage() {
               >
                 {isGenerating ? (
                   <span className="flex items-center gap-1.5">
-                    Analyzing with Gemini...
+                    Analyzing with AI...
                   </span>
                 ) : (
                   "Generate Invoice Draft"
@@ -494,7 +491,7 @@ export default function AIInvoiceGeneratePage() {
             <Sparkles className="h-5 w-5 shrink-0 text-blue-600 mt-0.5" />
             <div className="flex-1 space-y-1">
               <div className="flex items-center gap-2">
-                <p className="font-bold">Draft Generated with Gemini AI</p>
+                <p className="font-bold">Draft Generated with AI</p>
                 <Badge variant="neutral" size="sm" dot>
                   Unsaved Draft
                 </Badge>

@@ -236,9 +236,6 @@ export default function InvoicesPage() {
             <h1 className="text-2xl font-extrabold text-[#172033] tracking-tight">
               Invoices & Billing
             </h1>
-            <Badge variant="primary" size="sm">
-              Live Database
-            </Badge>
           </div>
           <p className="text-xs text-[#64748B] mt-0.5">
             Manage client receivables, filter payment states, and track balances.

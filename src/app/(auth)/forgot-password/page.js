@@ -31,12 +31,10 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [backendNotice, setBackendNotice] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setBackendNotice("");
 
     const validation = validateForgotPasswordForm({ email });
     if (!validation.isValid) {
@@ -50,11 +48,7 @@ export default function ForgotPasswordPage() {
       const res = await requestPasswordReset({ email });
 
       if (res.isMissingEndpoint) {
-        // Clear indication of pending backend route without inventing fake backend
-        setBackendNotice(
-          "Backend Notice: /api/auth/forgot-password endpoint is not yet configured in the backend service. For demo testing, preview the confirmation screen below."
-        );
-        setIsSubmitted(true);
+        setError("Password reset service is temporarily unavailable. Please try again later or contact support.");
       } else if (!res.success) {
         setError(res.message || "Failed to send reset link.");
       } else {
@@ -87,12 +81,7 @@ export default function ForgotPasswordPage() {
           </CardDescription>
         </div>
 
-        {backendNotice && (
-          <div className="p-3 rounded-xl bg-amber-50 border border-[#F59E0B]/30 text-[#B45309] text-xs leading-relaxed text-left flex items-start gap-2 shadow-inset-sm">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-[#F59E0B]" />
-            <p>{backendNotice}</p>
-          </div>
-        )}
+        
 
         <Divider />
 
@@ -127,9 +116,6 @@ export default function ForgotPasswordPage() {
           <CardTitle className="text-2xl font-bold text-[#172033]">
             Reset Password
           </CardTitle>
-          <Badge variant="default" size="sm">
-            Self-Service
-          </Badge>
         </div>
         <CardDescription className="text-sm mt-1">
           Enter the email address associated with your PayPilot AI account and we will send you a recovery link.

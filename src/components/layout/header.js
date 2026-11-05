@@ -220,14 +220,7 @@ export function Header({
                   <span>Account Settings</span>
                 </Link>
 
-                <Link
-                  href="/design-system"
-                  onClick={() => setShowUserMenu(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#64748B] hover:text-[#172033] hover:shadow-raised-sm active:shadow-inset-sm transition-all"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-[#2563EB]" />
-                  <span>Design System</span>
-                </Link>
+
 
                 <Divider />
 

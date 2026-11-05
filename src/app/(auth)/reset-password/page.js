@@ -46,7 +46,6 @@ function ResetPasswordContent() {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-  const [backendNotice, setBackendNotice] = useState("");
 
   const passwordCriteria = getPasswordCriteria(formData.password);
 
@@ -63,7 +62,6 @@ function ResetPasswordContent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError("");
-    setBackendNotice("");
 
     const validation = validateResetPasswordForm(formData);
     if (!validation.isValid) {
@@ -80,10 +78,7 @@ function ResetPasswordContent() {
       });
 
       if (res.isMissingEndpoint) {
-        setBackendNotice(
-          "Backend Notice: /api/auth/reset-password endpoint is pending in the backend service. For demo testing, preview the confirmation screen below."
-        );
-        setIsSuccess(true);
+        setServerError("Password reset service is temporarily unavailable. Please try again later or contact support.");
       } else if (!res.success) {
         setServerError(res.message || "Failed to reset password.");
       } else {
@@ -115,12 +110,7 @@ function ResetPasswordContent() {
           </CardDescription>
         </div>
 
-        {backendNotice && (
-          <div className="p-3 rounded-xl bg-amber-50 border border-[#F59E0B]/30 text-[#B45309] text-xs leading-relaxed text-left flex items-start gap-2 shadow-inset-sm">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-[#F59E0B]" />
-            <p>{backendNotice}</p>
-          </div>
-        )}
+        
 
         <Divider />
 
@@ -147,9 +137,6 @@ function ResetPasswordContent() {
           <CardTitle className="text-2xl font-bold text-[#172033]">
             Choose New Password
           </CardTitle>
-          <Badge variant="primary" size="sm">
-            Security Check
-          </Badge>
         </div>
         <CardDescription className="text-sm mt-1">
           Create a new, strong password for your PayPilot AI account.

@@ -69,7 +69,7 @@ export async function sendAssistantMessage({ message, history = [] }) {
         return {
           data: null,
           error:
-            "The conversational AI Assistant endpoint (/api/assistant/chat) is not yet deployed on the backend. Server-side integration is scheduled for backend rollout.",
+            "The AI Assistant service is temporarily unavailable. Please try again later.",
           status: 404,
           isUnavailable: true,
         };

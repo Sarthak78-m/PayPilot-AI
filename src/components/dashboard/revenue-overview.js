@@ -29,9 +29,6 @@ export function RevenueOverview({
         <div>
           <div className="flex items-center gap-2">
             <CardTitle className="text-base sm:text-lg">Invoiced Value Overview</CardTitle>
-            <Badge variant="primary" size="sm">
-              Paid Invoices
-            </Badge>
           </div>
           <p className="text-xs text-[#64748B] mt-0.5">
             Total paid invoice value for selected period:{" "}

@@ -111,11 +111,11 @@ try {
 
     # Test 9: New payment link blocks rollback
     Write-Host "`n[TEST 9] Testing Safety Gate: New payment link blocks rollback..." -ForegroundColor Yellow
-    & $psql -h 127.0.0.1 -p $port -U postgres -d paypilot_isolated_test -c "INSERT INTO public.invoice_payment_links (invoice_id, token_hash, expires_at) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'test_hash_gate_9', now() + interval '7 days');"
+    & $psql -h 127.0.0.1 -p $port -U postgres -d paypilot_isolated_test -c "INSERT INTO public.invoice_payment_links (invoice_id, token_hash, expires_at) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '9999999999999999999999999999999999999999999999999999999999990009', now() + interval '7 days');"
     $out9 = & $psql -h 127.0.0.1 -p $port -U postgres -d paypilot_isolated_test -v ON_ERROR_STOP=1 -f $rollbackSql 2>&1 | Out-String
     if ($out9 -notmatch "ROLLBACK ABORTED BY SAFETY GATE") { throw "Safety Gate failed for Test 9" }
     Write-Host "  -> [PASS 9] New payment link blocked rollback." -ForegroundColor Green
-    & $psql -h 127.0.0.1 -p $port -U postgres -d paypilot_isolated_test -c "DELETE FROM public.invoice_payment_links WHERE token_hash = 'test_hash_gate_9';"
+    & $psql -h 127.0.0.1 -p $port -U postgres -d paypilot_isolated_test -c "DELETE FROM public.invoice_payment_links WHERE token_hash = '9999999999999999999999999999999999999999999999999999999999990009';"
 
     # Test 10: New webhook event blocks rollback
     Write-Host "`n[TEST 10] Testing Safety Gate: New webhook event blocks rollback..." -ForegroundColor Yellow

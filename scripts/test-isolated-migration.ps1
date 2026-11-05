@@ -121,7 +121,10 @@ try {
     Write-Host "  -> Concurrency Test C: 5 Concurrent create_or_regenerate_payment_link requests..." -ForegroundColor Cyan
     $jobs = @()
     1..5 | ForEach-Object {
-        $tokenHash = "hash_conc_" + [System.Guid]::NewGuid().ToString()
+        $sha256 = [System.Security.Cryptography.SHA256]::Create()
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes("conc_c_" + [System.Guid]::NewGuid().ToString())
+        $hashBytes = $sha256.ComputeHash($bytes)
+        $tokenHash = ($hashBytes | ForEach-Object { $_.ToString("x2") }) -join ""
         $jobs += Start-Job -ScriptBlock {
             param($psqlPath, $p, $tHash)
             & $psqlPath -h 127.0.0.1 -p $p -U postgres -d paypilot_isolated_test -t -A -c "SELECT public.create_or_regenerate_payment_link('ffffffff-ffff-ffff-ffff-ffffffffffff', '11111111-1111-1111-1111-111111111111', '$tHash', now() + interval '7 days');"

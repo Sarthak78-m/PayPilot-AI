@@ -24,9 +24,6 @@ export function AIAssistantCard() {
           <div>
             <div className="flex items-center gap-2">
               <CardTitle className="text-base sm:text-lg">PayPilot AI Assistant</CardTitle>
-              <Badge variant="primary" size="sm">
-                Active Copilot
-              </Badge>
             </div>
             <CardDescription className="text-xs mt-0.5">
               Ask questions about your accounts receivable, automate reminder drafts, or analyze cashflow trends.
@@ -50,7 +47,7 @@ export function AIAssistantCard() {
       {/* Suggested Prompts */}
       <div className="pt-2 border-t border-[#CBD5E1]/60">
         <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block mb-1.5">
-          Suggested Copilot Queries:
+          Suggested prompts:
         </span>
         <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {suggestedPrompts.map((prompt) => (

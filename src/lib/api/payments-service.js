@@ -108,7 +108,7 @@ export async function fetchPayments({ page = 1, limit = 10, status = "", search 
         }
         return {
           data: null,
-          error: "The dedicated payments endpoint (/api/payments) is not yet deployed on the backend.",
+          error: "Payment settlement service is temporarily unavailable. Please try again later.",
           is401: false,
           isFallback: false,
           status: 404,
