@@ -148,7 +148,7 @@ export default function DashboardPage() {
           <span className="text-xs text-[#64748B]">
             Primary Currency: <strong className="text-[#172033]">{metrics?.primaryCurrency || "USD"}</strong>
           </span>
-          {metrics?.outstanding && (
+          {metrics?.outstanding && metrics?.totalCount > 0 && (
             <span className="text-xs text-[#64748B] hidden md:inline">
               • Outstanding Balance:{" "}
               <strong className="text-[#DC2626] font-mono">{metrics.outstanding.formatted}</strong>

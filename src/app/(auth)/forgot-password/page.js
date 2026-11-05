@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardHeader,
@@ -25,6 +26,7 @@ import { validateForgotPasswordForm } from "@/lib/validation/auth";
 import { requestPasswordReset } from "@/lib/auth/auth-client";
 
 export default function ForgotPasswordPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -101,7 +103,7 @@ export default function ForgotPasswordPage() {
             className="w-full"
             icon={ArrowLeft}
             iconPosition="left"
-            onClick={() => (window.location.href = "/login")}
+            onClick={() => router.push("/login")}
           >
             Back to Sign In
           </Button>

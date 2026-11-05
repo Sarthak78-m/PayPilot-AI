@@ -1,5 +1,5 @@
 import { validateRegistrationInput } from "@/lib/auth/validation";
-import { createSupabaseAuthClient } from "@/lib/supabase/server";
+import { createSupabaseAuthClient, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(request) {
   let input;
@@ -23,6 +23,44 @@ export async function POST(request) {
   }
 
   try {
+    // If Supabase service/secret key is available, use admin.createUser to register the user
+    // with email confirmed, completely bypassing Supabase free-tier SMTP email rate limits.
+    if (process.env.SUPABASE_SECRET_KEY) {
+      const serverClient = createSupabaseServerClient();
+      const { error } = await serverClient.auth.admin.createUser({
+        email: validation.data.email,
+        password: validation.data.password,
+        email_confirm: true,
+        user_metadata: { name: validation.data.name },
+      });
+
+      if (error) {
+        const isDuplicate =
+          error.code === "email_exists" ||
+          error.status === 422 ||
+          (error.message && error.message.toLowerCase().includes("already"));
+
+        return Response.json(
+          {
+            status: "error",
+            message: isDuplicate
+              ? "Unable to create an account with these details."
+              : error.message || "Unable to create an account.",
+          },
+          { status: isDuplicate ? 409 : 400 },
+        );
+      }
+
+      return Response.json(
+        {
+          status: "ok",
+          message: "Account created successfully.",
+          requiresEmailConfirmation: false,
+        },
+        { status: 201 },
+      );
+    }
+
     const supabase = await createSupabaseAuthClient();
     const { data, error } = await supabase.auth.signUp({
       email: validation.data.email,

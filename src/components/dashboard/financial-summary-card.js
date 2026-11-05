@@ -16,6 +16,8 @@ export function FinancialSummaryCard({
   period,
   description,
   variant = "revenue",
+  empty = false,
+  emptyMessage = "No revenue data available yet.",
 }) {
   const variantConfig = {
     revenue: {
@@ -47,6 +49,13 @@ export function FinancialSummaryCard({
   const config = variantConfig[variant] || variantConfig.revenue;
   const Icon = config.icon;
 
+  const isStringEmptyNotice =
+    typeof amount === "string" &&
+    (amount.toLowerCase().includes("no revenue") ||
+      amount.toLowerCase().includes("no data"));
+  const isExplicitEmpty = empty || !amount || isStringEmptyNotice;
+  const displayEmptyText = isStringEmptyNotice ? amount : emptyMessage;
+
   return (
     <Card
       variant="raised-sm"
@@ -57,9 +66,15 @@ export function FinancialSummaryCard({
           <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block truncate">
             {title}
           </span>
-          <div className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight mt-1 font-mono truncate">
-            {amount}
-          </div>
+          {isExplicitEmpty ? (
+            <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
+              {displayEmptyText}
+            </div>
+          ) : (
+            <div className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight mt-1 font-mono truncate">
+              {amount}
+            </div>
+          )}
         </div>
 
         <div
@@ -71,7 +86,7 @@ export function FinancialSummaryCard({
 
       <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
         <div className="flex items-center gap-1.5 truncate">
-          {trend && (
+          {!isExplicitEmpty && trend && (
             <span
               className={`font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] shrink-0 ${config.pillBg}`}
             >
@@ -81,7 +96,7 @@ export function FinancialSummaryCard({
           <span className="truncate text-[11px]">{period || description}</span>
         </div>
 
-        {count !== undefined && (
+        {!isExplicitEmpty && count !== undefined && (
           <span className="font-mono font-semibold text-[#172033] shrink-0 ml-1.5 text-[11px]">
             {count} {count === 1 ? "inv" : "invs"}
           </span>
@@ -94,27 +109,33 @@ export function FinancialSummaryCard({
 export function FinancialSummarySection({ metrics }) {
   if (!metrics) return null;
 
+  const hasRecords = Boolean(metrics.totalCount && metrics.totalCount > 0);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5 lg:gap-4">
       {/* Card 1: Paid Invoice Value (Honest semantic replacement for unverified revenue) */}
       <FinancialSummaryCard
         variant="revenue"
         title="Paid Invoice Value"
-        amount={metrics.paidInvoiceValue?.formatted || metrics.totalRevenue?.formatted || "$0.00"}
-        trend={metrics.paidInvoices?.count > 0 ? `${metrics.paidInvoices.count} settled` : undefined}
+        amount={hasRecords ? (metrics.paidInvoiceValue?.formatted || metrics.totalRevenue?.formatted || "$0.00") : null}
+        empty={!hasRecords}
+        emptyMessage="No revenue data available yet."
+        trend={hasRecords && metrics.paidInvoices?.count > 0 ? `${metrics.paidInvoices.count} settled` : undefined}
         trendDirection="neutral"
-        period="Status = PAID"
-        description="Total value of invoices marked PAID (settlement unverified)"
+        period={hasRecords ? "Status = PAID" : "Awaiting first invoice"}
+        description={hasRecords ? "Total value of invoices marked PAID (settlement unverified)" : "No invoices created yet"}
       />
 
       {/* Card 2: Outstanding Balance (Pending + Overdue) */}
       <FinancialSummaryCard
         variant="pending"
         title="Outstanding Balance"
-        amount={metrics.outstanding?.formatted || "$0.00"}
-        count={metrics.outstanding?.count}
-        trend={metrics.outstanding?.count > 0 ? `${metrics.outstanding.count} unpaid` : undefined}
-        period="Pending + Overdue"
+        amount={hasRecords ? (metrics.outstanding?.formatted || "$0.00") : null}
+        empty={!hasRecords}
+        emptyMessage="No receivables recorded"
+        count={hasRecords ? metrics.outstanding?.count : undefined}
+        trend={hasRecords && metrics.outstanding?.count > 0 ? `${metrics.outstanding.count} unpaid` : undefined}
+        period={hasRecords ? "Pending + Overdue" : "No open balances"}
         description="Receivables awaiting client settlement"
       />
 
@@ -122,10 +143,12 @@ export function FinancialSummarySection({ metrics }) {
       <FinancialSummaryCard
         variant="pending"
         title="Pending Invoices"
-        amount={metrics.pendingInvoices?.formatted || "$0.00"}
-        count={metrics.pendingInvoices?.count}
-        trend={metrics.pendingInvoices?.count > 0 ? `${metrics.pendingInvoices.count} active` : undefined}
-        period="Awaiting payment"
+        amount={hasRecords ? (metrics.pendingInvoices?.formatted || "$0.00") : null}
+        empty={!hasRecords}
+        emptyMessage="No pending invoices"
+        count={hasRecords ? metrics.pendingInvoices?.count : undefined}
+        trend={hasRecords && metrics.pendingInvoices?.count > 0 ? `${metrics.pendingInvoices.count} active` : undefined}
+        period={hasRecords ? "Awaiting payment" : "All clear"}
         description="Pending client receivables"
       />
 
@@ -133,10 +156,12 @@ export function FinancialSummarySection({ metrics }) {
       <FinancialSummaryCard
         variant="overdue"
         title="Overdue Invoices"
-        amount={metrics.overdueInvoices?.formatted || "$0.00"}
-        count={metrics.overdueInvoices?.count}
-        trend={metrics.overdueInvoices?.count > 0 ? `${metrics.overdueInvoices.count} past due` : undefined}
-        period="Past due date"
+        amount={hasRecords ? (metrics.overdueInvoices?.formatted || "$0.00") : null}
+        empty={!hasRecords}
+        emptyMessage="No overdue invoices"
+        count={hasRecords ? metrics.overdueInvoices?.count : undefined}
+        trend={hasRecords && metrics.overdueInvoices?.count > 0 ? `${metrics.overdueInvoices.count} past due` : undefined}
+        period={hasRecords ? "Past due date" : "No overdue accounts"}
         description="Requires payment follow-up"
       />
     </div>

@@ -13,7 +13,6 @@ import {
   ChevronDown,
   X,
   Sparkles,
-  CheckCircle2,
 } from "@/components/icons";
 import { Button, Badge, Divider } from "@/components/ui";
 import { getSessionUser, logoutUser } from "@/lib/auth/auth-client";
@@ -38,7 +37,7 @@ export function Header({
   const [currentUser, setCurrentUser] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(2);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const userMenuRef = useRef(null);
   const notificationsRef = useRef(null);
@@ -168,32 +167,19 @@ export function Header({
               <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-[#E8EDF4] shadow-raised-lg border border-white/60 p-4 space-y-3 z-30 animate-in fade-in zoom-in-95 duration-150">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-[#172033]">
-                    System Updates
+                    Notifications
                   </span>
-                  <Badge variant="primary" size="sm">
-                    Phase 4 Active
+                  <Badge variant="neutral" size="sm">
+                    0 New
                   </Badge>
                 </div>
                 <Divider />
-                <div className="space-y-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-[#E8EDF4] shadow-inset-sm space-y-1">
-                    <p className="font-semibold text-[#172033] flex items-center gap-1.5">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-[#16A34A]" />
-                      Supabase Client Connected
-                    </p>
-                    <p className="text-[11px] text-[#64748B]">
-                      SSR session proxy active on port 3000.
-                    </p>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-[#E8EDF4] shadow-inset-sm space-y-1">
-                    <p className="font-semibold text-[#172033] flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-[#2563EB]" />
-                      Development Preview Mode
-                    </p>
-                    <p className="text-[11px] text-[#64748B]">
-                      Displaying isolated mock financial data until backend endpoints deploy.
-                    </p>
-                  </div>
+                <div className="py-6 text-center text-[#64748B]">
+                  <Bell className="h-7 w-7 mx-auto mb-2 text-[#94A3B8] opacity-60" />
+                  <p className="text-xs font-semibold text-[#172033]">No notifications yet</p>
+                  <p className="text-[11px] text-[#64748B] mt-0.5">
+                    We&apos;ll notify you when important billing or account updates arrive.
+                  </p>
                 </div>
               </div>
             )}

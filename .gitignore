@@ -43,6 +43,7 @@ next-env.d.ts
 invoice-phase*.txt
 *.report
 scratch/
+docs/
 
 # agent files
 AGENTS.md
