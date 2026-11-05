@@ -122,6 +122,8 @@ ALTER TABLE public.payments ADD CONSTRAINT payments_currency_check CHECK (
 -- payments retain NULL, distinguishing them from post-migration attempts.
 -- ----------------------------------------------------------------------------
 ALTER TABLE public.payments
+  ADD COLUMN IF NOT EXISTS paypal_order_id varchar(100),
+  ADD COLUMN IF NOT EXISTS paypal_capture_id varchar(100),
   ADD COLUMN IF NOT EXISTS captured_at timestamp with time zone,
   ADD COLUMN IF NOT EXISTS create_request_id uuid,
   ADD COLUMN IF NOT EXISTS capture_request_id uuid,
