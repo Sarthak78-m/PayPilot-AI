@@ -462,10 +462,10 @@ BEGIN
         v_settle_pending jsonb;
     BEGIN
         INSERT INTO public.payments (invoice_id, amount, currency, status, provider, paypal_order_id, create_request_id, capture_request_id)
-        VALUES (v_pending_inv_id, 350.00, 'GBP', 'PENDING', 'paypal', 'ORDER-PENDING-CLEAR', gen_random_uuid(), gen_random_uuid())
+        VALUES (v_pending_inv_id, 25000.00, 'INR', 'PENDING', 'paypal', 'ORDER-PENDING-CLEAR', gen_random_uuid(), gen_random_uuid())
         RETURNING id INTO v_pending_pay_id;
 
-        v_settle_pending := public.settle_invoice_payment(v_pending_pay_id, 'ORDER-PENDING-CLEAR', 'CAPTURE-PENDING-CLEAR-1', 350.00, 'GBP', v_verified_time, 'paypal');
+        v_settle_pending := public.settle_invoice_payment(v_pending_pay_id, 'ORDER-PENDING-CLEAR', 'CAPTURE-PENDING-CLEAR-1', 25000.00, 'INR', v_verified_time, 'paypal');
         ASSERT (v_settle_pending->>'success')::boolean = true, 'FAIL 4.7b: Settlement from PENDING failed: ' || (v_settle_pending->>'message');
         ASSERT (v_settle_pending->>'already_settled')::boolean = false, 'FAIL 4.7b: already_settled wrong flag';
         ASSERT (v_settle_pending->>'capture_id') = 'CAPTURE-PENDING-CLEAR-1', 'FAIL 4.7b: capture_id mismatch';
@@ -487,7 +487,7 @@ BEGIN
         v_settle_fail jsonb;
     BEGIN
         INSERT INTO public.payments (invoice_id, amount, currency, status, provider, paypal_order_id, create_request_id)
-        VALUES (v_fail_inv_id, 350.00, 'GBP', 'FAILED', 'paypal', 'ORDER-FAILED-PAY', gen_random_uuid())
+        VALUES (v_fail_inv_id, 25000.00, 'INR', 'FAILED', 'paypal', 'ORDER-FAILED-PAY', gen_random_uuid())
         RETURNING id INTO v_fail_pay_id;
 
         -- Record failure reason as trusted backend operation
@@ -497,7 +497,7 @@ BEGIN
         ASSERT (SELECT status FROM public.invoices WHERE id = v_fail_inv_id) = 'PENDING', 'FAIL 4.11: Failed payment caused invoice to not be PENDING';
 
         -- Verify settle_invoice_payment rejects settling this FAILED payment
-        v_settle_fail := public.settle_invoice_payment(v_fail_pay_id, 'ORDER-FAILED-PAY', 'CAPTURE-FAIL-ATTEMPT', 350.00, 'GBP', v_verified_time, 'paypal');
+        v_settle_fail := public.settle_invoice_payment(v_fail_pay_id, 'ORDER-FAILED-PAY', 'CAPTURE-FAIL-ATTEMPT', 25000.00, 'INR', v_verified_time, 'paypal');
         ASSERT (v_settle_fail->>'success')::boolean = false, 'FAIL 4.11: Succeeded settlement on FAILED payment';
         ASSERT (v_settle_fail->>'code') = 'INVALID_PAYMENT_STATUS', 'FAIL 4.11: Code was ' || (v_settle_fail->>'code');
 

@@ -225,8 +225,23 @@ CREATE TABLE IF NOT EXISTS public.invoice_payment_links (
     created_at        timestamp with time zone NOT NULL DEFAULT now(),
     expires_at        timestamp with time zone NOT NULL,
     revoked_at        timestamp with time zone NULL,
-    last_accessed_at  timestamp with time zone NULL
+    last_accessed_at  timestamp with time zone NULL,
+    CONSTRAINT invoice_payment_links_token_hash_check CHECK (token_hash ~ '^[0-9a-f]{64}$')
 );
+
+-- Idempotent constraint check for existing installations
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'invoice_payment_links_token_hash_check'
+          AND conrelid = 'public.invoice_payment_links'::regclass
+    ) THEN
+        ALTER TABLE public.invoice_payment_links
+            ADD CONSTRAINT invoice_payment_links_token_hash_check
+            CHECK (token_hash ~ '^[0-9a-f]{64}$');
+    END IF;
+END $$;
 
 -- Unique index on token hash (raw token is never stored)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_payment_links_token_hash_unique
@@ -975,11 +990,11 @@ BEGIN
         );
     END IF;
 
-    IF p_token_hash IS NULL OR pg_catalog.btrim(p_token_hash) = '' THEN
+    IF p_token_hash IS NULL OR p_token_hash !~ '^[0-9a-f]{64}$' THEN
         RETURN pg_catalog.jsonb_build_object(
             'success', false,
             'code', 'INVALID_TOKEN_HASH',
-            'message', 'Token hash must not be null or empty.'
+            'message', 'Token hash must be a 64-character lowercase hexadecimal SHA-256 digest.'
         );
     END IF;
 
