@@ -32,7 +32,7 @@ export async function ensureUserProfile({ user }) {
     // Prefer service-role client if available to ensure RLS bypass during account onboarding;
     // otherwise fallback to authenticated user SSR client.
     let supabase;
-    if (process.env.SUPABASE_SECRET_KEY) {
+    if (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY) {
       supabase = createSupabaseServerClient();
     } else {
       supabase = await createSupabaseAuthClient();

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createSupabaseAuthClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { getSiteBaseUrl, getSafeInternalRedirect } from "@/lib/auth/url";
 import { ensureUserProfile } from "@/lib/auth/profile";
 
@@ -12,7 +13,8 @@ export const dynamic = "force-dynamic";
  * 2. OTP Token Hash Verification (verifyOtp for signup, recovery, email_change).
  * 3. Provider error handling (e.g. user cancelled Google OAuth consent).
  * 4. Safe open-redirect prevention using allowlisted internal application paths.
- * 5. Idempotent user profile creation for new OAuth sign-ins.
+ * 5. Explicit Set-Cookie response preservation for all redirects (preventing session drops in Next.js).
+ * 6. Idempotent user profile creation for new OAuth sign-ins.
  */
 export async function GET(request) {
   const requestUrl = new URL(request.url);
@@ -43,20 +45,65 @@ export async function GET(request) {
   const defaultDestination = isRecoveryFlow ? "/reset-password" : "/dashboard";
   const safeRedirectPath = getSafeInternalRedirect(nextParam, defaultDestination);
 
-  try {
-    const supabase = await createSupabaseAuthClient();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabasePublishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  if (!supabaseUrl || !supabasePublishableKey) {
+    const loginUrl = new URL("/login", baseUrl);
+    loginUrl.searchParams.set("error", "Server authentication configuration is missing.");
+    return NextResponse.redirect(loginUrl.toString());
+  }
+
+  // Track all cookies set by Supabase SSR to forward them directly onto the redirect response
+  const cookiesToSetArray = [];
+  const cookieStore = await cookies();
+
+  const supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach((cookie) => {
+          cookiesToSetArray.push(cookie);
+          try {
+            cookieStore.set(cookie.name, cookie.value, cookie.options);
+          } catch {
+            // Safe fallback
+          }
+        });
+      },
+    },
+    cookieOptions: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    },
+  });
+
+  const createRedirectResponse = (destinationUrl) => {
+    const redirectResponse = NextResponse.redirect(destinationUrl);
+    cookiesToSetArray.forEach(({ name, value, options }) => {
+      redirectResponse.cookies.set(name, value, options);
+    });
+    return redirectResponse;
+  };
+
+  try {
     // 3. Process PKCE authorization code exchange
     if (code) {
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
+        console.error("[Auth Callback: exchangeCode error]", error.message);
         const loginUrl = new URL("/login", baseUrl);
         loginUrl.searchParams.set(
           "error",
           "Your verification or recovery link is invalid, expired, or has already been used. Please try again.",
         );
-        return NextResponse.redirect(loginUrl.toString());
+        return createRedirectResponse(loginUrl.toString());
       }
 
       if (data?.user) {
@@ -65,10 +112,10 @@ export async function GET(request) {
 
       // If this is password recovery, route directly to /reset-password
       if (isRecoveryFlow) {
-        return NextResponse.redirect(new URL("/reset-password", baseUrl).toString());
+        return createRedirectResponse(new URL("/reset-password", baseUrl).toString());
       }
 
-      return NextResponse.redirect(new URL(safeRedirectPath, baseUrl).toString());
+      return createRedirectResponse(new URL(safeRedirectPath, baseUrl).toString());
     }
 
     // 4. Process OTP token_hash verification
@@ -79,12 +126,13 @@ export async function GET(request) {
       });
 
       if (error) {
+        console.error("[Auth Callback: verifyOtp error]", error.message);
         const loginUrl = new URL("/login", baseUrl);
         loginUrl.searchParams.set(
           "error",
           "The email verification link is invalid, expired, or has already been used.",
         );
-        return NextResponse.redirect(loginUrl.toString());
+        return createRedirectResponse(loginUrl.toString());
       }
 
       if (data?.user) {
@@ -92,30 +140,31 @@ export async function GET(request) {
       }
 
       if (type === "recovery") {
-        return NextResponse.redirect(new URL("/reset-password", baseUrl).toString());
+        return createRedirectResponse(new URL("/reset-password", baseUrl).toString());
       }
 
       // Successful email confirmation: redirect to dashboard if session established,
       // or to login with confirmed status
       if (data?.session) {
-        return NextResponse.redirect(new URL(safeRedirectPath, baseUrl).toString());
+        return createRedirectResponse(new URL(safeRedirectPath, baseUrl).toString());
       }
 
       const loginConfirmedUrl = new URL("/login", baseUrl);
       loginConfirmedUrl.searchParams.set("confirmed", "true");
-      return NextResponse.redirect(loginConfirmedUrl.toString());
+      return createRedirectResponse(loginConfirmedUrl.toString());
     }
 
     // 5. Missing code or token parameters
     const loginUrl = new URL("/login", baseUrl);
     loginUrl.searchParams.set("error", "Missing authentication verification parameters.");
-    return NextResponse.redirect(loginUrl.toString());
-  } catch {
+    return createRedirectResponse(loginUrl.toString());
+  } catch (err) {
+    console.error("[Auth Callback: unexpected error]", err);
     const loginUrl = new URL("/login", baseUrl);
     loginUrl.searchParams.set(
       "error",
       "An unexpected error occurred during authentication verification. Please try again.",
     );
-    return NextResponse.redirect(loginUrl.toString());
+    return createRedirectResponse(loginUrl.toString());
   }
 }
