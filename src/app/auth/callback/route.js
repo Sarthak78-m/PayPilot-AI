@@ -25,7 +25,11 @@ export async function GET(request) {
   const providerError = requestUrl.searchParams.get("error");
   const providerErrorDesc = requestUrl.searchParams.get("error_description");
 
-  const baseUrl = getSiteBaseUrl(request);
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
+  const targetOrigin = forwardedHost
+    ? `${forwardedProto}://${forwardedHost.split(",")[0].trim()}`
+    : requestUrl.origin || getSiteBaseUrl(request);
 
   // 1. Handle OAuth provider errors (e.g. user cancelled consent screen)
   if (providerError) {
@@ -35,7 +39,7 @@ export async function GET(request) {
         ? "Sign-in was cancelled. Please try again."
         : "Authentication provider error occurred.");
 
-    const loginUrl = new URL("/login", baseUrl);
+    const loginUrl = new URL("/login", targetOrigin);
     loginUrl.searchParams.set("error", errorMsg);
     return NextResponse.redirect(loginUrl.toString());
   }
@@ -51,7 +55,7 @@ export async function GET(request) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabasePublishableKey) {
-    const loginUrl = new URL("/login", baseUrl);
+    const loginUrl = new URL("/login", targetOrigin);
     loginUrl.searchParams.set("error", "Server authentication configuration is missing.");
     return NextResponse.redirect(loginUrl.toString());
   }
@@ -98,7 +102,7 @@ export async function GET(request) {
 
       if (error) {
         console.error("[Auth Callback: exchangeCode error]", error.message);
-        const loginUrl = new URL("/login", baseUrl);
+        const loginUrl = new URL("/login", targetOrigin);
         loginUrl.searchParams.set(
           "error",
           "Your verification or recovery link is invalid, expired, or has already been used. Please try again.",
@@ -112,10 +116,10 @@ export async function GET(request) {
 
       // If this is password recovery, route directly to /reset-password
       if (isRecoveryFlow) {
-        return createRedirectResponse(new URL("/reset-password", baseUrl).toString());
+        return createRedirectResponse(new URL("/reset-password", targetOrigin).toString());
       }
 
-      return createRedirectResponse(new URL(safeRedirectPath, baseUrl).toString());
+      return createRedirectResponse(new URL(safeRedirectPath, targetOrigin).toString());
     }
 
     // 4. Process OTP token_hash verification
@@ -127,7 +131,7 @@ export async function GET(request) {
 
       if (error) {
         console.error("[Auth Callback: verifyOtp error]", error.message);
-        const loginUrl = new URL("/login", baseUrl);
+        const loginUrl = new URL("/login", targetOrigin);
         loginUrl.searchParams.set(
           "error",
           "The email verification link is invalid, expired, or has already been used.",
@@ -140,27 +144,27 @@ export async function GET(request) {
       }
 
       if (type === "recovery") {
-        return createRedirectResponse(new URL("/reset-password", baseUrl).toString());
+        return createRedirectResponse(new URL("/reset-password", targetOrigin).toString());
       }
 
       // Successful email confirmation: redirect to dashboard if session established,
       // or to login with confirmed status
       if (data?.session) {
-        return createRedirectResponse(new URL(safeRedirectPath, baseUrl).toString());
+        return createRedirectResponse(new URL(safeRedirectPath, targetOrigin).toString());
       }
 
-      const loginConfirmedUrl = new URL("/login", baseUrl);
+      const loginConfirmedUrl = new URL("/login", targetOrigin);
       loginConfirmedUrl.searchParams.set("confirmed", "true");
       return createRedirectResponse(loginConfirmedUrl.toString());
     }
 
     // 5. Missing code or token parameters
-    const loginUrl = new URL("/login", baseUrl);
+    const loginUrl = new URL("/login", targetOrigin);
     loginUrl.searchParams.set("error", "Missing authentication verification parameters.");
     return createRedirectResponse(loginUrl.toString());
   } catch (err) {
     console.error("[Auth Callback: unexpected error]", err);
-    const loginUrl = new URL("/login", baseUrl);
+    const loginUrl = new URL("/login", targetOrigin);
     loginUrl.searchParams.set(
       "error",
       "An unexpected error occurred during authentication verification. Please try again.",
