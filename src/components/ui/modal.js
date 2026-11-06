@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "./button";
+
+const emptySubscribe = () => () => {};
 
 export function Modal({
   isOpen,
@@ -14,12 +16,8 @@ export function Modal({
   showCloseButton = true,
   className = "",
 }) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
 
   const handleKeyDown = useCallback(
     (e) => {

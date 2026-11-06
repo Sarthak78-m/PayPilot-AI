@@ -12,23 +12,154 @@ import {
 } from "./payment-validation";
 
 /**
+ * Helper to check if a hostname is localhost / loopback.
+ * @param {string} host
+ * @returns {boolean}
+ */
+export function isLocalhostHost(host) {
+  if (!host) return false;
+  const cleanHost = host.split(":")[0].toLowerCase();
+  return cleanHost === "localhost" || cleanHost === "127.0.0.1" || cleanHost === "[::1]" || cleanHost === "::1";
+}
+
+/**
+ * Validates whether a hostname belongs to explicitly permitted deployment domains.
+ *
+ * @param {string} hostWithPort
+ * @returns {boolean}
+ */
+export function isPermittedHost(hostWithPort) {
+  if (!hostWithPort || typeof hostWithPort !== "string") return false;
+  // Disallow control characters, spaces, userinfo (@), or path separators
+  if (/[/@\s\\<>]/.test(hostWithPort)) return false;
+
+  const hostname = hostWithPort.split(":")[0].toLowerCase();
+  const isProduction = process.env.NODE_ENV === "production";
+
+  // 1. Localhost is permitted ONLY in non-production environments
+  if (isLocalhostHost(hostname)) {
+    return !isProduction;
+  }
+
+  // 2. Allow host from configured NEXT_PUBLIC_SITE_URL or NEXT_PUBLIC_APP_URL
+  const configuredUrls = [process.env.NEXT_PUBLIC_SITE_URL, process.env.NEXT_PUBLIC_APP_URL].filter(Boolean);
+  for (const urlStr of configuredUrls) {
+    try {
+      const parsed = new URL(urlStr);
+      if (parsed.hostname.toLowerCase() === hostname) {
+        return true;
+      }
+    } catch {
+      // Ignore invalid configured URLs
+    }
+  }
+
+  // 3. Allow explicit ALLOWED_HOSTS / ALLOWED_ORIGINS (comma-separated list)
+  const allowedHostsEnv = process.env.ALLOWED_HOSTS || process.env.ALLOWED_ORIGINS;
+  if (allowedHostsEnv) {
+    const list = allowedHostsEnv.split(",").map((h) => h.trim().toLowerCase());
+    if (list.includes(hostname) || list.includes(hostWithPort.toLowerCase())) {
+      return true;
+    }
+  }
+
+  // 4. Allow PayPilot production domains and subdomains
+  if (
+    hostname === "paypilot.ai" ||
+    hostname.endsWith(".paypilot.ai") ||
+    hostname === "paypilot.com" ||
+    hostname.endsWith(".paypilot.com")
+  ) {
+    return true;
+  }
+
+  // 5. Allow Vercel preview and deployment domains (*.vercel.app)
+  if (/^[a-zA-Z0-9_-]+\.vercel\.app$/i.test(hostname)) {
+    return true;
+  }
+
+  // Reject all other arbitrary external hosts
+  return false;
+}
+
+/**
  * Resolves application base URL for generating customer checkout links.
+ * Enforces production origin security, rejecting arbitrary hosts and protocols.
  *
  * @param {Request} [request] - Next.js Request object for fallback origin.
  * @returns {string} Fully qualified base URL without trailing slash.
  */
 export function getAppBaseUrl(request) {
-  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (envUrl && typeof envUrl === "string" && envUrl.trim()) {
-    return envUrl.trim().replace(/\/+$/, "");
+  const isProduction = process.env.NODE_ENV === "production";
+
+  // 1. Prefer fixed configured application origin (NEXT_PUBLIC_SITE_URL)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl && typeof siteUrl === "string" && siteUrl.trim()) {
+    try {
+      const parsed = new URL(siteUrl.trim());
+      if (parsed.protocol === "https:" || (!isProduction && parsed.protocol === "http:" && isLocalhostHost(parsed.hostname))) {
+        return siteUrl.trim().replace(/\/+$/, "");
+      }
+    } catch {
+      // Malformed URL, fall through
+    }
   }
 
-  if (request && typeof request.headers?.get === "function") {
-    const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
-    const proto = request.headers.get("x-forwarded-proto") || "http";
-    if (host) {
-      return `${proto}://${host}`.replace(/\/+$/, "");
+  // 2. Fall back to NEXT_PUBLIC_APP_URL
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (appUrl && typeof appUrl === "string" && appUrl.trim()) {
+    try {
+      const parsed = new URL(appUrl.trim());
+      if (parsed.protocol === "https:" || (!isProduction && parsed.protocol === "http:" && isLocalhostHost(parsed.hostname))) {
+        return appUrl.trim().replace(/\/+$/, "");
+      }
+    } catch {
+      // Malformed URL, fall through
     }
+  }
+
+  // 3. Fall back to validated Vercel deployment URL
+  const vercelUrl = process.env.VERCEL_URL;
+  if (vercelUrl && typeof vercelUrl === "string" && vercelUrl.trim()) {
+    const cleanVercel = vercelUrl.trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+    if (/^[a-zA-Z0-9_.-]+$/.test(cleanVercel) && (cleanVercel.endsWith(".vercel.app") || isPermittedHost(cleanVercel))) {
+      return `https://${cleanVercel}`;
+    }
+  }
+
+  // 4. Request header evaluation (X-Forwarded-Host / Host)
+  if (request && typeof request.headers?.get === "function") {
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const rawHost = forwardedHost || request.headers.get("host");
+
+    if (rawHost && typeof rawHost === "string") {
+      // If multiple hosts provided (e.g. "evil.com, good.com"), inspect the first host
+      const hostCandidate = rawHost.split(",")[0].trim();
+
+      if (isPermittedHost(hostCandidate)) {
+        const protoHeader = (request.headers.get("x-forwarded-proto") || "https").toLowerCase().trim();
+        const hostname = hostCandidate.split(":")[0].toLowerCase();
+        const isLocal = isLocalhostHost(hostname);
+
+        // Protocol enforcement:
+        // Localhost in dev may use http or https; all remote hosts MUST use https
+        if (isLocal) {
+          const proto = protoHeader === "https" ? "https" : "http";
+          return `${proto}://${hostCandidate}`.replace(/\/+$/, "");
+        } else if (protoHeader === "https" || protoHeader === "http") {
+          // Reject non-http/https protocols; enforce https for remote hosts
+          return `https://${hostCandidate}`.replace(/\/+$/, "");
+        }
+      }
+    }
+  }
+
+  // 5. Fallback behavior
+  if (isProduction) {
+    throw new Error(
+      "Payment link generation failed: Localhost payment links cannot be generated in production. " +
+      "Configure NEXT_PUBLIC_SITE_URL or ensure a valid Vercel deployment URL is set."
+    );
   }
 
   return "http://localhost:3000";
@@ -134,7 +265,17 @@ export async function generateMerchantPaymentLink({
   }
 
   // 3. Construct public payment URL with the raw public token (never persisted or logged)
-  const baseUrl = getAppBaseUrl(request);
+  let baseUrl;
+  try {
+    baseUrl = getAppBaseUrl(request);
+  } catch (urlErr) {
+    return {
+      success: false,
+      error: urlErr.message || "Invalid payment link origin configuration.",
+      code: "INVALID_ORIGIN_CONFIGURATION",
+      statusCode: 500,
+    };
+  }
   const paymentUrl = `${baseUrl}/pay/${token}`;
 
   return {

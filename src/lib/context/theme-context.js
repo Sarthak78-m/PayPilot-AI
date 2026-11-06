@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useCallback, useSyncExternalStore } from "react";
 
 const ThemeContext = createContext({
   theme: "light",
@@ -10,9 +10,53 @@ const ThemeContext = createContext({
   mounted: false,
 });
 
+const emptySubscribe = () => () => {};
+
+const themeListeners = new Set();
+function subscribeTheme(callback) {
+  themeListeners.add(callback);
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", callback);
+  }
+  return () => {
+    themeListeners.delete(callback);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", callback);
+    }
+  };
+}
+
+function notifyThemeListeners() {
+  themeListeners.forEach((fn) => fn());
+}
+
+function getStoredThemeSnapshot() {
+  if (typeof window === "undefined") return "light";
+  try {
+    const savedTheme = localStorage.getItem("paypilot_theme");
+    if (savedTheme === "dark" || savedTheme === "light") {
+      return savedTheme;
+    }
+    // Clear any corrupted legacy value
+    if (savedTheme) {
+      localStorage.removeItem("paypilot_theme");
+    }
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return "dark";
+    }
+  } catch {
+    // localStorage unavailable
+  }
+  return "light";
+}
+
+function getStoredThemeServerSnapshot() {
+  return "light";
+}
+
 export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState("light");
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const theme = useSyncExternalStore(subscribeTheme, getStoredThemeSnapshot, getStoredThemeServerSnapshot);
 
   const applyTheme = useCallback((targetTheme) => {
     if (typeof document === "undefined") return;
@@ -38,45 +82,24 @@ export function ThemeProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    let initialTheme = "light";
-    try {
-      const savedTheme = localStorage.getItem("paypilot_theme");
-      if (savedTheme === "dark" || savedTheme === "light") {
-        initialTheme = savedTheme;
-      } else {
-        // Clear any corrupted legacy value
-        if (savedTheme) {
-          localStorage.removeItem("paypilot_theme");
-        }
-        if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-          initialTheme = "dark";
-        }
-      }
-    } catch {
-      // localStorage unavailable (e.g. security sandbox)
-    }
-
-    setThemeState(initialTheme);
-    applyTheme(initialTheme);
-    setMounted(true);
-  }, [applyTheme]);
+    applyTheme(theme);
+  }, [theme, applyTheme]);
 
   const setTheme = useCallback(
     (newThemeOrUpdater) => {
-      setThemeState((prevTheme) => {
-        const resolved =
-          typeof newThemeOrUpdater === "function"
-            ? newThemeOrUpdater(prevTheme)
-            : newThemeOrUpdater;
-        const sanitized = resolved === "dark" ? "dark" : "light";
+      const currentTheme = getStoredThemeSnapshot();
+      const resolved =
+        typeof newThemeOrUpdater === "function"
+          ? newThemeOrUpdater(currentTheme)
+          : newThemeOrUpdater;
+      const sanitized = resolved === "dark" ? "dark" : "light";
 
-        applyTheme(sanitized);
-        try {
-          localStorage.setItem("paypilot_theme", sanitized);
-        } catch {}
+      applyTheme(sanitized);
+      try {
+        localStorage.setItem("paypilot_theme", sanitized);
+      } catch {}
 
-        return sanitized;
-      });
+      notifyThemeListeners();
     },
     [applyTheme]
   );

@@ -86,6 +86,31 @@ export async function POST(request) {
   }
 }
 
+/**
+ * Safely sanitizes and escapes customer search terms for PostgREST .or() filter expressions.
+ * Prevents PostgREST syntax injection without silently stripping legitimate characters.
+ *
+ * @param {string} rawSearch - Unsanitized search input.
+ * @returns {string} Sanitized string safe for PostgREST double-quoted expression.
+ */
+export function sanitizePostgrestSearchTerm(rawSearch) {
+  if (typeof rawSearch !== "string") return "";
+  const trimmed = rawSearch.trim();
+  if (!trimmed) return "";
+
+  // 1. Cap maximum search length to 100 characters to prevent query buffer overflow
+  const truncated = trimmed.slice(0, 100);
+
+  // 2. Escape backslashes first to prevent escape sequence hijacking
+  // 3. Escape double quotes to ensure string cannot break out of PostgREST double-quoted literal
+  // 4. Escape SQL ILIKE wildcards (% and _) to ensure exact literal matching
+  return truncated
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+}
+
 // ──────────────────────────────────────────────
 // GET /api/invoices — List authenticated user's invoices
 // ──────────────────────────────────────────────
@@ -160,7 +185,8 @@ export async function GET(request) {
     }
 
     // Optional search by customer name or email.
-    const search = url.searchParams.get("search")?.trim() ?? "";
+    const rawSearch = url.searchParams.get("search") ?? "";
+    const search = sanitizePostgrestSearchTerm(rawSearch);
 
     const supabase = await createSupabaseAuthClient();
 
@@ -175,7 +201,7 @@ export async function GET(request) {
     }
     if (search.length > 0) {
       countQuery = countQuery.or(
-        `customer_name.ilike.%${search}%,customer_email.ilike.%${search}%`,
+        `customer_name.ilike."%${search}%",customer_email.ilike."%${search}%"`,
       );
     }
 
@@ -208,7 +234,7 @@ export async function GET(request) {
     }
     if (search.length > 0) {
       dataQuery = dataQuery.or(
-        `customer_name.ilike.%${search}%,customer_email.ilike.%${search}%`,
+        `customer_name.ilike."%${search}%",customer_email.ilike."%${search}%"`,
       );
     }
 

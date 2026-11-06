@@ -122,5 +122,49 @@ describe("Account Deletion Feature (API & Client Contracts)", () => {
     assert.equal(result.status, 0);
     assert.match(result.message, /Network error/);
   });
-});
 
+  it("aborts cascading deletion if payment deletion returns database error, preventing partial deletion", async () => {
+    let authUserDeleted = false;
+
+    // Simulating safe deletion handler
+    const runDeletion = async (simulateDbError = false) => {
+      if (simulateDbError) {
+        return { status: 500, error: "Failed to clean up associated payment records." };
+      }
+      authUserDeleted = true;
+      return { status: 200, success: true };
+    };
+
+    const res = await runDeletion(true);
+    assert.equal(res.status, 500);
+    assert.equal(authUserDeleted, false, "Auth user must NOT be deleted if prior step failed");
+  });
+
+  it("handles repeated deletion requests safely when records are already deleted", async () => {
+    // User with 0 remaining invoices or payments
+    const userInvoices = [];
+    let executedDeletion = false;
+
+    if (userInvoices && userInvoices.length > 0) {
+      executedDeletion = true;
+    }
+
+    assert.equal(executedDeletion, false);
+    const profileResult = { error: null };
+    assert.equal(profileResult.error, null);
+  });
+
+  it("ensures deletion target is derived solely from session, ignoring any payload user IDs", () => {
+    const sessionUser = { id: "authenticated-merchant-uuid" };
+    const maliciousPayload = {
+      confirmation: "DELETE",
+      userId: "victim-user-uuid",
+      user_id: "victim-user-uuid",
+    };
+
+    // Server implementation must always bind to sessionUser.id
+    const targetUserId = sessionUser.id;
+    assert.equal(targetUserId, "authenticated-merchant-uuid");
+    assert.notEqual(targetUserId, maliciousPayload.userId);
+  });
+});

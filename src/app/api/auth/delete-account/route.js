@@ -41,7 +41,7 @@ export async function POST(request) {
     // Use service role client if available to bypass RLS during cascading deletion;
     // otherwise fallback to authenticated user SSR client.
     let dbClient;
-    if (process.env.SUPABASE_SECRET_KEY) {
+    if (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY) {
       try {
         dbClient = createSupabaseServerClient();
       } catch {
@@ -52,44 +52,86 @@ export async function POST(request) {
     }
 
     // 1. Identify all invoices owned by this user
-    try {
-      const { data: invoices } = await dbClient
+    const { data: invoices, error: invFetchError } = await dbClient
+      .from("invoices")
+      .select("id")
+      .eq("user_id", userId);
+
+    if (invFetchError) {
+      return Response.json(
+        { status: "error", message: "Failed to query account records for deletion." },
+        { status: 500 }
+      );
+    }
+
+    if (invoices && invoices.length > 0) {
+      const invoiceIds = invoices.map((inv) => inv.id);
+
+      // Delete payments linked to these invoices (avoids ON DELETE RESTRICT foreign key violations)
+      const { error: payDeleteError } = await dbClient
+        .from("payments")
+        .delete()
+        .in("invoice_id", invoiceIds);
+
+      if (payDeleteError) {
+        return Response.json(
+          { status: "error", message: "Failed to clean up associated payment records." },
+          { status: 500 }
+        );
+      }
+
+      // Delete invoice payment links
+      const { error: linkDeleteError } = await dbClient
+        .from("invoice_payment_links")
+        .delete()
+        .in("invoice_id", invoiceIds);
+
+      if (linkDeleteError) {
+        return Response.json(
+          { status: "error", message: "Failed to clean up payment links." },
+          { status: 500 }
+        );
+      }
+
+      // Delete invoices
+      const { error: invDeleteError } = await dbClient
         .from("invoices")
-        .select("id")
+        .delete()
         .eq("user_id", userId);
 
-      if (invoices && invoices.length > 0) {
-        const invoiceIds = invoices.map((inv) => inv.id);
-
-        // Delete payments linked to these invoices (avoids ON DELETE RESTRICT foreign key violations)
-        await dbClient.from("payments").delete().in("invoice_id", invoiceIds);
-
-        // Delete invoice payment links
-        await dbClient.from("invoice_payment_links").delete().in("invoice_id", invoiceIds);
-
-        // Delete invoices
-        await dbClient.from("invoices").delete().eq("user_id", userId);
+      if (invDeleteError) {
+        return Response.json(
+          { status: "error", message: "Failed to delete user invoices." },
+          { status: 500 }
+        );
       }
-    } catch {
-      // In local/mock environments, tables may not exist yet; proceed gracefully
     }
 
     // 2. Delete public.profiles record
-    try {
-      await dbClient.from("profiles").delete().eq("id", userId);
-    } catch {
-      // Table may not exist or already clean
+    const { error: profileError } = await dbClient
+      .from("profiles")
+      .delete()
+      .eq("id", userId);
+
+    if (profileError && profileError.code !== "PGRST116" && profileError.code !== "42P01") {
+      // Return 500 if profile deletion failed for reasons other than missing table/record
+      return Response.json(
+        { status: "error", message: "Failed to clean up user profile." },
+        { status: 500 }
+      );
     }
 
-    // 3. Delete from Supabase Auth (auth.users) if service-role admin is available
-    if (process.env.SUPABASE_SECRET_KEY) {
-      try {
-        const adminClient = createSupabaseServerClient();
-        if (adminClient.auth?.admin?.deleteUser) {
-          await adminClient.auth.admin.deleteUser(userId);
+    // 3. Delete from Supabase Auth (auth.users) ONLY after all DB records have been successfully cleared
+    if (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const adminClient = createSupabaseServerClient();
+      if (adminClient?.auth?.admin?.deleteUser) {
+        const { error: authError } = await adminClient.auth.admin.deleteUser(userId);
+        if (authError) {
+          return Response.json(
+            { status: "error", message: "Failed to delete authentication user identity." },
+            { status: 500 }
+          );
         }
-      } catch {
-        // Admin user deletion skipped if unavailable or network issues
       }
     }
 
