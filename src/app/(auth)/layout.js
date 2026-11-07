@@ -44,14 +44,6 @@ export default function AuthLayout({ children }) {
         </div>
         <div className="flex items-center gap-4 text-[11px]">
           <a href="#" className="hover:text-[#2563EB] transition-colors">
-            Privacy Policy
-          </a>
-          <span className="text-[#CBD5E1]">•</span>
-          <a href="#" className="hover:text-[#2563EB] transition-colors">
-            Terms of Service
-          </a>
-          <span className="text-[#CBD5E1]">•</span>
-          <a href="#" className="hover:text-[#2563EB] transition-colors">
             Security Overview
           </a>
         </div>

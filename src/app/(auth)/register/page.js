@@ -274,7 +274,7 @@ export default function RegisterPage() {
           }
         />
 
-        {/* Submit Button */}
+
         {/* Submit Button */}
         <Button
           type="submit"

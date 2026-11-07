@@ -166,7 +166,7 @@ export default function SettingsPage() {
           <div>
             <CardTitle className="text-lg">Profile Information</CardTitle>
             <CardDescription className="text-xs">
-              Your personal details and account information
+Your personal details and account information
             </CardDescription>
           </div>
         </div>

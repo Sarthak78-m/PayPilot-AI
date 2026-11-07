@@ -110,7 +110,7 @@ export function validateResetPasswordForm({ password, confirmPassword }) {
     errors.confirmPassword = "Confirm your new password.";
   } else if (password !== confirmPassword) {
     errors.confirmPassword = "Passwords do not match.";
-  } 1
+  }
 
   return {
     isValid: Object.keys(errors).length === 0,

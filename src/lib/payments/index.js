@@ -39,3 +39,27 @@ export {
   isServerPaymentCheckoutEnabled,
   checkServerPaymentFeatureGuard,
 } from "./server-feature-guard";
+
+export {
+  PAYMENT_STATUS,
+  normalizePaymentStatus,
+  canTransitionStatus,
+  assertValidStatusTransition,
+  mapPayPalStatusToInternal,
+} from "./payment-state-machine";
+
+export {
+  SUPPORTED_CURRENCIES,
+  isSupportedCurrency,
+  normalizeCurrency,
+  parseAndValidateAmount,
+  formatAmountString,
+  calculateTransactionFee,
+  convertCurrency,
+  formatCurrencyDisplay,
+} from "./currency";
+
+export {
+  generateInternalTransactionReference,
+  initiatePaymentTransaction,
+} from "./transaction-engine-service";

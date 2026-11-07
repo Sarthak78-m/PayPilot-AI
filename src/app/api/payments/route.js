@@ -1,5 +1,5 @@
 import { getAuthenticatedUser } from "@/lib/auth/require-user";
-import { createSupabaseAuthClient } from "@/lib/supabase/server";
+import { createSupabaseAuthClient, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -35,8 +35,9 @@ export async function GET(request) {
     const order = searchParams.get("order") === "asc" ? "asc" : "desc";
 
     const supabase = await createSupabaseAuthClient();
+    const serverSupabase = createSupabaseServerClient();
 
-    // 1. Fetch user's invoices to establish authorization boundaries
+    // 1. Fetch user's invoices to establish authorization boundaries and customer mappings
     const { data: userInvoices, error: invError } = await supabase
       .from("invoices")
       .select("id, customer_name, customer_email, currency")
@@ -49,32 +50,45 @@ export async function GET(request) {
       );
     }
 
-    const primaryCurrency = userInvoices?.[0]?.currency || "USD";
+    const invoicesList = userInvoices || [];
+    const primaryCurrency = invoicesList[0]?.currency || "USD";
+    const invoiceIds = invoicesList.map((inv) => inv.id);
+    const invMap = new Map(invoicesList.map((inv) => [inv.id, inv]));
 
-    if (!userInvoices || userInvoices.length === 0) {
-      return Response.json({
-        status: "ok",
-        data: {
-          overview: {
-            totalReceived: { amount: 0, formatted: formatCurrency(0, primaryCurrency), count: 0 },
-            pending: { amount: 0, formatted: formatCurrency(0, primaryCurrency), count: 0 },
-            failed: { amount: 0, formatted: formatCurrency(0, primaryCurrency), count: 0 },
-            refunded: { amount: 0, formatted: formatCurrency(0, primaryCurrency), count: 0 },
-          },
-          payments: [],
-          pagination: { page, limit, total: 0, totalPages: 0 },
-        },
-      });
+    // 2. Fetch payments: either linked to user's invoices OR directly owned by user
+    let paymentsQuery = serverSupabase
+      .from("payments")
+      .select(`
+        id,
+        user_id,
+        invoice_id,
+        internal_transaction_id,
+        amount,
+        currency,
+        transaction_fee,
+        total_amount,
+        status,
+        provider,
+        payment_method,
+        payer_email,
+        payer_name,
+        recipient_email,
+        recipient_name,
+        category,
+        description,
+        created_at,
+        updated_at,
+        paypal_capture_id,
+        paypal_order_id
+      `);
+
+    if (invoiceIds.length > 0) {
+      paymentsQuery = paymentsQuery.or(`user_id.eq.${user.id},invoice_id.in.(${invoiceIds.join(",")})`);
+    } else {
+      paymentsQuery = paymentsQuery.eq("user_id", user.id);
     }
 
-    const invoiceIds = userInvoices.map((inv) => inv.id);
-    const invMap = new Map(userInvoices.map((inv) => [inv.id, inv]));
-
-    // 2. Fetch payments for invoices owned by this authenticated user
-    const { data: paymentsData, error: payError } = await supabase
-      .from("payments")
-      .select("id, invoice_id, amount, currency, status, provider, created_at, updated_at, paypal_capture_id, paypal_order_id")
-      .in("invoice_id", invoiceIds);
+    const { data: paymentsData, error: payError } = await paymentsQuery;
 
     if (payError) {
       return Response.json(
@@ -96,19 +110,19 @@ export async function GET(request) {
     let refundedCount = 0;
 
     allPayments.forEach((p) => {
-      const amt = Number(p.amount) || 0;
+      const amt = Number(p.total_amount || p.amount) || 0;
       const st = (p.status || "").toLowerCase();
 
       if (st === "completed" || st === "paid" || st === "settled") {
         totalReceivedAmt += amt;
         totalReceivedCount += 1;
-      } else if (["pending", "created", "order_created", "approved", "capturing"].includes(st)) {
+      } else if (["pending", "created", "order_created", "approved", "processing", "capturing", "initiated"].includes(st)) {
         pendingAmt += amt;
         pendingCount += 1;
       } else if (st === "failed" || st === "denied") {
         failedAmt += amt;
         failedCount += 1;
-      } else if (st === "refunded") {
+      } else if (st === "refunded" || st === "partially_refunded") {
         refundedAmt += amt;
         refundedCount += 1;
       }
@@ -147,10 +161,13 @@ export async function GET(request) {
           return st === "completed" || st === "paid" || st === "settled";
         }
         if (statusParam === "pending") {
-          return ["pending", "created", "order_created", "approved", "capturing"].includes(st);
+          return ["pending", "created", "order_created", "approved", "processing", "capturing", "initiated"].includes(st);
         }
         if (statusParam === "failed") {
           return st === "failed" || st === "denied";
+        }
+        if (statusParam === "refunded") {
+          return st === "refunded" || st === "partially_refunded";
         }
         return st === statusParam;
       });
@@ -160,11 +177,17 @@ export async function GET(request) {
       filtered = filtered.filter((p) => {
         const inv = invMap.get(p.invoice_id);
         const matchId = p.id && p.id.toLowerCase().includes(searchParam);
+        const matchInternal = p.internal_transaction_id && p.internal_transaction_id.toLowerCase().includes(searchParam);
         const matchOrder = p.paypal_order_id && p.paypal_order_id.toLowerCase().includes(searchParam);
         const matchCapture = p.paypal_capture_id && p.paypal_capture_id.toLowerCase().includes(searchParam);
-        const matchCustomer = inv?.customer_name && inv.customer_name.toLowerCase().includes(searchParam);
-        const matchEmail = inv?.customer_email && inv.customer_email.toLowerCase().includes(searchParam);
-        return matchId || matchOrder || matchCapture || matchCustomer || matchEmail;
+        const matchCustomer = (inv?.customer_name && inv.customer_name.toLowerCase().includes(searchParam)) ||
+          (p.recipient_name && p.recipient_name.toLowerCase().includes(searchParam)) ||
+          (p.payer_name && p.payer_name.toLowerCase().includes(searchParam));
+        const matchEmail = (inv?.customer_email && inv.customer_email.toLowerCase().includes(searchParam)) ||
+          (p.recipient_email && p.recipient_email.toLowerCase().includes(searchParam)) ||
+          (p.payer_email && p.payer_email.toLowerCase().includes(searchParam));
+
+        return matchId || matchInternal || matchOrder || matchCapture || matchCustomer || matchEmail;
       });
     }
 
@@ -172,7 +195,7 @@ export async function GET(request) {
     filtered.sort((a, b) => {
       let comparison = 0;
       if (sort === "amount") {
-        comparison = (Number(a.amount) || 0) - (Number(b.amount) || 0);
+        comparison = (Number(a.total_amount || a.amount) || 0) - (Number(b.total_amount || b.amount) || 0);
       } else {
         const dateA = new Date(a.created_at || 0).getTime();
         const dateB = new Date(b.created_at || 0).getTime();
@@ -195,23 +218,36 @@ export async function GET(request) {
       const normalizedStatus =
         rawStatus === "paid" || rawStatus === "settled" ? "completed" : rawStatus;
 
+      const displayAmount = p.total_amount || p.amount;
+
       return {
         id: p.id,
-        transactionRef: p.paypal_capture_id
+        internalReference: p.internal_transaction_id || null,
+        transactionRef: p.internal_transaction_id
+          ? p.internal_transaction_id
+          : p.paypal_capture_id
           ? `#${p.paypal_capture_id.slice(-8)}`
           : p.id
           ? `#${p.id.slice(0, 8)}`
           : "—",
         invoiceId: p.invoice_id ? `#${p.invoice_id.slice(0, 8)}` : "—",
         rawInvoiceId: p.invoice_id,
-        customer: matchedInv?.customer_name || "Client",
-        customerEmail: matchedInv?.customer_email || "",
-        amount: Number(p.amount) || 0,
+        customer: p.recipient_name || matchedInv?.customer_name || p.payer_name || "Client",
+        customerEmail: p.recipient_email || matchedInv?.customer_email || p.payer_email || "",
+        amount: Number(displayAmount) || 0,
+        baseAmount: Number(p.amount) || 0,
+        fee: Number(p.transaction_fee) || 0,
         currency: curr,
-        formattedAmount: formatCurrency(p.amount, curr),
+        formattedAmount: formatCurrency(displayAmount, curr),
         date: p.created_at ? p.created_at.split("T")[0] : "",
+        fullDate: p.created_at,
         status: normalizedStatus,
         provider: p.provider === "paypal" ? "PayPal Sandbox" : p.provider || "PayPal Sandbox",
+        paymentMethod: p.payment_method || "PayPal Sandbox",
+        paypalOrderId: p.paypal_order_id,
+        paypalCaptureId: p.paypal_capture_id,
+        category: p.category || "Payment",
+        description: p.description || "",
       };
     });
 

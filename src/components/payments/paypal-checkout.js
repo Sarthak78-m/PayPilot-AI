@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Button, Badge, Skeleton } from "@/components/ui";
-import { AlertCircle, ShieldCheck, RefreshCw, CheckCircle2 } from "@/components/icons";
+import React, { useState, useEffect, useRef } from "react";
+import { Button, Skeleton } from "@/components/ui";
+import { AlertCircle, ShieldCheck, RefreshCw } from "@/components/icons";
 import { isCheckoutFeatureEnabled, getPublicPayPalClientId } from "@/lib/payments/feature-guard";
 
 /**
@@ -64,6 +64,7 @@ function loadOfficialPayPalSdk({ clientId, currency = "USD" }) {
 export function PayPalCheckout({
   token,
   invoiceId,
+  transactionId,
   currency = "USD",
   amount,
   onPaymentSuccess = () => {},
@@ -80,6 +81,7 @@ export function PayPalCheckout({
   const [sdkLoading, setSdkLoading] = useState(true);
   const [sdkError, setSdkError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingMessage, setProcessingMessage] = useState("Processing Your Payment...");
   const [actionNotice, setActionNotice] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -157,13 +159,14 @@ export function PayPalCheckout({
           createOrder: async () => {
             if (!isMountedRef.current) return "";
             setIsProcessing(true);
+            setProcessingMessage("Creating Your Payment Order...");
             setActionNotice(null);
 
             try {
               const res = await fetch("/api/paypal/create-order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token, invoiceId }),
+                body: JSON.stringify({ token, invoiceId, transactionId }),
               });
 
               const data = await res.json();
@@ -173,13 +176,17 @@ export function PayPalCheckout({
                 throw new Error(errorMessage);
               }
 
+              if (isMountedRef.current) {
+                setProcessingMessage("Continuing to PayPal Sandbox...");
+              }
+
               return data.orderId;
             } catch (err) {
               if (isMountedRef.current) {
                 setIsProcessing(false);
                 setActionNotice({
                   type: "error",
-                  message: err.message || "Could not initialize PayPal order. Please try again.",
+                  message: err.message || "Payment Could Not Be Completed.",
                 });
               }
               throw err;
@@ -190,9 +197,10 @@ export function PayPalCheckout({
           onApprove: async (data) => {
             if (!isMountedRef.current) return;
             setIsProcessing(true);
+            setProcessingMessage("Payment Approved. Verifying Transaction...");
             setActionNotice({
               type: "info",
-              message: "Payment authorized! Confirming and verifying settlement with PayPal Sandbox...",
+              message: "Payment Approved. Verifying Transaction...",
             });
 
             const orderId = data?.orderID || data?.orderId;
@@ -207,10 +215,14 @@ export function PayPalCheckout({
             }
 
             try {
+              if (isMountedRef.current) {
+                setProcessingMessage("Processing Your Payment...");
+              }
+
               const captureRes = await fetch("/api/paypal/capture-order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ orderId, token, invoiceId }),
+                body: JSON.stringify({ orderId, token, invoiceId, transactionId }),
               });
 
               const captureData = await captureRes.json();
@@ -221,6 +233,10 @@ export function PayPalCheckout({
                 if (captureData.status === "PENDING") {
                   onPaymentPending(captureData);
                 } else {
+                  setActionNotice({
+                    type: "success",
+                    message: "Payment Completed Successfully!",
+                  });
                   onPaymentSuccess(captureData);
                 }
               } else {
@@ -228,7 +244,7 @@ export function PayPalCheckout({
                   type: "error",
                   message:
                     captureData.error ||
-                    "Payment capture could not be verified by the server. Please contact merchant.",
+                    "Payment Could Not Be Completed.",
                 });
                 onPaymentFailed(captureData);
               }
@@ -249,7 +265,7 @@ export function PayPalCheckout({
             setIsProcessing(false);
             setActionNotice({
               type: "warning",
-              message: "Checkout was cancelled. Your invoice remains open and no funds were charged.",
+              message: "Payment Cancelled.",
             });
             onPaymentCancelled(data);
           },
@@ -260,7 +276,7 @@ export function PayPalCheckout({
             setIsProcessing(false);
             setActionNotice({
               type: "error",
-              message: "PayPal encountered an issue during checkout. Please try again or refresh.",
+              message: "Payment Could Not Be Completed.",
             });
             onPaymentFailed({ error: err?.message || "Gateway error" });
           },
@@ -294,6 +310,7 @@ export function PayPalCheckout({
     resolvedCurrency,
     token,
     invoiceId,
+    transactionId,
     retryCount,
     onPaymentSuccess,
     onPaymentPending,
@@ -341,7 +358,7 @@ export function PayPalCheckout({
         </div>
       )}
 
-      {/* Action Status Notice (Info / Warning / Error) */}
+      {/* Action Status Notice (Info / Warning / Error / Success) */}
       {actionNotice && (
         <div
           role="alert"
@@ -350,6 +367,8 @@ export function PayPalCheckout({
               ? "bg-red-50 text-red-700 border border-red-200"
               : actionNotice.type === "warning"
               ? "bg-amber-50 text-amber-800 border border-amber-200"
+              : actionNotice.type === "success"
+              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
               : "bg-blue-50 text-blue-700 border border-blue-200"
           }`}
         >
@@ -359,6 +378,8 @@ export function PayPalCheckout({
                 ? "text-red-500"
                 : actionNotice.type === "warning"
                 ? "text-amber-500"
+                : actionNotice.type === "success"
+                ? "text-emerald-500"
                 : "text-blue-500"
             }`}
           />
@@ -366,7 +387,7 @@ export function PayPalCheckout({
         </div>
       )}
 
-      {/* Loading Skeleton */}
+      {/* Loading Skeleton: Connecting to PayPal Sandbox */}
       {sdkLoading && (
         <div className="space-y-3 p-4 rounded-2xl bg-[#E8EDF4] border border-white/60 shadow-raised-sm" aria-busy="true">
           <div className="flex items-center justify-between">
@@ -374,7 +395,7 @@ export function PayPalCheckout({
             <Skeleton className="h-4 w-20 rounded-md" />
           </div>
           <Skeleton className="h-12 w-full rounded-xl" />
-          <p className="text-[11px] text-[#64748B] text-center">Loading official PayPal Sandbox Gateway...</p>
+          <p className="text-[11px] text-[#64748B] text-center font-medium">Connecting to PayPal Sandbox...</p>
         </div>
       )}
 
@@ -404,12 +425,12 @@ export function PayPalCheckout({
       {/* Official PayPal Buttons Container */}
       <div className="relative">
         {isProcessing && (
-          <div className="absolute inset-0 z-20 bg-white/70 backdrop-blur-xs rounded-xl flex items-center justify-center gap-2 text-xs font-semibold text-[#172033]">
+          <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-xs rounded-xl flex items-center justify-center gap-2 text-xs font-semibold text-[#172033] shadow-raised-sm p-4">
             <svg className="animate-spin h-5 w-5 text-[#0070BA]" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            <span>Verifying settlement with PayPal...</span>
+            <span>{processingMessage}</span>
           </div>
         )}
 

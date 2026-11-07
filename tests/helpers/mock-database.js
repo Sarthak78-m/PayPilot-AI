@@ -2,19 +2,27 @@ import crypto from "node:crypto";
 
 /**
  * Creates an in-memory mock database that faithfully reproduces the Supabase client
- * query interface and PostgreSQL Phase 7B migration RPC behaviors for isolated testing.
+ * query interface and PostgreSQL Phase 7B and Phase 8 migrations for isolated testing.
  */
 export function createMockDatabase() {
   const invoices = new Map();
   const invoicePaymentLinks = new Map();
   const payments = new Map();
   const rateLimits = new Map();
+  const paymentRefunds = new Map();
+  const paypalWebhookEvents = new Map();
+  const paymentAuditLogs = new Map();
+  const profiles = new Map();
 
   function reset() {
     invoices.clear();
     invoicePaymentLinks.clear();
     payments.clear();
     rateLimits.clear();
+    paymentRefunds.clear();
+    paypalWebhookEvents.clear();
+    paymentAuditLogs.clear();
+    profiles.clear();
   }
 
   // Pre-seed sample invoice
@@ -56,15 +64,27 @@ export function createMockDatabase() {
     const id = payment.id || crypto.randomUUID();
     payments.set(id, {
       id,
-      invoice_id: payment.invoice_id,
+      invoice_id: payment.invoice_id || null,
+      user_id: payment.user_id || "user-merchant-123",
+      internal_transaction_id: payment.internal_transaction_id || `PP-TXN-${Date.now()}-${id.slice(0, 4)}`,
       amount: payment.amount || 500.0,
+      transaction_fee: payment.transaction_fee || 0.0,
+      total_amount: payment.total_amount || payment.amount || 500.0,
       currency: payment.currency || "USD",
       status: payment.status || "CREATED",
       provider: payment.provider || "paypal",
+      payment_method: payment.payment_method || "PayPal Sandbox",
+      payer_email: payment.payer_email || null,
+      payer_name: payment.payer_name || null,
+      recipient_email: payment.recipient_email || null,
+      recipient_name: payment.recipient_name || null,
+      category: payment.category || "Payment",
+      description: payment.description || null,
       paypal_order_id: payment.paypal_order_id || null,
       paypal_capture_id: payment.paypal_capture_id || null,
       create_request_id: payment.create_request_id || crypto.randomUUID(),
       capture_request_id: payment.capture_request_id || null,
+      captured_at: payment.captured_at || null,
       created_at: payment.created_at || new Date().toISOString(),
       updated_at: payment.updated_at || new Date().toISOString(),
       ...payment,
@@ -72,12 +92,58 @@ export function createMockDatabase() {
     return payments.get(id);
   }
 
+  function seedRefund(refund) {
+    const id = refund.id || crypto.randomUUID();
+    paymentRefunds.set(id, {
+      id,
+      payment_id: refund.payment_id,
+      paypal_refund_id: refund.paypal_refund_id || `9${crypto.randomBytes(8).toString("hex").toUpperCase()}`,
+      refund_amount: refund.refund_amount || 100.0,
+      currency: refund.currency || "USD",
+      refund_reason: refund.refund_reason || null,
+      refund_status: refund.refund_status || "COMPLETED",
+      initiated_by: refund.initiated_by || null,
+      created_at: refund.created_at || new Date().toISOString(),
+      updated_at: refund.updated_at || new Date().toISOString(),
+      ...refund,
+    });
+    return paymentRefunds.get(id);
+  }
+
+  function seedProfile(profile) {
+    profiles.set(profile.id, {
+      id: profile.id,
+      name: profile.name || "Test User",
+      email: profile.email || "user@example.com",
+      role: profile.role || "user",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...profile,
+    });
+    return profiles.get(profile.id);
+  }
+
   const client = {
     from(table) {
       let conditions = [];
+      let orConditions = null;
       let updatePayload = null;
+      let insertPayload = null;
       let isSingle = false;
       let isMaybeSingle = false;
+      let limitCount = null;
+
+      function getStore() {
+        if (table === "invoices") return invoices;
+        if (table === "invoice_payment_links") return invoicePaymentLinks;
+        if (table === "payments") return payments;
+        if (table === "rate_limits") return rateLimits;
+        if (table === "payment_refunds") return paymentRefunds;
+        if (table === "paypal_webhook_events") return paypalWebhookEvents;
+        if (table === "payment_audit_logs") return paymentAuditLogs;
+        if (table === "profiles") return profiles;
+        return new Map();
+      }
 
       const queryBuilder = {
         select() {
@@ -89,6 +155,33 @@ export function createMockDatabase() {
         },
         is(col, val) {
           conditions.push((row) => row[col] === val);
+          return queryBuilder;
+        },
+        in(col, vals) {
+          const valSet = new Set(Array.isArray(vals) ? vals : [vals]);
+          conditions.push((row) => valSet.has(row[col]));
+          return queryBuilder;
+        },
+        or(expr) {
+          // Parse simple .or() expressions like user_id.eq.X,invoice_id.in.(Y,Z)
+          orConditions = (row) => {
+            const clauses = expr.split(",");
+            return clauses.some((clause) => {
+              const trimmed = clause.trim();
+              if (trimmed.includes(".eq.")) {
+                const [col, val] = trimmed.split(".eq.");
+                return row[col] === val;
+              }
+              return false;
+            });
+          };
+          return queryBuilder;
+        },
+        order() {
+          return queryBuilder;
+        },
+        limit(n) {
+          limitCount = n;
           return queryBuilder;
         },
         single() {
@@ -103,24 +196,46 @@ export function createMockDatabase() {
           updatePayload = payload;
           return queryBuilder;
         },
+        insert(payload) {
+          insertPayload = payload;
+          return queryBuilder;
+        },
+        upsert(payload, opts) {
+          insertPayload = payload;
+          return queryBuilder;
+        },
         then(resolve, reject) {
           return execute().then(resolve, reject);
         },
       };
 
       async function execute() {
-        let store;
-        if (table === "invoices") store = invoices;
-        else if (table === "invoice_payment_links") store = invoicePaymentLinks;
-        else if (table === "payments") store = payments;
-        else if (table === "rate_limits") store = rateLimits;
-        else store = new Map();
+        const store = getStore();
+
+        // Handle INSERT / UPSERT
+        if (insertPayload) {
+          const items = Array.isArray(insertPayload) ? insertPayload : [insertPayload];
+          const inserted = [];
+
+          for (const item of items) {
+            const id = item.id || crypto.randomUUID();
+            const fullRecord = { id, ...item };
+            store.set(id, fullRecord);
+            inserted.push(fullRecord);
+          }
+
+          if (isSingle || isMaybeSingle) {
+            return { data: inserted[0], error: null };
+          }
+          return { data: Array.isArray(insertPayload) ? inserted : inserted[0], error: null };
+        }
 
         // 1. Filter matching rows
         const matched = [];
         for (const [id, row] of store.entries()) {
-          const passes = conditions.every((fn) => fn(row));
-          if (passes) {
+          const passesAnd = conditions.every((fn) => fn(row));
+          const passesOr = orConditions ? orConditions(row) : true;
+          if (passesAnd && passesOr) {
             matched.push({ id, row });
           }
         }
@@ -147,14 +262,26 @@ export function createMockDatabase() {
         }
 
         // 3. Perform SELECT
-        // Support join on invoices if requested from invoice_payment_links
-        const formattedRows = matched.map(({ row }) => {
+        let formattedRows = matched.map(({ row }) => {
           if (table === "invoice_payment_links" && row.invoice_id) {
             const inv = invoices.get(row.invoice_id);
             return { ...row, invoices: inv || null };
           }
+          if (table === "payments") {
+            const inv = row.invoice_id ? invoices.get(row.invoice_id) : null;
+            // attach refunds if queried
+            const refundsForPayment = [];
+            for (const r of paymentRefunds.values()) {
+              if (r.payment_id === row.id) refundsForPayment.push(r);
+            }
+            return { ...row, invoices: inv || null, payment_refunds: refundsForPayment };
+          }
           return { ...row };
         });
+
+        if (limitCount !== null && limitCount > 0) {
+          formattedRows = formattedRows.slice(0, limitCount);
+        }
 
         if (isSingle) {
           if (formattedRows.length === 0) {
@@ -298,6 +425,7 @@ export function createMockDatabase() {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
+
         payments.set(paymentId, newPayment);
 
         return {
@@ -519,9 +647,15 @@ export function createMockDatabase() {
     invoicePaymentLinks,
     payments,
     rateLimits,
+    paymentRefunds,
+    paypalWebhookEvents,
+    paymentAuditLogs,
+    profiles,
     seedInvoice,
     seedPaymentLink,
     seedPayment,
+    seedRefund,
+    seedProfile,
     reset,
   };
 }

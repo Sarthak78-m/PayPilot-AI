@@ -9,7 +9,6 @@ import {
   CardDescription,
   Button,
   Badge,
-  Input,
   Select,
   EmptyState,
   Skeleton,
@@ -28,14 +27,19 @@ import {
   FileText,
   DollarSign,
   Plus,
+  ShieldCheck,
+  Download,
 } from "@/components/icons";
 import { fetchPayments } from "@/lib/api/payments-service";
+import { InitiatePaymentModal } from "@/components/payments/initiate-payment-modal";
+import { PaymentReceiptModal } from "@/components/payments/payment-receipt-modal";
 
 const STATUS_FILTER_OPTIONS = [
   { value: "", label: "All Statuses" },
   { value: "completed", label: "Completed" },
   { value: "pending", label: "Pending" },
   { value: "failed", label: "Failed" },
+  { value: "cancelled", label: "Cancelled" },
   { value: "refunded", label: "Refunded" },
 ];
 
@@ -51,21 +55,35 @@ function getPaymentStatusBadge(status) {
         </Badge>
       );
     case "pending":
+    case "created":
+    case "order_created":
+    case "approved":
+    case "processing":
+    case "capturing":
+    case "initiated":
       return (
         <Badge variant="warning" size="sm" dot>
           Pending
         </Badge>
       );
     case "failed":
+    case "denied":
       return (
         <Badge variant="error" size="sm" dot>
           Failed
         </Badge>
       );
-    case "refunded":
+    case "cancelled":
       return (
         <Badge variant="neutral" size="sm" dot>
-          Refunded
+          Cancelled
+        </Badge>
+      );
+    case "refunded":
+    case "partially_refunded":
+      return (
+        <Badge variant="neutral" size="sm" dot>
+          {s === "partially_refunded" ? "Partially Refunded" : "Refunded"}
         </Badge>
       );
     default:
@@ -98,6 +116,8 @@ export default function PaymentsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [receiptPayment, setReceiptPayment] = useState(null);
+  const [isInitiateOpen, setIsInitiateOpen] = useState(false);
 
   const loadData = useCallback(async (targetStatus = statusFilter, targetSearch = search) => {
     try {
@@ -167,8 +187,12 @@ export default function PaymentsPage() {
     loadData("", "");
   };
 
+  const handleTransactionSuccess = async (receiptData) => {
+    await loadData();
+  };
+
   // Check if account has any payment activity
-  const hasPaymentRecords = overview.totalReceived.count > 0 || payments.length > 0;
+  const hasPaymentRecords = overview.totalReceived?.count > 0 || payments.length > 0;
 
   if (loading) {
     return (
@@ -205,13 +229,28 @@ export default function PaymentsPage() {
             <h1 className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight">
               Payments & Settlements
             </h1>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-amber-500/10 text-amber-800 border border-amber-500/30">
+              PayPal Sandbox
+            </span>
           </div>
           <p className="text-xs text-[#64748B] mt-0.5">
-            Monitor client payouts, payment histories, and PayPal settlements.
+            Process Sandbox payments, inspect financial settlements, and generate official payment receipts.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          {/* New Payment Button */}
+          <Button
+            variant="primary"
+            size="sm"
+            icon={Plus}
+            iconPosition="left"
+            onClick={() => setIsInitiateOpen(true)}
+            className="shadow-primary-glow"
+          >
+            Initiate Payment
+          </Button>
+
           <Button
             variant="secondary"
             size="sm"
@@ -225,9 +264,15 @@ export default function PaymentsPage() {
             Refresh
           </Button>
 
+          <Link href="/admin/payments">
+            <Button variant="secondary" size="sm" icon={ShieldCheck} iconPosition="left">
+              Admin Portal
+            </Button>
+          </Link>
+
           <Link href="/dashboard">
-            <Button variant="secondary" size="sm" icon={ArrowLeft} iconPosition="left">
-              Back to Dashboard
+            <Button variant="ghost" size="sm" icon={ArrowLeft} iconPosition="left">
+              Dashboard
             </Button>
           </Link>
         </div>
@@ -293,7 +338,7 @@ export default function PaymentsPage() {
             <div className="flex items-start justify-between gap-2.5">
               <div className="min-w-0">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block truncate">
-                  {isFallback ? "Recent Verified Settlements" : "Total Payments Received"}
+                  Total Payments Received
                 </span>
                 {hasPaymentRecords && overview.totalReceived ? (
                   <div className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight mt-1 font-mono truncate">
@@ -347,10 +392,10 @@ export default function PaymentsPage() {
 
             <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
               <span className="font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] bg-amber-100 text-[#B45309] shrink-0">
-                All clear
+                Active
               </span>
               <span className="font-mono font-semibold text-[#172033] text-[11px]">
-                {isFallback ? "—" : `${overview.pending?.count || 0} payouts`}
+                {overview.pending?.count || 0} in-flight
               </span>
             </div>
           </Card>
@@ -382,10 +427,10 @@ export default function PaymentsPage() {
 
             <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
               <span className="font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] bg-red-100 text-[#DC2626] shrink-0">
-                All clear
+                Status
               </span>
               <span className="font-mono font-semibold text-[#172033] text-[11px]">
-                {isFallback ? "—" : `${overview.failed?.count || 0} failed`}
+                {overview.failed?.count || 0} failed
               </span>
             </div>
           </Card>
@@ -417,10 +462,10 @@ export default function PaymentsPage() {
 
             <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
               <span className="font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] bg-blue-100 text-[#2563EB] shrink-0">
-                None
+                Reversed
               </span>
               <span className="font-mono font-semibold text-[#172033] text-[11px]">
-                {isFallback ? "—" : `${overview.refunded?.count || 0} refunds`}
+                {overview.refunded?.count || 0} refunds
               </span>
             </div>
           </Card>
@@ -433,18 +478,20 @@ export default function PaymentsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <CardTitle className="text-base sm:text-lg">
-              Recent Settlements
+              Transaction History
             </CardTitle>
             <CardDescription className="text-xs">
-              Recent client payments and settled payouts
+              Verified PayPal Sandbox payment captures and financial settlements
             </CardDescription>
           </div>
 
-          <Link href="/invoices">
-            <Button variant="outline" size="sm" icon={FileText} iconPosition="left">
-              View All Invoices
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/invoices">
+              <Button variant="outline" size="sm" icon={FileText} iconPosition="left">
+                View Invoices
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Filter Controls Bar */}
@@ -459,7 +506,7 @@ export default function PaymentsPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search transaction ID, invoice, or client..."
+                placeholder="Search ref ID, order ID, or payee..."
                 className="w-full bg-[#E8EDF4] text-[#172033] placeholder-[#94A3B8] text-xs sm:text-sm rounded-xl py-2 pl-9 pr-8 shadow-inset-sm border border-[#D1D8E2] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] focus:outline-none transition-all"
               />
               {search && (
@@ -511,15 +558,15 @@ export default function PaymentsPage() {
         {/* 5. Payments Table / List */}
         {payments.length === 0 ? (
           <EmptyState
-            title={search || statusFilter ? "No Matching Settlements" : "No Payment Settlements Yet"}
+            title={search || statusFilter ? "No Matching Settlements" : "No Payment Transactions Yet"}
             description={
               search || statusFilter
-                ? `No transactions match your current filters. Try resetting search or changing status.`
-                : "Client payments captured via PayPal will appear here automatically once an invoice is settled."
+                ? "No transactions match your current filters. Try resetting search or changing status."
+                : "Transactions initiated in PayPilot or paid via PayPal Sandbox will appear here automatically."
             }
             icon={CreditCard}
-            actionLabel={search || statusFilter ? "Clear Filters" : "Create Invoice"}
-            onAction={search || statusFilter ? handleClearFilters : () => router.push("/invoices/new")}
+            actionLabel={search || statusFilter ? "Clear Filters" : "Initiate Payment"}
+            onAction={search || statusFilter ? handleClearFilters : () => setIsInitiateOpen(true)}
           />
         ) : (
           <>
@@ -529,12 +576,12 @@ export default function PaymentsPage() {
                 <thead>
                   <tr className="border-b border-[#CBD5E1]/60 text-[#64748B] uppercase tracking-wider font-semibold text-[11px]">
                     <th className="py-2.5 px-3">Transaction Ref</th>
-                    <th className="py-2.5 px-3">Invoice</th>
-                    <th className="py-2.5 px-3">Customer</th>
+                    <th className="py-2.5 px-3">Customer / Category</th>
+                    <th className="py-2.5 px-3">PayPal Order ID</th>
                     <th className="py-2.5 px-3">Amount</th>
-                    <th className="py-2.5 px-3">Payment Date</th>
+                    <th className="py-2.5 px-3">Date</th>
                     <th className="py-2.5 px-3">Status</th>
-                    <th className="py-2.5 px-3 text-right">Details</th>
+                    <th className="py-2.5 px-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#CBD5E1]/40">
@@ -543,19 +590,26 @@ export default function PaymentsPage() {
                       key={payment.id}
                       className="hover:bg-[#CBD5E1]/20 transition-colors group"
                     >
-                      <td className="py-3 px-3 font-mono font-bold text-[#2563EB]">
-                        {payment.id}
-                      </td>
-                      <td className="py-3 px-3 font-mono text-[#64748B]">
-                        {payment.invoiceId}
+                      <td className="py-3 px-3">
+                        <span className="font-mono font-bold text-[#2563EB] block">
+                          {payment.internalReference || payment.transactionRef || payment.id.slice(0, 12)}
+                        </span>
+                        {payment.paypalCaptureId && (
+                          <span className="text-[10px] font-mono text-[#64748B]">
+                            Cap: {payment.paypalCaptureId}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-3">
                         <span className="font-semibold text-[#172033] block">
                           {payment.customer}
                         </span>
                         <span className="text-[11px] text-[#64748B]">
-                          {payment.method || "PayPal"}
+                          {payment.category || payment.invoiceId || "PayPal Sandbox"}
                         </span>
+                      </td>
+                      <td className="py-3 px-3 font-mono text-[#64748B]">
+                        {payment.paypalOrderId || payment.orderId || "—"}
                       </td>
                       <td className="py-3 px-3 font-mono font-bold text-[#16A34A] text-sm">
                         +{payment.formattedAmount}
@@ -567,14 +621,28 @@ export default function PaymentsPage() {
                         {getPaymentStatusBadge(payment.status)}
                       </td>
                       <td className="py-3 px-3 text-right">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setSelectedPayment(payment)}
-                          className="text-[11px] py-1 px-2.5 min-h-[30px]"
-                        >
-                          View
-                        </Button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {payment.status === "completed" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setReceiptPayment(payment)}
+                              icon={Download}
+                              iconPosition="left"
+                              className="text-[11px] py-1 px-2 min-h-[30px]"
+                            >
+                              Receipt
+                            </Button>
+                          )}
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setSelectedPayment(payment)}
+                            className="text-[11px] py-1 px-2.5 min-h-[30px]"
+                          >
+                            Details
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -591,7 +659,7 @@ export default function PaymentsPage() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-bold text-[#2563EB]">
-                      {payment.id}
+                      {payment.internalReference || payment.transactionRef || payment.id.slice(0, 10)}
                     </span>
                     {getPaymentStatusBadge(payment.status)}
                   </div>
@@ -600,19 +668,29 @@ export default function PaymentsPage() {
                     <div>
                       <p className="font-bold text-[#172033]">{payment.customer}</p>
                       <p className="text-[11px] text-[#64748B]">
-                        Inv: <span className="font-mono">{payment.invoiceId}</span> • {payment.date}
+                        {payment.category} • {payment.date}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="font-mono font-extrabold text-sm text-[#16A34A]">
                         +{payment.formattedAmount}
                       </p>
-                      <button
-                        onClick={() => setSelectedPayment(payment)}
-                        className="text-[11px] font-semibold text-[#2563EB] hover:underline mt-0.5 inline-block"
-                      >
-                        Details →
-                      </button>
+                      <div className="flex items-center justify-end gap-2 mt-1">
+                        {payment.status === "completed" && (
+                          <button
+                            onClick={() => setReceiptPayment(payment)}
+                            className="text-[11px] font-semibold text-[#16A34A] hover:underline"
+                          >
+                            Receipt
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setSelectedPayment(payment)}
+                          className="text-[11px] font-semibold text-[#2563EB] hover:underline"
+                        >
+                          Details →
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -642,7 +720,7 @@ export default function PaymentsPage() {
               </div>
               <div className="flex items-center justify-center gap-1.5 pt-1">
                 {getPaymentStatusBadge(selectedPayment.status)}
-                <span className="text-[11px] text-[#64748B]">• {selectedPayment.method || "PayPal"}</span>
+                <span className="text-[11px] text-[#64748B]">• {selectedPayment.paymentMethod || "PayPal Sandbox"}</span>
               </div>
             </div>
 
@@ -650,13 +728,24 @@ export default function PaymentsPage() {
             <div className="space-y-2.5">
               <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
                 <span className="text-[#64748B] font-medium">Transaction Reference:</span>
-                <span className="font-mono font-bold text-[#172033]">{selectedPayment.id}</span>
+                <span className="font-mono font-bold text-[#172033] select-all">
+                  {selectedPayment.internalReference || selectedPayment.transactionRef || selectedPayment.id}
+                </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
-                <span className="text-[#64748B] font-medium">Associated Invoice:</span>
-                <span className="font-mono font-bold text-[#2563EB]">{selectedPayment.invoiceId}</span>
-              </div>
+              {selectedPayment.paypalOrderId && (
+                <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
+                  <span className="text-[#64748B] font-medium">PayPal Order ID:</span>
+                  <span className="font-mono text-[#2563EB] select-all">{selectedPayment.paypalOrderId}</span>
+                </div>
+              )}
+
+              {selectedPayment.paypalCaptureId && (
+                <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
+                  <span className="text-[#64748B] font-medium">PayPal Capture ID:</span>
+                  <span className="font-mono text-[#16A34A] select-all">{selectedPayment.paypalCaptureId}</span>
+                </div>
+              )}
 
               <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
                 <span className="text-[#64748B] font-medium">Payer / Client:</span>
@@ -670,18 +759,33 @@ export default function PaymentsPage() {
 
               <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
                 <span className="text-[#64748B] font-medium">Payment Protocol:</span>
-                <span className="font-semibold text-[#172033]">PayPal REST v2 Capture</span>
+                <span className="font-semibold text-[#172033]">PayPal Orders v2 (intent: CAPTURE)</span>
               </div>
             </div>
 
             <Divider />
 
-            <div className="flex items-center justify-end gap-2 pt-1">
+            <div className="flex items-center justify-between gap-2 pt-1">
+              {selectedPayment.status === "completed" && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={Download}
+                  iconPosition="left"
+                  onClick={() => {
+                    const curr = selectedPayment;
+                    setSelectedPayment(null);
+                    setReceiptPayment(curr);
+                  }}
+                >
+                  View Receipt
+                </Button>
+              )}
               <Button
                 variant="primary"
                 size="sm"
                 onClick={() => setSelectedPayment(null)}
-                className="w-full"
+                className="w-full sm:w-auto"
               >
                 Close Details
               </Button>
@@ -689,6 +793,20 @@ export default function PaymentsPage() {
           </div>
         )}
       </Modal>
+
+      {/* 7. New Payment Initiation Modal */}
+      <InitiatePaymentModal
+        isOpen={isInitiateOpen}
+        onClose={() => setIsInitiateOpen(false)}
+        onPaymentSuccess={handleTransactionSuccess}
+      />
+
+      {/* 8. Receipt Modal */}
+      <PaymentReceiptModal
+        isOpen={Boolean(receiptPayment)}
+        onClose={() => setReceiptPayment(null)}
+        payment={receiptPayment}
+      />
     </div>
   );
 }

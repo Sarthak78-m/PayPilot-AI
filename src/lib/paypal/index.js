@@ -30,3 +30,14 @@ export {
   PayPalApiError,
   sanitizePayPalMessage,
 } from "./paypal-errors";
+
+export {
+  refundPayPalCapture,
+  getPayPalRefund,
+  getPayPalCapture,
+} from "./paypal-refunds";
+
+export {
+  verifyPayPalWebhookSignature,
+  processPayPalWebhookEvent,
+} from "./paypal-webhooks";
