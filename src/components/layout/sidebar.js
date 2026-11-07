@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -17,6 +17,8 @@ import {
 } from "@/components/icons";
 import { Badge, Divider, ThemeToggle } from "@/components/ui";
 import { getSessionUser, logoutUser } from "@/lib/auth/auth-client";
+
+const emptySubscribe = () => () => {};
 
 const NAV_ITEMS = [
   {
@@ -58,15 +60,21 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+
   useEffect(() => {
-    let mounted = true;
+    let isMounted = true;
     getSessionUser().then((res) => {
-      if (mounted && res?.authenticated && res.user) {
+      if (isMounted && res?.authenticated && res.user) {
         setCurrentUser(res.user);
       }
     });
     return () => {
-      mounted = false;
+      isMounted = false;
     };
   }, []);
 
@@ -109,6 +117,7 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
           {/* Mobile Close Button */}
           {mobileOpen && (
             <button
+              type="button"
               onClick={onCloseMobile}
               className="lg:hidden p-2 rounded-xl text-[#64748B] hover:text-[#172033] shadow-raised-sm active:shadow-inset-sm"
               aria-label="Close navigation sidebar"
@@ -185,15 +194,25 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
             </div>
           </div>
 
-          <button
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="p-1.5 rounded-lg text-[#64748B] hover:text-[#DC2626] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-colors shrink-0"
-            title="Sign out of PayPilot AI"
-            aria-label="Sign out"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
+          {mounted ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="p-1.5 rounded-lg text-[#64748B] hover:text-[#DC2626] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-colors shrink-0"
+              title="Sign out of PayPilot AI"
+              aria-label="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          ) : (
+            <div
+              className="p-1.5 rounded-lg text-[#64748B] shadow-raised-sm shrink-0"
+              aria-hidden="true"
+            >
+              <LogOut className="h-4 w-4" />
+            </div>
+          )}
         </div>
       </div>
     </div>
