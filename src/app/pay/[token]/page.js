@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   Card,
@@ -25,6 +26,9 @@ import {
   Clock,
   RefreshCw,
   FileText,
+  Download,
+  ArrowLeft,
+  ExternalLink,
 } from "@/components/icons";
 import { PayPalCheckout } from "@/components/payments/paypal-checkout";
 
@@ -50,6 +54,8 @@ function formatDate(dateStr) {
       year: "numeric",
       month: "short",
       day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   } catch {
     return dateStr;
@@ -67,6 +73,9 @@ export default function CustomerPaymentPage() {
   // Settlement completion states
   const [paymentSuccessData, setPaymentSuccessData] = useState(null);
   const [paymentPendingData, setPaymentPendingData] = useState(null);
+  const [paymentCancelledData, setPaymentCancelledData] = useState(null);
+  const [paymentFailedData, setPaymentFailedData] = useState(null);
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
 
   const fetchInvoice = useCallback(async () => {
     if (!token) {
@@ -122,6 +131,8 @@ export default function CustomerPaymentPage() {
   const handleRetry = () => {
     setLoading(true);
     setErrorState(null);
+    setPaymentCancelledData(null);
+    setPaymentFailedData(null);
     fetchInvoice();
   };
 
@@ -129,11 +140,29 @@ export default function CustomerPaymentPage() {
   const handlePaymentSuccess = (captureResult) => {
     setPaymentSuccessData(captureResult);
     setPaymentPendingData(null);
+    setPaymentCancelledData(null);
+    setPaymentFailedData(null);
   };
 
   const handlePaymentPending = (pendingResult) => {
     setPaymentPendingData(pendingResult);
     setPaymentSuccessData(null);
+  };
+
+  const handlePaymentCancelled = (data) => {
+    setPaymentCancelledData(data || { cancelled: true });
+    setPaymentFailedData(null);
+  };
+
+  const handlePaymentFailed = (err) => {
+    setPaymentFailedData(err || { message: "Payment could not be completed." });
+    setPaymentCancelledData(null);
+  };
+
+  const handlePrintReceipt = () => {
+    if (typeof window !== "undefined") {
+      window.print();
+    }
   };
 
   return (
@@ -249,55 +278,153 @@ export default function CustomerPaymentPage() {
           </Card>
         )}
 
-        {/* State 3: Payment Successfully Completed (State 14) */}
+        {/* State 3: Payment Successfully Completed (Phase 7 Requirements) */}
         {!loading && !errorState && paymentSuccessData && (
           <Card variant="raised-lg" className="p-6 sm:p-8 text-center space-y-6">
-            <div className="h-16 w-16 rounded-2xl bg-[#DCFCE7] border border-[#86EFAC] text-[#15803D] flex items-center justify-center mx-auto shadow-raised-sm">
-              <CheckCircle2 className="h-9 w-9" />
+            {/* Success Animation & Icon */}
+            <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-[#DCFCE7] animate-ping opacity-30" />
+              <div className="h-18 w-18 rounded-2xl bg-[#DCFCE7] border border-[#86EFAC] text-[#15803D] flex items-center justify-center shadow-raised-sm relative z-10">
+                <CheckCircle2 className="h-10 w-10" />
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Badge variant="success" size="md" dot>
-                Payment Confirmed
-              </Badge>
-              <h2 className="text-2xl font-extrabold text-[#172033] tracking-tight pt-1">
-                Thank You for Your Payment!
-              </h2>
-              <p className="text-xs text-[#64748B]">
-                Your transaction has been captured and settled with the merchant.
+            <div className="space-y-2">
+              <div className="flex items-center justify-center gap-2">
+                <Badge variant="success" size="md" dot>
+                  Transaction Status: COMPLETED
+                </Badge>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-800 border border-amber-500/30">
+                  PayPal Sandbox Payment
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172033] tracking-tight pt-1">
+                Payment Successful
+              </h1>
+              <p className="text-xs text-[#64748B] max-w-md mx-auto">
+                Your payment has been officially captured and verified through PayPal Developer Sandbox.
               </p>
             </div>
 
+            {/* Verified Transaction Details Breakdown */}
             <div className="p-5 rounded-2xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-inset-sm space-y-3 text-left text-xs">
-              <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
-                <span className="text-[#64748B]">Amount Settled</span>
-                <span className="font-mono font-bold text-base text-[#172033]">
-                  {formatCurrency(paymentSuccessData.amount || invoice?.amount, paymentSuccessData.currency || invoice?.currency)}
+              <div className="flex justify-between items-center py-1.5 border-b border-[#CBD5E1]/40">
+                <span className="text-[#64748B] font-medium">Amount Paid</span>
+                <span className="font-mono font-extrabold text-base text-[#172033]">
+                  {formatCurrency(
+                    paymentSuccessData.amount || invoice?.amount,
+                    paymentSuccessData.currency || invoice?.currency
+                  )}
                 </span>
               </div>
+
               <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
-                <span className="text-[#64748B]">Invoice Status</span>
-                <span className="font-bold text-[#15803D]">PAID</span>
+                <span className="text-[#64748B]">Currency</span>
+                <span className="font-mono font-bold text-[#172033]">
+                  {paymentSuccessData.currency || invoice?.currency || "USD"}
+                </span>
               </div>
-              {paymentSuccessData.captureId && (
+
+              <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
+                <span className="text-[#64748B]">Payment Method</span>
+                <span className="font-semibold text-[#172033] flex items-center gap-1.5">
+                  <span className="text-[#0070BA] font-extrabold italic">Pay<span className="text-[#00B2E3]">Pal</span></span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">Sandbox</span>
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
+                <span className="text-[#64748B]">Transaction Status</span>
+                <span className="font-bold text-[#15803D]">COMPLETED</span>
+              </div>
+
+              <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
+                <span className="text-[#64748B]">Payment Date and Time</span>
+                <span className="text-[#172033] font-mono text-[11px]">
+                  {formatDate(paymentSuccessData.capturedAt || new Date().toISOString())}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
+                <span className="text-[#64748B]">Transaction ID</span>
+                <span className="font-mono text-[#172033] select-all">
+                  {paymentSuccessData.paymentId || "PAY-RECORDED"}
+                </span>
+              </div>
+
+              {paymentSuccessData.orderId && (
                 <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
-                  <span className="text-[#64748B]">PayPal Reference</span>
-                  <span className="font-mono text-[#172033]">{paymentSuccessData.captureId}</span>
+                  <span className="text-[#64748B]">PayPal Order ID</span>
+                  <span className="font-mono text-[#0070BA] font-semibold select-all">
+                    {paymentSuccessData.orderId}
+                  </span>
                 </div>
               )}
-              <div className="flex justify-between items-center py-1">
-                <span className="text-[#64748B]">Payment Date</span>
-                <span className="text-[#172033]">{formatDate(paymentSuccessData.capturedAt || new Date().toISOString())}</span>
-              </div>
+
+              {paymentSuccessData.captureId && (
+                <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
+                  <span className="text-[#64748B]">Capture ID</span>
+                  <span className="font-mono text-[#15803D] font-semibold select-all">
+                    {paymentSuccessData.captureId}
+                  </span>
+                </div>
+              )}
+
+              {invoice?.customerName && (
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-[#64748B]">Payer / Customer</span>
+                  <span className="text-[#172033] font-semibold">{invoice.customerName}</span>
+                </div>
+              )}
             </div>
 
-            <p className="text-xs text-[#64748B]">
-              A confirmation record has been registered with the merchant. You may save or print this page for your records.
-            </p>
+            {/* Technical Verification Details Dropdown */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
+                className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] hover:underline flex items-center justify-center gap-1 mx-auto transition-colors"
+              >
+                <span>{showTechnicalDetails ? "Hide" : "View"} Gateway Verification Details</span>
+                <ExternalLink className="h-3 w-3" />
+              </button>
+
+              {showTechnicalDetails && (
+                <div className="mt-3 p-3.5 rounded-xl bg-slate-900 text-slate-100 text-[11px] font-mono text-left overflow-x-auto shadow-inset-sm">
+                  <pre>{JSON.stringify(paymentSuccessData, null, 2)}</pre>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons: Download Receipt & Return to Dashboard */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={handlePrintReceipt}
+                icon={Download}
+                iconPosition="left"
+                className="w-full sm:w-auto"
+              >
+                Download Receipt
+              </Button>
+
+              <Link href="/dashboard" className="w-full sm:w-auto">
+                <Button
+                  variant="primary"
+                  size="md"
+                  icon={ArrowLeft}
+                  iconPosition="left"
+                  className="w-full sm:w-auto"
+                >
+                  Return to Dashboard
+                </Button>
+              </Link>
+            </div>
           </Card>
         )}
 
-        {/* State 4: Payment Capture Pending Clearance (State 13 - eCheck) */}
+        {/* State 4: Payment Capture Pending Clearance (eCheck / Bank Clearance) */}
         {!loading && !errorState && !paymentSuccessData && paymentPendingData && (
           <Card variant="raised-lg" className="p-6 sm:p-8 text-center space-y-6">
             <div className="h-16 w-16 rounded-2xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] flex items-center justify-center mx-auto shadow-raised-sm">
@@ -312,7 +439,7 @@ export default function CustomerPaymentPage() {
                 Payment Awaiting Clearance
               </h2>
               <p className="text-xs text-[#64748B] max-w-md mx-auto">
-                Your payment authorization was received by PayPal and is pending gateway clearance (such as an eCheck or standard bank transfer).
+                Your payment authorization was received by PayPal and is pending gateway clearance (eCheck or bank clearance).
               </p>
             </div>
 
@@ -335,14 +462,92 @@ export default function CustomerPaymentPage() {
               </div>
             </div>
 
-            <p className="text-xs text-[#64748B]">
-              The merchant has been notified of your in-flight payment. Your invoice will update to PAID automatically once funds clear.
-            </p>
+            <Link href="/dashboard">
+              <Button variant="secondary" size="md">
+                Return to Dashboard
+              </Button>
+            </Link>
           </Card>
         )}
 
-        {/* State 5: Active Payable Invoice Checkout (State 2) */}
-        {!loading && !errorState && !paymentSuccessData && !paymentPendingData && invoice && (
+        {/* State 5: Payment Cancelled State (Phase 8 Requirement) */}
+        {!loading && !errorState && !paymentSuccessData && !paymentPendingData && paymentCancelledData && (
+          <Card variant="raised-lg" className="p-6 sm:p-8 text-center space-y-6">
+            <div className="h-16 w-16 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto shadow-raised-sm">
+              <AlertCircle className="h-9 w-9" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Badge variant="warning" size="md" dot>
+                Transaction Status: CANCELLED
+              </Badge>
+              <h2 className="text-2xl font-extrabold text-[#172033] tracking-tight pt-1">
+                Payment Cancelled
+              </h2>
+              <p className="text-xs text-[#64748B] max-w-md mx-auto">
+                The PayPal checkout window was closed before completion. No funds were debited from your account and your invoice remains open.
+              </p>
+            </div>
+
+            <div className="pt-2 flex justify-center gap-3">
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => setPaymentCancelledData(null)}
+                icon={RefreshCw}
+                iconPosition="left"
+              >
+                Retry Payment
+              </Button>
+              <Link href="/dashboard">
+                <Button variant="secondary" size="md">
+                  Return to Dashboard
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        )}
+
+        {/* State 6: Payment Failed State (Phase 8 Requirement) */}
+        {!loading && !errorState && !paymentSuccessData && !paymentPendingData && !paymentCancelledData && paymentFailedData && (
+          <Card variant="raised-lg" className="p-6 sm:p-8 text-center space-y-6">
+            <div className="h-16 w-16 rounded-2xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto shadow-raised-sm">
+              <AlertCircle className="h-9 w-9" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Badge variant="error" size="md" dot>
+                Transaction Status: FAILED
+              </Badge>
+              <h2 className="text-2xl font-extrabold text-[#172033] tracking-tight pt-1">
+                Payment Failed
+              </h2>
+              <p className="text-xs text-[#64748B] max-w-md mx-auto">
+                {paymentFailedData.error || "PayPal was unable to process this payment. Please check your sandbox test credentials or balance and try again."}
+              </p>
+            </div>
+
+            <div className="pt-2 flex justify-center gap-3">
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => setPaymentFailedData(null)}
+                icon={RefreshCw}
+                iconPosition="left"
+              >
+                Retry Payment
+              </Button>
+              <Link href="/dashboard">
+                <Button variant="secondary" size="md">
+                  Return to Dashboard
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        )}
+
+        {/* State 7: Active Payable Invoice Checkout */}
+        {!loading && !errorState && !paymentSuccessData && !paymentPendingData && !paymentCancelledData && !paymentFailedData && invoice && (
           <div className="space-y-6">
             {/* Invoice Summary Card */}
             <Card variant="raised-lg" className="p-6 sm:p-8 space-y-6">
@@ -402,7 +607,7 @@ export default function CustomerPaymentPage() {
               <div className="space-y-4 pt-1">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-[#172033] tracking-tight">Select Payment Option</h3>
-                  <span className="text-[11px] text-[#64748B]">Official PayPal Checkout</span>
+                  <span className="text-[11px] text-[#64748B]">Official PayPal Sandbox</span>
                 </div>
 
                 <PayPalCheckout
@@ -411,12 +616,8 @@ export default function CustomerPaymentPage() {
                   amount={invoice.amount}
                   onPaymentSuccess={handlePaymentSuccess}
                   onPaymentPending={handlePaymentPending}
-                  onPaymentFailed={(err) => {
-                    // Optional local handling
-                  }}
-                  onPaymentCancelled={(data) => {
-                    // Optional local handling
-                  }}
+                  onPaymentFailed={handlePaymentFailed}
+                  onPaymentCancelled={handlePaymentCancelled}
                 />
               </div>
             </Card>

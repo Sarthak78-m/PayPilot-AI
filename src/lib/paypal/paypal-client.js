@@ -22,7 +22,10 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
  * @param {string} [environmentEnv] - PAYPAL_ENVIRONMENT ("sandbox" | "production").
  * @returns {string} Fully qualified base URL without trailing slashes.
  */
-export function resolvePayPalBaseUrl(baseUrlEnv = process.env.PAYPAL_BASE_URL, environmentEnv = process.env.PAYPAL_ENVIRONMENT) {
+export function resolvePayPalBaseUrl(
+  baseUrlEnv = process.env.PAYPAL_BASE_URL,
+  environmentEnv = process.env.PAYPAL_ENVIRONMENT || process.env.PAYPAL_MODE
+) {
   if (baseUrlEnv && typeof baseUrlEnv === "string" && baseUrlEnv.trim()) {
     const trimmed = baseUrlEnv.trim().replace(/\/+$/, "");
     try {
@@ -75,9 +78,10 @@ export function resolvePayPalBaseUrl(baseUrlEnv = process.env.PAYPAL_BASE_URL, e
 export function getPayPalConfig() {
   const clientId = process.env.PAYPAL_CLIENT_ID;
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
-  const rawEnv = (process.env.PAYPAL_ENVIRONMENT || "").trim().toLowerCase();
+  const rawEnv = (process.env.PAYPAL_MODE || process.env.PAYPAL_ENVIRONMENT || "").trim().toLowerCase();
   const environment = rawEnv === "production" ? "production" : "sandbox";
-  const baseUrl = resolvePayPalBaseUrl(process.env.PAYPAL_BASE_URL, process.env.PAYPAL_ENVIRONMENT);
+  const baseUrl = resolvePayPalBaseUrl(process.env.PAYPAL_BASE_URL, rawEnv);
+  const currency = (process.env.PAYPAL_CURRENCY || "USD").trim().toUpperCase();
 
   if (!clientId || !clientSecret) {
     throw new PayPalError(
@@ -91,6 +95,7 @@ export function getPayPalConfig() {
     clientSecret: clientSecret.trim(),
     baseUrl,
     environment,
+    currency,
   };
 }
 
