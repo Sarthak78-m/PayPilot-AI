@@ -19,18 +19,20 @@ export async function GET() {
     return guardResponse;
   }
 
-  const clientId =
+  const sanitize = (val) => (typeof val === "string" ? val.trim().replace(/^["']|["']$/g, "").trim() : "");
+  const clientId = sanitize(
     process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ||
     process.env.PAYPAL_CLIENT_ID ||
-    "";
-  const currency = (process.env.PAYPAL_CURRENCY || "USD").trim().toUpperCase();
+    ""
+  );
+  const hasClientSecret = Boolean(
+    sanitize(process.env.PAYPAL_CLIENT_SECRET)
+  );
+  const currency = (sanitize(process.env.PAYPAL_CURRENCY) || "USD").toUpperCase();
   const mode = (
-    process.env.PAYPAL_MODE ||
-    process.env.PAYPAL_ENVIRONMENT ||
+    sanitize(process.env.PAYPAL_MODE || process.env.PAYPAL_ENVIRONMENT) ||
     "sandbox"
-  )
-    .trim()
-    .toLowerCase();
+  ).toLowerCase();
 
   return Response.json(
     {
@@ -39,6 +41,8 @@ export async function GET() {
       currency,
       mode,
       sandbox: mode === "sandbox",
+      hasClientSecret,
+      configured: Boolean(clientId && hasClientSecret),
     },
     {
       status: 200,

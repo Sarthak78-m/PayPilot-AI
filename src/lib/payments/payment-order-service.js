@@ -181,11 +181,12 @@ export async function createCheckoutOrder({
       config: payPalConfig,
     });
   } catch (err) {
+    console.error("[PaymentOrderService] PayPal order creation failed:", err?.message || err);
     return {
       success: false,
-      error: "Payment gateway error during order initialization. Please retry.",
-      code: err.code || "PAYPAL_ORDER_CREATION_FAILED",
-      statusCode: err.statusCode === 429 ? 429 : 502,
+      error: err?.message || "Payment gateway error during order initialization. Please retry.",
+      code: err?.code || "PAYPAL_ORDER_CREATION_FAILED",
+      statusCode: err?.statusCode === 429 ? 429 : 502,
     };
   }
 

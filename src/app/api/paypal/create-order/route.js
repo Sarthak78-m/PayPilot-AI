@@ -227,7 +227,7 @@ export async function POST(request) {
         return Response.json(
           {
             success: false,
-            error: "Payment gateway error during order creation. Please retry.",
+            error: gatewayErr?.message || "Payment gateway error during order creation. Please retry.",
             code: gatewayErr.code || "PAYPAL_ORDER_CREATION_FAILED",
           },
           { status: gatewayErr.statusCode === 429 ? 429 : 502 }
@@ -369,7 +369,7 @@ export async function POST(request) {
       return Response.json(
         {
           success: false,
-          error: "Payment gateway error during order creation. Please retry.",
+          error: gatewayErr?.message || "Payment gateway error during order creation. Please retry.",
           code: gatewayErr.code || "PAYPAL_ORDER_CREATION_FAILED",
         },
         { status: gatewayErr.statusCode === 429 ? 429 : 502 }

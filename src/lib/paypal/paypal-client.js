@@ -76,12 +76,13 @@ export function resolvePayPalBaseUrl(
  * }}
  */
 export function getPayPalConfig() {
-  const clientId = process.env.PAYPAL_CLIENT_ID;
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
-  const rawEnv = (process.env.PAYPAL_MODE || process.env.PAYPAL_ENVIRONMENT || "").trim().toLowerCase();
+  const sanitize = (val) => (typeof val === "string" ? val.trim().replace(/^["']|["']$/g, "").trim() : "");
+  const clientId = sanitize(process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID);
+  const clientSecret = sanitize(process.env.PAYPAL_CLIENT_SECRET);
+  const rawEnv = sanitize(process.env.PAYPAL_MODE || process.env.PAYPAL_ENVIRONMENT).toLowerCase();
   const environment = rawEnv === "production" ? "production" : "sandbox";
   const baseUrl = resolvePayPalBaseUrl(process.env.PAYPAL_BASE_URL, rawEnv);
-  const currency = (process.env.PAYPAL_CURRENCY || "USD").trim().toUpperCase();
+  const currency = (sanitize(process.env.PAYPAL_CURRENCY) || "USD").toUpperCase();
 
   if (!clientId || !clientSecret) {
     throw new PayPalError(
@@ -91,8 +92,8 @@ export function getPayPalConfig() {
   }
 
   return {
-    clientId: clientId.trim(),
-    clientSecret: clientSecret.trim(),
+    clientId,
+    clientSecret,
     baseUrl,
     environment,
     currency,
