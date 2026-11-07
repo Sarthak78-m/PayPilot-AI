@@ -11,6 +11,16 @@ export async function proxy(request) {
     response.headers.set("Referrer-Policy", "no-referrer");
   }
 
+  const pathname = request.nextUrl.pathname;
+  const isProtectedRoute = PROTECTED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+
+  // Skip auth operations on non-protected paths (including /auth/callback, public checkout, etc.)
+  if (!isProtectedRoute) {
+    return response;
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
@@ -53,34 +63,27 @@ export async function proxy(request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-  const isProtectedRoute = PROTECTED_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  );
+  // 1. Unauthenticated user accessing protected dashboard route
+  if (!user) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", pathname);
+    const redirectResponse = NextResponse.redirect(loginUrl);
+    cookiesToPass.forEach(({ name, value, options }) => {
+      redirectResponse.cookies.set(name, value, options);
+    });
+    return redirectResponse;
+  }
 
-  if (isProtectedRoute) {
-    // 1. Unauthenticated user accessing protected dashboard route
-    if (!user) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("next", pathname);
-      const redirectResponse = NextResponse.redirect(loginUrl);
-      cookiesToPass.forEach(({ name, value, options }) => {
-        redirectResponse.cookies.set(name, value, options);
-      });
-      return redirectResponse;
-    }
-
-    // 2. Unverified email/password user attempting protected access
-    const isEmailProvider = !user.app_metadata?.provider || user.app_metadata?.provider === "email";
-    if (isEmailProvider && !user.email_confirmed_at) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("error", "Email confirmation is required before accessing the dashboard.");
-      const redirectResponse = NextResponse.redirect(loginUrl);
-      cookiesToPass.forEach(({ name, value, options }) => {
-        redirectResponse.cookies.set(name, value, options);
-      });
-      return redirectResponse;
-    }
+  // 2. Unverified email/password user attempting protected access
+  const isEmailProvider = !user.app_metadata?.provider || user.app_metadata?.provider === "email";
+  if (isEmailProvider && !user.email_confirmed_at) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("error", "Email confirmation is required before accessing the dashboard.");
+    const redirectResponse = NextResponse.redirect(loginUrl);
+    cookiesToPass.forEach(({ name, value, options }) => {
+      redirectResponse.cookies.set(name, value, options);
+    });
+    return redirectResponse;
   }
 
   return response;

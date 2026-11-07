@@ -15,7 +15,13 @@ export function createSupabaseBrowserClient() {
   }
 
   if (!supabaseBrowserClient) {
-    supabaseBrowserClient = createBrowserClient(supabaseUrl, supabasePublishableKey);
+    supabaseBrowserClient = createBrowserClient(supabaseUrl, supabasePublishableKey, {
+      cookieOptions: {
+        path: "/",
+        sameSite: "lax",
+        secure: typeof window !== "undefined" && window.location.protocol === "https:",
+      },
+    });
   }
 
   return supabaseBrowserClient;

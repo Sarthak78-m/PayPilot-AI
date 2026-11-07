@@ -81,6 +81,7 @@ export async function GET(request) {
       },
     },
     cookieOptions: {
+      path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -103,10 +104,31 @@ export async function GET(request) {
       if (error) {
         console.error("[Auth Callback: exchangeCode error]", error.message);
         const loginUrl = new URL("/login", targetOrigin);
-        loginUrl.searchParams.set(
-          "error",
-          "Your verification or recovery link is invalid, expired, or has already been used. Please try again.",
-        );
+
+        let userMessage;
+        if (isRecoveryFlow || type === "recovery") {
+          userMessage =
+            "Your password recovery link is invalid, expired, or has already been used. Please request a new link.";
+        } else if (type === "signup") {
+          userMessage =
+            "Your verification link is invalid, expired, or has already been used. Please request a new confirmation email.";
+        } else if (
+          error.message?.toLowerCase().includes("code verifier") ||
+          error.code === "pkce_code_verifier_not_found"
+        ) {
+          userMessage =
+            "Authentication session expired or code verifier not found. Please try signing in again with Google.";
+        } else if (
+          error.message?.toLowerCase().includes("already registered") ||
+          error.message?.toLowerCase().includes("already linked")
+        ) {
+          userMessage =
+            "An account with this email address already exists. Please sign in with your email and password, or use password reset.";
+        } else {
+          userMessage = error.message || "Authentication failed during sign-in verification. Please try again.";
+        }
+
+        loginUrl.searchParams.set("error", userMessage);
         return createRedirectResponse(loginUrl.toString());
       }
 
