@@ -66,7 +66,6 @@ export function validateRegisterForm({
   email,
   password,
   confirmPassword,
-  acceptTerms,
 }) {
   const errors = {};
 
@@ -83,10 +82,6 @@ export function validateRegisterForm({
     errors.confirmPassword = "Confirm your password.";
   } else if (password !== confirmPassword) {
     errors.confirmPassword = "Passwords do not match.";
-  }
-
-  if (!acceptTerms) {
-    errors.acceptTerms = "You must agree to the Terms of Service.";
   }
 
   return {

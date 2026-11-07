@@ -11,7 +11,6 @@ import {
   CardFooter,
   Button,
   Input,
-  Checkbox,
   Divider,
 } from "@/components/ui";
 import {
@@ -37,7 +36,6 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    acceptTerms: false,
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -193,11 +191,10 @@ export default function RegisterPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 pt-1">
                 <div className="flex items-center gap-1.5">
                   <span
-                    className={`h-3 w-3 rounded-full flex items-center justify-center text-[9px] font-bold ${
-                      passwordCriteria.minLength
-                        ? "bg-[#16A34A] text-white"
-                        : "bg-[#CBD5E1] text-[#64748B]"
-                    }`}
+                    className={`h-3 w-3 rounded-full flex items-center justify-center text-[9px] font-bold ${passwordCriteria.minLength
+                      ? "bg-[#16A34A] text-white"
+                      : "bg-[#CBD5E1] text-[#64748B]"
+                      }`}
                   >
                     ✓
                   </span>
@@ -212,11 +209,10 @@ export default function RegisterPage() {
 
                 <div className="flex items-center gap-1.5">
                   <span
-                    className={`h-3 w-3 rounded-full flex items-center justify-center text-[9px] font-bold ${
-                      passwordCriteria.hasLetter
-                        ? "bg-[#16A34A] text-white"
-                        : "bg-[#CBD5E1] text-[#64748B]"
-                    }`}
+                    className={`h-3 w-3 rounded-full flex items-center justify-center text-[9px] font-bold ${passwordCriteria.hasLetter
+                      ? "bg-[#16A34A] text-white"
+                      : "bg-[#CBD5E1] text-[#64748B]"
+                      }`}
                   >
                     ✓
                   </span>
@@ -231,11 +227,10 @@ export default function RegisterPage() {
 
                 <div className="flex items-center gap-1.5">
                   <span
-                    className={`h-3 w-3 rounded-full flex items-center justify-center text-[9px] font-bold ${
-                      passwordCriteria.hasNumber
-                        ? "bg-[#16A34A] text-white"
-                        : "bg-[#CBD5E1] text-[#64748B]"
-                    }`}
+                    className={`h-3 w-3 rounded-full flex items-center justify-center text-[9px] font-bold ${passwordCriteria.hasNumber
+                      ? "bg-[#16A34A] text-white"
+                      : "bg-[#CBD5E1] text-[#64748B]"
+                      }`}
                   >
                     ✓
                   </span>
@@ -279,40 +274,7 @@ export default function RegisterPage() {
           }
         />
 
-        {/* Terms and Conditions Checkbox */}
-        <div className="pt-1">
-          <Checkbox
-            id="acceptTerms"
-            name="acceptTerms"
-            label={
-              <span className="text-xs text-[#64748B]">
-                I agree to the{" "}
-                <a href="#" className="font-semibold text-[#2563EB] hover:underline">
-                  Terms of Service
-                </a>{" "}
-                and{" "}
-                <a href="#" className="font-semibold text-[#2563EB] hover:underline">
-                  Privacy Policy
-                </a>
-                .
-              </span>
-            }
-            checked={formData.acceptTerms}
-            onChange={(checked) => {
-              setFormData((prev) => ({ ...prev, acceptTerms: checked }));
-              if (errors.acceptTerms) {
-                setErrors((prev) => ({ ...prev, acceptTerms: null }));
-              }
-            }}
-            disabled={loading}
-          />
-          {errors.acceptTerms && (
-            <p className="text-xs text-[#DC2626] font-medium mt-1">
-              {errors.acceptTerms}
-            </p>
-          )}
-        </div>
-
+        {/* Submit Button */}
         {/* Submit Button */}
         <Button
           type="submit"

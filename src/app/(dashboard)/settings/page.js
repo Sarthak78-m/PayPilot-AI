@@ -17,7 +17,6 @@ import {
   ArrowLeft,
   User,
   Mail,
-  KeyRound,
   AlertCircle,
   Trash2,
 } from "@/components/icons";
@@ -167,7 +166,7 @@ export default function SettingsPage() {
           <div>
             <CardTitle className="text-lg">Profile Information</CardTitle>
             <CardDescription className="text-xs">
-              Your personal details and authenticated account identifier
+              Your personal details and account information
             </CardDescription>
           </div>
         </div>
@@ -194,17 +193,6 @@ export default function SettingsPage() {
             </span>
             <p className="font-bold text-[#172033] text-sm font-mono truncate">
               {user?.email || "Unavailable"}
-            </p>
-          </div>
-
-          {/* Account ID */}
-          <div className="p-4 rounded-xl bg-[#E8EDF4] shadow-inset-sm space-y-1 md:col-span-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
-              <KeyRound className="h-3.5 w-3.5 text-[#2563EB]" />
-              Account ID
-            </span>
-            <p className="font-mono font-bold text-[#172033] text-xs sm:text-sm select-all break-all">
-              {user?.id || user?.userId || "Unavailable"}
             </p>
           </div>
         </div>
