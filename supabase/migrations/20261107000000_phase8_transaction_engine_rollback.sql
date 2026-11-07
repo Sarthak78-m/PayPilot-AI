@@ -45,6 +45,7 @@ ALTER TABLE public.payments
 
 -- Restore Phase 7B RLS policy
 DROP POLICY IF EXISTS "Users can view own payments" ON public.payments;
+DROP POLICY IF EXISTS "Users can view payments for their own invoices" ON public.payments;
 CREATE POLICY "Users can view payments for their own invoices"
   ON public.payments FOR SELECT TO authenticated
   USING (

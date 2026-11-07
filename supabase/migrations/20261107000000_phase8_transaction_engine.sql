@@ -148,6 +148,7 @@ ALTER TABLE public.paypal_webhook_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- 5.1 Payments RLS: Allow users to view their own payments (direct or invoice-linked)
+DROP POLICY IF EXISTS "Users can view own payments" ON public.payments;
 DROP POLICY IF EXISTS "Users can view payments for their own invoices" ON public.payments;
 CREATE POLICY "Users can view own payments"
   ON public.payments FOR SELECT TO authenticated
