@@ -63,22 +63,10 @@ export async function proxy(request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 1. Unauthenticated user accessing protected dashboard route
+  // 1. Unauthenticated user accessing protected dashboard route: redirect to login
   if (!user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
-    const redirectResponse = NextResponse.redirect(loginUrl);
-    cookiesToPass.forEach(({ name, value, options }) => {
-      redirectResponse.cookies.set(name, value, options);
-    });
-    return redirectResponse;
-  }
-
-  // 2. Unverified email/password user attempting protected access
-  const isEmailProvider = !user.app_metadata?.provider || user.app_metadata?.provider === "email";
-  if (isEmailProvider && !user.email_confirmed_at) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("error", "Email confirmation is required before accessing the dashboard.");
     const redirectResponse = NextResponse.redirect(loginUrl);
     cookiesToPass.forEach(({ name, value, options }) => {
       redirectResponse.cookies.set(name, value, options);

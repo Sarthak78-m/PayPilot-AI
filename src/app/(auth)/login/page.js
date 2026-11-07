@@ -22,10 +22,9 @@ import {
   AlertCircle,
   CheckCircle2,
   ArrowRight,
-  Google,
 } from "@/components/icons";
 import { validateLoginForm } from "@/lib/validation/auth";
-import { loginUser, signInWithGoogle } from "@/lib/auth/auth-client";
+import { loginUser } from "@/lib/auth/auth-client";
 
 function LoginContent() {
   const router = useRouter();
@@ -43,7 +42,6 @@ function LoginContent() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const [serverSuccess, setServerSuccess] = useState("");
@@ -68,24 +66,6 @@ function LoginContent() {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
     if (serverError) setServerError("");
-  };
-
-  const handleGoogleSignIn = async () => {
-    setServerError("");
-    setServerSuccess("");
-    setOauthLoading(true);
-
-    try {
-      const nextDest = searchParams.get("next") || "/dashboard";
-      const res = await signInWithGoogle({ nextUrl: nextDest });
-      if (!res.success) {
-        setServerError(res.message || "Failed to initiate Google Sign-In.");
-        setOauthLoading(false);
-      }
-    } catch {
-      setServerError("An unexpected error occurred with Google Sign-In. Please try again.");
-      setOauthLoading(false);
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -175,30 +155,6 @@ function LoginContent() {
         </div>
       )}
 
-      {/* Google OAuth Button */}
-      <div className="space-y-4">
-        <Button
-          type="button"
-          variant="secondary"
-          size="lg"
-          loading={oauthLoading}
-          disabled={loading || oauthLoading}
-          onClick={handleGoogleSignIn}
-          className="w-full flex items-center justify-center gap-2.5 font-semibold text-[#172033]"
-          icon={Google}
-          iconPosition="left"
-        >
-          Sign in with Google
-        </Button>
-
-        <div className="relative my-4 flex items-center justify-center">
-          <div className="w-full border-t border-[#CBD5E1]" />
-          <span className="absolute bg-[#E8EDF4] px-3 text-xs uppercase tracking-wider text-[#64748B]">
-            or sign in with email
-          </span>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {/* Email Field */}
         <Input
@@ -213,7 +169,7 @@ function LoginContent() {
           onChange={handleChange}
           error={errors.email}
           leadingIcon={Mail}
-          disabled={loading || oauthLoading}
+          disabled={loading}
         />
 
         {/* Password Field */}
@@ -229,7 +185,7 @@ function LoginContent() {
           onChange={handleChange}
           error={errors.password}
           leadingIcon={Lock}
-          disabled={loading || oauthLoading}
+          disabled={loading}
           trailingAction={
             <button
               type="button"
@@ -253,7 +209,7 @@ function LoginContent() {
             onChange={(checked) =>
               setFormData((prev) => ({ ...prev, rememberMe: checked }))
             }
-            disabled={loading || oauthLoading}
+            disabled={loading}
           />
 
           <Link
@@ -270,7 +226,7 @@ function LoginContent() {
           variant="primary"
           size="lg"
           loading={loading}
-          disabled={loading || oauthLoading}
+          disabled={loading}
           className="w-full mt-2"
           icon={ArrowRight}
           iconPosition="right"

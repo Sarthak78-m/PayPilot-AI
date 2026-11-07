@@ -1,5 +1,6 @@
 import { validateRegistrationInput } from "@/lib/auth/validation";
 import { createSupabaseAuthClient } from "@/lib/supabase/server";
+import { ensureUserProfile } from "@/lib/auth/profile";
 import { getSiteBaseUrl } from "@/lib/auth/url";
 
 export async function POST(request) {
@@ -69,15 +70,34 @@ export async function POST(request) {
       );
     }
 
-    // Successful registration
+    // Idempotently create user profile upon successful registration
+    if (data?.user) {
+      await ensureUserProfile({ user: data.user });
+    }
+
+    // Verify authenticated session was created and persisted via cookies
+    if (!data?.session) {
+      return Response.json(
+        {
+          status: "error",
+          message:
+            "Account created, but an active session could not be established. Please sign in with your email and password.",
+          sessionEstablished: false,
+        },
+        { status: 200 },
+      );
+    }
+
+    // Successful registration with immediate authenticated session
     return Response.json(
       {
         status: "ok",
-        message: data.session
-          ? "Account created successfully."
-          : "Account created. Check your email to confirm your account.",
-        requiresEmailConfirmation: !data.session,
-        email: validation.data.email,
+        message: "Account created successfully.",
+        sessionEstablished: true,
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+        },
       },
       { status: 201 },
     );
