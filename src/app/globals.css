@@ -366,3 +366,66 @@ html.dark .bg-\[\#172033\]\/40,
 html[data-theme="dark"] .bg-\[\#172033\]\/40 {
   background-color: rgba(0, 0, 0, 0.75) !important;
 }
+
+/* ==========================================================================
+   Print Optimization & Professional Receipt Voucher Styles
+   ========================================================================== */
+@page {
+  size: A4 portrait;
+  margin: 10mm 12mm;
+}
+
+@media print {
+  html, body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Universal hide for web chrome */
+  header,
+  footer,
+  nav,
+  button,
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
+
+  /* Reset all neumorphic shadows and backgrounds for crisp paper print */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* When an official receipt document is present on the page */
+  body:has(#official-print-receipt) {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  body:has(#official-print-receipt) main > *:not(#official-print-receipt-wrapper):not(#official-print-receipt) {
+    display: none !important;
+  }
+
+  #official-print-receipt {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 12px 16px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+  }
+}

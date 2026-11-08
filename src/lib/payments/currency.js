@@ -141,6 +141,7 @@ export function calculateTransactionFee(amount, currency = "USD") {
 /**
  * Converts an amount from one currency to another server-side.
  * If source and target are the same, returns unchanged amount.
+ * Safely handles 0 amount without throwing errors.
  *
  * @param {object} params
  * @param {number|string} params.amount - Source amount.
@@ -156,9 +157,25 @@ export function calculateTransactionFee(amount, currency = "USD") {
  * }}
  */
 export function convertCurrency({ amount, fromCurrency, toCurrency = "USD" }) {
-  const base = parseAndValidateAmount(amount);
+  const num = Number(amount);
   const from = normalizeCurrency(fromCurrency);
   const to = normalizeCurrency(toCurrency);
+
+  if (Number.isNaN(num) || !Number.isFinite(num) || num <= 0) {
+    const fromUsd = BASE_USD_EXCHANGE_RATES[from] || 1.0;
+    const toUsd = BASE_USD_EXCHANGE_RATES[to] || 1.0;
+    const rate = from === to ? 1.0 : Math.round((toUsd / fromUsd) * 10000) / 10000;
+    return {
+      originalAmount: 0,
+      originalCurrency: from,
+      convertedAmount: 0,
+      targetCurrency: to,
+      exchangeRate: rate,
+      requiresConversion: from !== to,
+    };
+  }
+
+  const base = parseAndValidateAmount(amount);
 
   if (from === to) {
     return {

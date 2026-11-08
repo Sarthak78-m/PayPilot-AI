@@ -31,6 +31,7 @@ import {
   ExternalLink,
 } from "@/components/icons";
 import { PayPalCheckout } from "@/components/payments/paypal-checkout";
+import { OfficialReceiptDocument } from "@/components/payments/official-receipt-document";
 
 function formatCurrency(amount, currency = "USD") {
   try {
@@ -161,14 +162,20 @@ export default function CustomerPaymentPage() {
 
   const handlePrintReceipt = () => {
     if (typeof window !== "undefined") {
+      const originalTitle = document.title;
+      const ref = paymentSuccessData?.orderId || paymentSuccessData?.paymentId || invoice?.customerName || "Official-Receipt";
+      document.title = `PayPilot-Receipt-${ref}`;
       window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 1000);
     }
   };
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex flex-col justify-between">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex flex-col justify-between print:py-0 print:px-0 print:block">
       {/* A. Header */}
-      <header className="max-w-2xl mx-auto w-full mb-8">
+      <header className="max-w-2xl mx-auto w-full mb-8 no-print">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="h-10 w-10 rounded-xl bg-[#2563EB] flex items-center justify-center text-white shadow-primary-glow">
@@ -278,150 +285,84 @@ export default function CustomerPaymentPage() {
           </Card>
         )}
 
-        {/* State 3: Payment Successfully Completed (Phase 7 Requirements) */}
+        {/* State 3: Payment Successfully Completed (Phase 7 & Professional Receipt) */}
         {!loading && !errorState && paymentSuccessData && (
-          <Card variant="raised-lg" className="p-6 sm:p-8 text-center space-y-6">
-            {/* Success Animation & Icon */}
-            <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-[#DCFCE7] animate-ping opacity-30" />
-              <div className="h-18 w-18 rounded-2xl bg-[#DCFCE7] border border-[#86EFAC] text-[#15803D] flex items-center justify-center shadow-raised-sm relative z-10">
-                <CheckCircle2 className="h-10 w-10" />
+          <div className="space-y-6">
+            {/* Success Banner & Top Actions (hidden during print) */}
+            <div className="no-print space-y-4 text-center">
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3 text-left">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-sm sm:text-base text-[#172033]">
+                        Payment Completed & Verified
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        Settled
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#64748B]">
+                      Official payment receipt generated. Click below to download or print as PDF.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handlePrintReceipt}
+                    icon={Download}
+                    iconPosition="left"
+                    className="w-full sm:w-auto shadow-md"
+                  >
+                    Download PDF Receipt
+                  </Button>
+
+                  <Link href="/dashboard" className="w-full sm:w-auto">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={ArrowLeft}
+                      iconPosition="left"
+                      className="w-full sm:w-auto"
+                    >
+                      Dashboard
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-center gap-2">
-                <Badge variant="success" size="md" dot>
-                  Transaction Status: COMPLETED
-                </Badge>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-800 border border-amber-500/30">
-                  PayPal Sandbox Payment
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172033] tracking-tight pt-1">
-                Payment Successful
-              </h1>
-              <p className="text-xs text-[#64748B] max-w-md mx-auto">
-                Your payment has been officially captured and verified through PayPal Developer Sandbox.
-              </p>
+            {/* Professional Document Receipt Component */}
+            <div id="official-print-receipt-wrapper">
+              <OfficialReceiptDocument
+                payment={paymentSuccessData}
+                invoice={invoice}
+              />
             </div>
 
-            {/* Verified Transaction Details Breakdown */}
-            <div className="p-5 rounded-2xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-inset-sm space-y-3 text-left text-xs">
-              <div className="flex justify-between items-center py-1.5 border-b border-[#CBD5E1]/40">
-                <span className="text-[#64748B] font-medium">Amount Paid</span>
-                <span className="font-mono font-extrabold text-base text-[#172033]">
-                  {formatCurrency(
-                    paymentSuccessData.amount || invoice?.amount,
-                    paymentSuccessData.currency || invoice?.currency
-                  )}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
-                <span className="text-[#64748B]">Currency</span>
-                <span className="font-mono font-bold text-[#172033]">
-                  {paymentSuccessData.currency || invoice?.currency || "USD"}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
-                <span className="text-[#64748B]">Payment Method</span>
-                <span className="font-semibold text-[#172033] flex items-center gap-1.5">
-                  <span className="text-[#0070BA] font-extrabold italic">Pay<span className="text-[#00B2E3]">Pal</span></span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">Sandbox</span>
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
-                <span className="text-[#64748B]">Transaction Status</span>
-                <span className="font-bold text-[#15803D]">COMPLETED</span>
-              </div>
-
-              <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
-                <span className="text-[#64748B]">Payment Date and Time</span>
-                <span className="text-[#172033] font-mono text-[11px]">
-                  {formatDate(paymentSuccessData.capturedAt || new Date().toISOString())}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
-                <span className="text-[#64748B]">Transaction ID</span>
-                <span className="font-mono text-[#172033] select-all">
-                  {paymentSuccessData.paymentId || "PAY-RECORDED"}
-                </span>
-              </div>
-
-              {paymentSuccessData.orderId && (
-                <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
-                  <span className="text-[#64748B]">PayPal Order ID</span>
-                  <span className="font-mono text-[#0070BA] font-semibold select-all">
-                    {paymentSuccessData.orderId}
-                  </span>
-                </div>
-              )}
-
-              {paymentSuccessData.captureId && (
-                <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
-                  <span className="text-[#64748B]">Capture ID</span>
-                  <span className="font-mono text-[#15803D] font-semibold select-all">
-                    {paymentSuccessData.captureId}
-                  </span>
-                </div>
-              )}
-
-              {invoice?.customerName && (
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-[#64748B]">Payer / Customer</span>
-                  <span className="text-[#172033] font-semibold">{invoice.customerName}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Technical Verification Details Dropdown */}
-            <div>
+            {/* Technical Verification Details Dropdown (hidden during print) */}
+            <div className="no-print text-center pt-2">
               <button
                 type="button"
                 onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
-                className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] hover:underline flex items-center justify-center gap-1 mx-auto transition-colors"
+                className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] hover:underline inline-flex items-center justify-center gap-1 transition-colors"
               >
                 <span>{showTechnicalDetails ? "Hide" : "View"} Gateway Verification Details</span>
                 <ExternalLink className="h-3 w-3" />
               </button>
 
               {showTechnicalDetails && (
-                <div className="mt-3 p-3.5 rounded-xl bg-slate-900 text-slate-100 text-[11px] font-mono text-left overflow-x-auto shadow-inset-sm">
+                <div className="mt-3 p-3.5 rounded-xl bg-slate-900 text-slate-100 text-[11px] font-mono text-left overflow-x-auto shadow-inset-sm max-w-2xl mx-auto">
                   <pre>{JSON.stringify(paymentSuccessData, null, 2)}</pre>
                 </div>
               )}
             </div>
-
-            {/* Action Buttons: Download Receipt & Return to Dashboard */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={handlePrintReceipt}
-                icon={Download}
-                iconPosition="left"
-                className="w-full sm:w-auto"
-              >
-                Download Receipt
-              </Button>
-
-              <Link href="/dashboard" className="w-full sm:w-auto">
-                <Button
-                  variant="primary"
-                  size="md"
-                  icon={ArrowLeft}
-                  iconPosition="left"
-                  className="w-full sm:w-auto"
-                >
-                  Return to Dashboard
-                </Button>
-              </Link>
-            </div>
-          </Card>
+          </div>
         )}
 
         {/* State 4: Payment Capture Pending Clearance (eCheck / Bank Clearance) */}
@@ -626,7 +567,7 @@ export default function CustomerPaymentPage() {
       </main>
 
       {/* D. Footer */}
-      <footer className="max-w-2xl mx-auto w-full mt-10 pt-6 border-t border-[#CBD5E1]/40 text-center text-xs text-[#64748B] space-y-2">
+      <footer className="max-w-2xl mx-auto w-full mt-10 pt-6 border-t border-[#CBD5E1]/40 text-center text-xs text-[#64748B] space-y-2 no-print">
         <div className="flex items-center justify-center gap-4 flex-wrap">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="h-3.5 w-3.5 text-[#16A34A]" />
