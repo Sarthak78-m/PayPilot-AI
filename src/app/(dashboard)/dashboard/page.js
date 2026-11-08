@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchDashboardSummary } from "@/lib/api/dashboard-service";
 import { FinancialSummarySection } from "@/components/dashboard/financial-summary-card";
+import { CurrencyBreakdownCard } from "@/components/dashboard/currency-breakdown-card";
 import { RevenueOverview } from "@/components/dashboard/revenue-overview";
 import { RecentInvoices } from "@/components/dashboard/recent-invoices";
 import { RecentPayments } from "@/components/dashboard/recent-payments";
@@ -13,7 +14,7 @@ import { QuickActions } from "@/components/dashboard/quick-actions";
 import { AIAssistantCard } from "@/components/dashboard/ai-assistant-card";
 import { useDashboardSearch } from "@/lib/context/search-context";
 import { Badge, Button, Skeleton } from "@/components/ui";
-import { RefreshCw, AlertCircle, Plus, Sparkles } from "@/components/icons";
+import { RefreshCw, AlertCircle, Plus, Sparkles, Filter } from "@/components/icons";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -25,15 +26,19 @@ export default function DashboardPage() {
   const [is401, setIs401] = useState(false);
 
   const [period, setPeriod] = useState("6M");
+  const [selectedCurrency, setSelectedCurrency] = useState("ALL");
+  const [availableCurrencies, setAvailableCurrencies] = useState(["INR", "USD"]);
+  const [byCurrency, setByCurrency] = useState([]);
+
   const [metrics, setMetrics] = useState(null);
   const [distribution, setDistribution] = useState(null);
   const [invoices, setInvoices] = useState([]);
   const [payments, setPayments] = useState([]);
   const [revenueTrends, setRevenueTrends] = useState({ "6M": [], "1Y": [], ALL: [] });
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (currencyToFetch = selectedCurrency) => {
     try {
-      const res = await fetchDashboardSummary();
+      const res = await fetchDashboardSummary(currencyToFetch);
 
       if (res.error) {
         if (res.is401) {
@@ -51,6 +56,12 @@ export default function DashboardPage() {
         setInvoices(res.data.recentInvoices || []);
         setPayments(res.data.recentPayments || []);
         setRevenueTrends(res.data.revenueTrends || { "6M": [], "1Y": [], ALL: [] });
+        if (res.data.availableCurrencies && res.data.availableCurrencies.length > 0) {
+          setAvailableCurrencies(res.data.availableCurrencies);
+        }
+        if (res.data.byCurrency) {
+          setByCurrency(res.data.byCurrency);
+        }
         setError(null);
         setIs401(false);
       }
@@ -60,23 +71,29 @@ export default function DashboardPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [selectedCurrency]);
 
   useEffect(() => {
     let ignore = false;
     (async () => {
       if (!ignore) {
-        await loadData();
+        await loadData(selectedCurrency);
       }
     })();
     return () => {
       ignore = true;
     };
-  }, [loadData]);
+  }, [loadData, selectedCurrency]);
+
+  const handleCurrencyChange = (newCurrency) => {
+    if (newCurrency === selectedCurrency) return;
+    setSelectedCurrency(newCurrency);
+    setRefreshing(true);
+  };
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await loadData(selectedCurrency);
   };
 
   if (loading) {
@@ -99,6 +116,7 @@ export default function DashboardPage() {
 
   const currentRevenueData = revenueTrends[period] || revenueTrends["6M"] || [];
   const isEmptyAccount = metrics?.totalCount === 0;
+  const chartCurrency = selectedCurrency === "ALL" ? (metrics?.primaryCurrency || "USD") : selectedCurrency;
 
   return (
     <div className="space-y-4">
@@ -139,30 +157,65 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Live Data Control & Indicator Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
-        <div className="flex items-center gap-2.5">
-          <span className="text-xs text-[#64748B]">
-            Primary Currency: <strong className="text-[#172033]">{metrics?.primaryCurrency || "USD"}</strong>
+      {/* Currency Switcher & Due Receivables Quick Bar */}
+      <div className="p-3 sm:p-3.5 rounded-2xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-raised-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold text-[#172033] uppercase tracking-wider flex items-center gap-1.5 mr-1">
+            <Filter className="h-3.5 w-3.5 text-[#2563EB]" />
+            <span>Currency:</span>
           </span>
-          {metrics?.outstanding && metrics?.totalCount > 0 && (
-            <span className="text-xs text-[#64748B] hidden md:inline">
-              • Outstanding Balance:{" "}
-              <strong className="text-[#DC2626] font-mono">{metrics.outstanding.formatted}</strong>
-            </span>
-          )}
+
+          <button
+            onClick={() => handleCurrencyChange("ALL")}
+            className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${
+              selectedCurrency === "ALL"
+                ? "bg-[#2563EB] text-white shadow-primary-glow"
+                : "bg-white/80 dark:bg-black/20 text-[#64748B] hover:text-[#172033] shadow-inset-sm"
+            }`}
+          >
+            All Currencies
+          </button>
+
+          {availableCurrencies.map((c) => {
+            const isSelected = selectedCurrency === c;
+            const sym = c === "INR" ? "₹" : c === "USD" ? "$" : c === "EUR" ? "€" : c === "GBP" ? "£" : "$";
+            return (
+              <button
+                key={c}
+                onClick={() => handleCurrencyChange(c)}
+                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 ${
+                  isSelected
+                    ? "bg-[#2563EB] text-white shadow-primary-glow"
+                    : "bg-white/80 dark:bg-black/20 text-[#64748B] hover:text-[#172033] shadow-inset-sm"
+                }`}
+              >
+                <span>{c}</span>
+                <span className="opacity-80">({sym})</span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        {/* Right side: Dynamic Due Payments status & Refresh */}
+        <div className="flex items-center justify-between md:justify-end gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-[#CBD5E1]/60">
+          {metrics?.outstanding && (
+            <div className="text-xs text-[#64748B] flex items-center gap-1.5">
+              <span>Due Receivables ({selectedCurrency}):</span>
+              <strong className="text-[#DC2626] font-mono font-bold text-sm">
+                {metrics.outstanding.formatted}
+              </strong>
+            </div>
+          )}
+
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="p-2 rounded-xl bg-[#E8EDF4] text-[#64748B] hover:text-[#2563EB] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm border border-white/80 dark:border-white/10 transition-all disabled:opacity-50 flex items-center gap-1.5 text-xs font-semibold"
+            className="p-1.5 sm:p-2 rounded-xl bg-white/80 dark:bg-black/20 text-[#64748B] hover:text-[#2563EB] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm border border-white/80 dark:border-white/10 transition-all disabled:opacity-50 flex items-center gap-1.5 text-xs font-semibold shrink-0"
             title="Refresh dashboard metrics"
             aria-label="Refresh dashboard metrics"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
-            <span>Refresh</span>
+            <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
       </div>
@@ -205,30 +258,43 @@ export default function DashboardPage() {
         <FinancialSummarySection metrics={metrics} />
       </section>
 
-      {/* 2. Quick Actions */}
+      {/* 2. Due & Settled Payments by Currency Breakdown Section */}
+      {byCurrency.length > 0 && (
+        <section aria-labelledby="section-currency-breakdown">
+          <h2 id="section-currency-breakdown" className="sr-only">Payments by Currency Breakdown</h2>
+          <CurrencyBreakdownCard
+            byCurrency={byCurrency}
+            activeCurrency={selectedCurrency}
+            onSelectCurrency={handleCurrencyChange}
+          />
+        </section>
+      )}
+
+      {/* 3. Quick Actions */}
       <section aria-labelledby="section-actions">
         <h2 id="section-actions" className="sr-only">Quick Actions</h2>
         <QuickActions />
       </section>
 
-      {/* 3. Revenue Overview Chart */}
+      {/* 4. Revenue Overview Chart */}
       <section aria-labelledby="section-revenue">
         <h2 id="section-revenue" className="sr-only">Revenue Overview Chart</h2>
         <RevenueOverview
           data={currentRevenueData}
           period={period}
+          currency={chartCurrency}
           onPeriodChange={(p) => setPeriod(p)}
           loading={refreshing}
         />
       </section>
 
-      {/* 4. AI Assistant Entry Point */}
+      {/* 5. AI Assistant Entry Point */}
       <section aria-labelledby="section-ai">
         <h2 id="section-ai" className="sr-only">AI Assistant Copilot</h2>
         <AIAssistantCard />
       </section>
 
-      {/* 5. Invoices, Payments & Distribution Grid */}
+      {/* 6. Invoices, Payments & Distribution Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* Left Column: Recent Invoices (7-8 cols on lg) */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-4">

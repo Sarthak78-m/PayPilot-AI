@@ -2,12 +2,19 @@
  * PayPilot AI — Dashboard API Service
  *
  * Connects directly to authenticated backend endpoint GET /api/dashboard/summary.
+ * Supports filtering metrics and cashflow by currency (e.g. INR, USD, EUR, or ALL).
  * Never silently falls back to mock data. Returns accurate server-calculated data.
  */
 
-export async function fetchDashboardSummary() {
+export async function fetchDashboardSummary(currency = null) {
   try {
-    const res = await fetch("/api/dashboard/summary", {
+    const url = currency && currency !== "ALL"
+      ? `/api/dashboard/summary?currency=${encodeURIComponent(currency)}`
+      : currency === "ALL"
+      ? `/api/dashboard/summary?currency=ALL`
+      : "/api/dashboard/summary";
+
+    const res = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

@@ -3,11 +3,13 @@
 import React, { useState } from "react";
 import { Card, CardTitle, Badge } from "@/components/ui";
 import { TrendingUp } from "@/components/icons";
+import { formatCurrencyDisplay } from "@/lib/payments/currency";
 
 export function RevenueOverview({
   data = [],
   period = "6M",
-  onPeriodChange = () => { },
+  currency = "USD",
+  onPeriodChange = () => {},
   loading = false,
 }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -29,11 +31,14 @@ export function RevenueOverview({
         <div>
           <div className="flex items-center gap-2">
             <CardTitle className="text-base sm:text-lg">Invoiced Value Overview</CardTitle>
+            <Badge variant="neutral" size="sm">
+              {currency}
+            </Badge>
           </div>
           <p className="text-xs text-[#64748B] mt-0.5">
             Total paid invoice value for selected period:{" "}
             <span className="font-mono font-bold text-[#172033]">
-              ${totalInPeriod.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              {formatCurrencyDisplay(totalInPeriod, currency)}
             </span>
           </p>
         </div>
@@ -46,10 +51,11 @@ export function RevenueOverview({
               <button
                 key={p.value}
                 onClick={() => onPeriodChange(p.value)}
-                className={`text-xs font-semibold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg transition-all duration-150 select-none ${isActive
+                className={`text-xs font-semibold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg transition-all duration-150 select-none ${
+                  isActive
                     ? "bg-[#2563EB] text-white shadow-primary-glow"
                     : "text-[#64748B] hover:text-[#172033]"
-                  }`}
+                }`}
               >
                 {p.label}
               </button>
@@ -69,13 +75,18 @@ export function RevenueOverview({
             <div className="border-b border-[#CBD5E1] dark:border-white/10 border-dashed w-full" />
           </div>
 
-          {data.length === 0 ? (
-            <div className="relative z-10 w-full h-full flex flex-col items-center justify-center text-center p-4">
-              <p className="text-xs font-semibold text-[#172033] dark:text-[#F8FAFC]">
-                No settled revenue data recorded for this period yet.
-              </p>
-              <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] mt-0.5">
-                Paid invoices will automatically populate this trajectory.
+          {/* Empty Data Placeholder */}
+          {loading ? (
+            <div className="h-full w-full flex items-center justify-center">
+              <span className="text-xs text-[#64748B] animate-pulse">
+                Updating trend metrics...
+              </span>
+            </div>
+          ) : data.length === 0 || maxRevenue === 0 ? (
+            <div className="h-full w-full flex flex-col items-center justify-center text-center p-4">
+              <p className="text-xs font-bold text-[#172033]">No Settled Invoices Yet</p>
+              <p className="text-[11px] text-[#64748B] max-w-xs mt-0.5">
+                Revenue trends will display monthly invoiced settlements once payments are recorded.
               </p>
             </div>
           ) : (
@@ -97,7 +108,7 @@ export function RevenueOverview({
                       <div className="absolute top-2 z-20 p-2.5 rounded-xl bg-[#172033] text-white shadow-raised-lg text-xs pointer-events-none transform -translate-y-1 transition-all">
                         <p className="font-semibold text-blue-200">{item.month || item.label}</p>
                         <p className="text-sm font-mono font-bold mt-0.5">
-                          ${item.revenue.toLocaleString()}
+                          {formatCurrencyDisplay(item.revenue, currency)}
                         </p>
                         <p className="text-[10px] text-zinc-300">
                           {item.invoices} {item.invoices === 1 ? "invoice marked paid" : "invoices marked paid"}
@@ -109,17 +120,19 @@ export function RevenueOverview({
                     <div className="w-full max-w-[42px] flex flex-col items-center h-full justify-end">
                       <div
                         style={{ height: `${heightPercent}%` }}
-                        className={`w-full rounded-t-xl transition-all duration-300 ${isHovered
+                        className={`w-full rounded-t-xl transition-all duration-300 ${
+                          isHovered
                             ? "bg-gradient-to-t from-[#2563EB] to-[#60A5FA] shadow-primary-glow"
                             : "bg-gradient-to-t from-[#2563EB]/85 to-[#3B82F6]/90 shadow-raised-sm group-hover:from-[#2563EB] group-hover:to-[#60A5FA]"
-                          }`}
+                        }`}
                       />
                     </div>
 
                     {/* X-Axis Label */}
                     <span
-                      className={`mt-2 text-[11px] font-semibold transition-colors truncate max-w-full ${isHovered ? "text-[#2563EB]" : "text-[#64748B]"
-                        }`}
+                      className={`mt-2 text-[11px] font-semibold transition-colors truncate max-w-full ${
+                        isHovered ? "text-[#2563EB]" : "text-[#64748B]"
+                      }`}
                     >
                       {item.label}
                     </span>

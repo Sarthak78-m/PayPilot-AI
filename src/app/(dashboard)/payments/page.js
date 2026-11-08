@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -33,6 +33,16 @@ import {
 import { fetchPayments } from "@/lib/api/payments-service";
 import { InitiatePaymentModal } from "@/components/payments/initiate-payment-modal";
 import { PaymentReceiptModal } from "@/components/payments/payment-receipt-modal";
+
+const CURRENCY_FILTER_OPTIONS = [
+  { value: "", label: "All Currencies" },
+  { value: "USD", label: "USD ($)" },
+  { value: "INR", label: "INR (₹)" },
+  { value: "EUR", label: "EUR (€)" },
+  { value: "GBP", label: "GBP (£)" },
+  { value: "CAD", label: "CAD (CA$)" },
+  { value: "AUD", label: "AUD (A$)" },
+];
 
 const STATUS_FILTER_OPTIONS = [
   { value: "", label: "All Statuses" },
@@ -115,6 +125,7 @@ export default function PaymentsPage() {
   // Filter & Search states
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [currencyFilter, setCurrencyFilter] = useState("");
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [receiptPayment, setReceiptPayment] = useState(null);
   const [isInitiateOpen, setIsInitiateOpen] = useState(false);
@@ -184,12 +195,20 @@ export default function PaymentsPage() {
   const handleClearFilters = () => {
     setSearch("");
     setStatusFilter("");
+    setCurrencyFilter("");
     loadData("", "");
   };
 
   const handleTransactionSuccess = async (receiptData) => {
     await loadData();
   };
+
+  const displayedPayments = useMemo(() => {
+    if (!currencyFilter) return payments;
+    return payments.filter(
+      (p) => (p.currency || "").toUpperCase() === currencyFilter.toUpperCase()
+    );
+  }, [payments, currencyFilter]);
 
   // Check if account has any payment activity
   const hasPaymentRecords = overview.totalReceived?.count > 0 || payments.length > 0;
@@ -528,21 +547,39 @@ export default function PaymentsPage() {
             </Button>
           </form>
 
-          {/* Status Dropdown */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider shrink-0 hidden sm:inline">
-              Status:
-            </span>
-            <div className="w-full sm:w-44">
-              <Select
-                value={statusFilter}
-                onChange={handleStatusChange}
-                options={STATUS_FILTER_OPTIONS}
-                className="mb-0"
-              />
+          {/* Filter Dropdowns & Clear Controls */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Status Dropdown */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider shrink-0 hidden sm:inline">
+                Status:
+              </span>
+              <div className="w-full sm:w-40">
+                <Select
+                  value={statusFilter}
+                  onChange={handleStatusChange}
+                  options={STATUS_FILTER_OPTIONS}
+                  className="mb-0"
+                />
+              </div>
             </div>
 
-            {(search || statusFilter) && (
+            {/* Currency Dropdown */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider shrink-0 hidden sm:inline">
+                Currency:
+              </span>
+              <div className="w-full sm:w-36">
+                <Select
+                  value={currencyFilter}
+                  onChange={(e) => setCurrencyFilter(e.target.value)}
+                  options={CURRENCY_FILTER_OPTIONS}
+                  className="mb-0"
+                />
+              </div>
+            </div>
+
+            {(search || statusFilter || currencyFilter) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -556,17 +593,17 @@ export default function PaymentsPage() {
         </div>
 
         {/* 5. Payments Table / List */}
-        {payments.length === 0 ? (
+        {displayedPayments.length === 0 ? (
           <EmptyState
-            title={search || statusFilter ? "No Matching Settlements" : "No Payment Transactions Yet"}
+            title={search || statusFilter || currencyFilter ? "No Matching Settlements" : "No Payment Transactions Yet"}
             description={
-              search || statusFilter
-                ? "No transactions match your current filters. Try resetting search or changing status."
+              search || statusFilter || currencyFilter
+                ? "No transactions match your current filters. Try resetting search, changing status, or currency."
                 : "Transactions initiated in PayPilot or paid via PayPal Sandbox will appear here automatically."
             }
             icon={CreditCard}
-            actionLabel={search || statusFilter ? "Clear Filters" : "Initiate Payment"}
-            onAction={search || statusFilter ? handleClearFilters : () => setIsInitiateOpen(true)}
+            actionLabel={search || statusFilter || currencyFilter ? "Clear Filters" : "Initiate Payment"}
+            onAction={search || statusFilter || currencyFilter ? handleClearFilters : () => setIsInitiateOpen(true)}
           />
         ) : (
           <>
@@ -585,7 +622,7 @@ export default function PaymentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#CBD5E1]/40">
-                  {payments.map((payment) => (
+                  {displayedPayments.map((payment) => (
                     <tr
                       key={payment.id}
                       className="hover:bg-[#CBD5E1]/20 transition-colors group"
@@ -652,7 +689,7 @@ export default function PaymentsPage() {
 
             {/* Mobile Card List View */}
             <div className="sm:hidden space-y-2.5">
-              {payments.map((payment) => (
+              {displayedPayments.map((payment) => (
                 <div
                   key={payment.id}
                   className="p-3.5 rounded-2xl bg-[#E8EDF4] shadow-raised-sm border border-white/60 space-y-2 text-xs"

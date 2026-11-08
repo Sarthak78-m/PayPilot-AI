@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Download,
   ArrowLeft,
+  Sparkles,
 } from "@/components/icons";
 import { PayPalCheckout } from "./paypal-checkout";
 import { PaymentReceiptModal } from "./payment-receipt-modal";
@@ -77,6 +78,16 @@ export function InitiatePaymentModal({
       setCapturedReceipt(null);
     }
   }, [isOpen]);
+  const handleFillDemoData = () => {
+    setAmount("25.00");
+    setCurrency("USD");
+    setCategory("Software Development");
+    setRecipientName("Acme Cloud Solutions");
+    setRecipientEmail("client@acme-cloud.example.com");
+    setDescription("PayPilot AI Sandbox Architecture Retainer");
+    setTermsAccepted(true);
+    setFormError(null);
+  };
 
   const handleInitiateTransaction = async (e) => {
     e.preventDefault();
@@ -158,6 +169,30 @@ export function InitiatePaymentModal({
         {/* Step 1: Form & Fee Review */}
         {step === 1 && (
           <form onSubmit={handleInitiateTransaction} className="space-y-4 pt-1 text-xs">
+            {/* Quick Demo Fill Helper */}
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 flex items-center justify-between gap-2">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5 font-bold text-[#1D4ED8] text-[11px]">
+                  <span className="h-2 w-2 rounded-full bg-[#2563EB] animate-pulse"></span>
+                  PayPal Sandbox Demo
+                </div>
+                <p className="text-[10px] text-[#64748B]">
+                  Zero real money charged. Official PayPal Sandbox API.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="xs"
+                onClick={handleFillDemoData}
+                icon={Sparkles}
+                iconPosition="left"
+                className="shrink-0 bg-white hover:bg-blue-50 text-[#2563EB] border border-blue-200 shadow-sm font-semibold"
+              >
+                Fill Demo Data ($25)
+              </Button>
+            </div>
+
             {formError && (
               <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
@@ -325,6 +360,14 @@ export function InitiatePaymentModal({
         {/* Step 2: PayPal Sandbox Checkout */}
         {step === 2 && initiatedTxn && (
           <div className="space-y-4 pt-1 text-xs">
+            {/* Sandbox Tester Reminder */}
+            <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] flex items-start gap-2">
+              <span className="text-amber-500 font-bold shrink-0">💡</span>
+              <span>
+                <strong>Sandbox Demo:</strong> In the PayPal checkout popup, sign in using your <strong>PayPal Sandbox Personal Buyer</strong> account. No real funds will be deducted.
+              </span>
+            </div>
+
             {/* Transaction Summary Card */}
             <div className="p-3.5 rounded-2xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-inset-sm space-y-2">
               <div className="flex items-center justify-between">

@@ -1,22 +1,34 @@
 import { getAuthenticatedUser } from "@/lib/auth/require-user";
 import { createSupabaseAuthClient } from "@/lib/supabase/server";
+import {
+  formatCurrencyDisplay,
+  SUPPORTED_CURRENCIES,
+  convertCurrency,
+  normalizeCurrency,
+} from "@/lib/payments/currency";
 
 export const dynamic = "force-dynamic";
 
-function formatCurrency(amount, currency = "USD") {
-  const num = Number(amount) || 0;
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency || "USD",
-      minimumFractionDigits: 2,
-    }).format(num);
-  } catch {
-    return `${currency || "USD"} ${num.toFixed(2)}`;
+function getCurrencySymbol(curr) {
+  switch ((curr || "").toUpperCase()) {
+    case "INR":
+      return "₹";
+    case "USD":
+      return "$";
+    case "EUR":
+      return "€";
+    case "GBP":
+      return "£";
+    case "CAD":
+      return "CA$";
+    case "AUD":
+      return "A$";
+    default:
+      return "$";
   }
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
     let user = null;
     try {
@@ -28,13 +40,24 @@ export async function GET() {
     if (!user) {
       return Response.json(
         { status: "error", message: "Authentication is required." },
-        { status: 401 },
+        { status: 401 }
       );
+    }
+
+    // Parse requested currency filter (optional: ?currency=USD or ?currency=INR or ?currency=ALL)
+    let requestedCurrency = "";
+    if (request && request.url) {
+      try {
+        const { searchParams } = new URL(request.url);
+        requestedCurrency = (searchParams.get("currency") || "").trim().toUpperCase();
+      } catch {
+        requestedCurrency = "";
+      }
     }
 
     const supabase = await createSupabaseAuthClient();
 
-    // Query all invoices for the authenticated user
+    // 1. Query all invoices for the authenticated user
     const { data: invoices, error: invError } = await supabase
       .from("invoices")
       .select("id, customer_name, customer_email, description, amount, currency, due_date, status, created_at")
@@ -44,240 +67,300 @@ export async function GET() {
     if (invError) {
       return Response.json(
         { status: "error", message: "Failed to retrieve invoice metrics." },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
     const allInvoices = invoices || [];
-    const totalCount = allInvoices.length;
 
-    // Count status breakdown
-    let draftCount = 0;
-    let pendingCount = 0;
-    let paidCount = 0;
-    let overdueCount = 0;
-    let cancelledCount = 0;
+    // 2. Query payments for this user (both invoice-linked and direct dashboard transactions)
+    let userPayments = [];
+    try {
+      const { data: pData } = await supabase
+        .from("payments")
+        .select("id, invoice_id, amount, currency, status, total_amount, internal_transaction_id, recipient_name, recipient_email, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      userPayments = pData || [];
+    } catch {
+      userPayments = [];
+    }
 
-    // Currency groupings
+    // 3. Build comprehensive Multi-Currency Breakdown (Due & Paid by Currency)
     const currencyTotals = {};
 
-    allInvoices.forEach((inv) => {
-      const status = (inv.status || "DRAFT").toUpperCase();
-      const curr = (inv.currency || "USD").toUpperCase();
-      const amt = Number(inv.amount) || 0;
-
-      if (!currencyTotals[curr]) {
-        currencyTotals[curr] = {
-          currency: curr,
-          paid: 0,
-          pending: 0,
-          overdue: 0,
-          draft: 0,
-          cancelled: 0,
-          outstanding: 0,
-          total: 0,
+    function initCurrencyBucket(curr) {
+      const normalized = (curr || "USD").toUpperCase();
+      if (!currencyTotals[normalized]) {
+        currencyTotals[normalized] = {
+          currency: normalized,
+          symbol: getCurrencySymbol(normalized),
+          // Due Receivables (Pending + Overdue invoices)
+          dueAmount: 0,
+          dueCount: 0,
+          pendingAmount: 0,
+          pendingCount: 0,
+          overdueAmount: 0,
+          overdueCount: 0,
+          // Settled Payments (Paid invoices)
+          paidAmount: 0,
+          paidCount: 0,
+          // Additional invoice states
+          draftAmount: 0,
+          draftCount: 0,
+          cancelledAmount: 0,
+          cancelledCount: 0,
+          // Total invoiced
+          totalAmount: 0,
+          totalCount: 0,
+          // Verified gateway collections
+          verifiedPaymentAmount: 0,
+          verifiedPaymentCount: 0,
         };
       }
+      return currencyTotals[normalized];
+    }
 
-      currencyTotals[curr].total += amt;
+    // Tally invoice metrics per currency
+    allInvoices.forEach((inv) => {
+      const curr = (inv.currency || "USD").toUpperCase();
+      const status = (inv.status || "DRAFT").toUpperCase();
+      const amt = Number(inv.amount) || 0;
+      const bucket = initCurrencyBucket(curr);
+
+      bucket.totalAmount += amt;
+      bucket.totalCount += 1;
 
       switch (status) {
         case "PAID":
-          paidCount += 1;
-          currencyTotals[curr].paid += amt;
+          bucket.paidAmount += amt;
+          bucket.paidCount += 1;
           break;
         case "PENDING":
-          pendingCount += 1;
-          currencyTotals[curr].pending += amt;
-          currencyTotals[curr].outstanding += amt;
+          bucket.pendingAmount += amt;
+          bucket.pendingCount += 1;
+          bucket.dueAmount += amt;
+          bucket.dueCount += 1;
           break;
         case "OVERDUE":
-          overdueCount += 1;
-          currencyTotals[curr].overdue += amt;
-          currencyTotals[curr].outstanding += amt;
+          bucket.overdueAmount += amt;
+          bucket.overdueCount += 1;
+          bucket.dueAmount += amt;
+          bucket.dueCount += 1;
           break;
         case "DRAFT":
-          draftCount += 1;
-          currencyTotals[curr].draft += amt;
+          bucket.draftAmount += amt;
+          bucket.draftCount += 1;
           break;
         case "CANCELLED":
-          cancelledCount += 1;
-          currencyTotals[curr].cancelled += amt;
+          bucket.cancelledAmount += amt;
+          bucket.cancelledCount += 1;
           break;
         default:
           break;
       }
     });
 
-    // Primary currency (most used currency, default USD)
-    const currencies = Object.keys(currencyTotals);
-    const primaryCurrency = currencies.length > 0 ? currencies[0] : "USD";
-    const primaryTotals = currencyTotals[primaryCurrency] || {
-      paid: 0,
-      pending: 0,
-      overdue: 0,
-      draft: 0,
-      cancelled: 0,
-      outstanding: 0,
-      total: 0,
-    };
+    // Tally verified payment records per currency
+    userPayments.forEach((p) => {
+      const pCurr = (p.currency || "USD").toUpperCase();
+      const pStatus = (p.status || "").toLowerCase();
+      const pAmt = Number(p.amount || p.total_amount) || 0;
+      const bucket = initCurrencyBucket(pCurr);
 
-    // ISSUE 2 CORRECTION: Use total invoice count as the common denominator for all statuses
-    // percentage = (statusCount / totalInvoiceCount) * 100
-    // Rounds to 2 decimal places to avoid floating-point drift while summing to ~100%
+      if (pStatus === "completed" || pStatus === "paid" || pStatus === "settled") {
+        bucket.verifiedPaymentAmount += pAmt;
+        bucket.verifiedPaymentCount += 1;
+      }
+    });
+
+    // Determine available currencies
+    const availableCurrencies = Object.keys(currencyTotals);
+    if (availableCurrencies.length === 0) {
+      availableCurrencies.push("USD");
+      initCurrencyBucket("USD");
+    }
+
+    // Format all currency totals with their native symbols
+    Object.values(currencyTotals).forEach((ct) => {
+      ct.formattedDue = formatCurrencyDisplay(ct.dueAmount, ct.currency);
+      ct.formattedPending = formatCurrencyDisplay(ct.pendingAmount, ct.currency);
+      ct.formattedOverdue = formatCurrencyDisplay(ct.overdueAmount, ct.currency);
+      ct.formattedPaid = formatCurrencyDisplay(ct.paidAmount, ct.currency);
+      ct.formattedTotal = formatCurrencyDisplay(ct.totalAmount, ct.currency);
+      ct.formattedVerified = formatCurrencyDisplay(ct.verifiedPaymentAmount, ct.currency);
+    });
+
+    // Determine active currency
+    const primaryCurrency = availableCurrencies[0] || "USD";
+    const isAllCurrencies = requestedCurrency === "ALL";
+    const activeCurrency = isAllCurrencies
+      ? "ALL"
+      : availableCurrencies.includes(requestedCurrency)
+      ? requestedCurrency
+      : primaryCurrency;
+
+    // Filter or Aggregate Invoices based on active currency
+    const filteredInvoices = activeCurrency === "ALL"
+      ? allInvoices
+      : allInvoices.filter((inv) => (inv.currency || "USD").toUpperCase() === activeCurrency);
+
+    // Filter or Aggregate Payments based on active currency
+    const filteredPayments = activeCurrency === "ALL"
+      ? userPayments
+      : userPayments.filter((p) => (p.currency || "USD").toUpperCase() === activeCurrency);
+
+    // Active metrics computation
+    let activePaidAmount = 0;
+    let activePaidCount = 0;
+    let activeDueAmount = 0;
+    let activeDueCount = 0;
+    let activePendingAmount = 0;
+    let activePendingCount = 0;
+    let activeOverdueAmount = 0;
+    let activeOverdueCount = 0;
+    let activeDraftCount = 0;
+    let activeCancelledCount = 0;
+    let activeTotalCount = filteredInvoices.length;
+    let activeVerifiedAmount = 0;
+    let activeVerifiedCount = 0;
+
+    let displayCurrency = primaryCurrency;
+
+    if (activeCurrency !== "ALL" && currencyTotals[activeCurrency]) {
+      const b = currencyTotals[activeCurrency];
+      displayCurrency = activeCurrency;
+      activePaidAmount = b.paidAmount;
+      activePaidCount = b.paidCount;
+      activeDueAmount = b.dueAmount;
+      activeDueCount = b.dueCount;
+      activePendingAmount = b.pendingAmount;
+      activePendingCount = b.pendingCount;
+      activeOverdueAmount = b.overdueAmount;
+      activeOverdueCount = b.overdueCount;
+      activeDraftCount = b.draftCount;
+      activeCancelledCount = b.cancelledCount;
+      activeVerifiedAmount = b.verifiedPaymentAmount;
+      activeVerifiedCount = b.verifiedPaymentCount;
+    } else {
+      // "ALL" Currencies: Convert to primary currency using exchange rates for consolidated view
+      displayCurrency = primaryCurrency;
+      availableCurrencies.forEach((c) => {
+        const b = currencyTotals[c];
+        const convertedPaid = convertCurrency({
+          amount: b.paidAmount,
+          fromCurrency: c,
+          toCurrency: primaryCurrency,
+        });
+        const convertedDue = convertCurrency({
+          amount: b.dueAmount,
+          fromCurrency: c,
+          toCurrency: primaryCurrency,
+        });
+        const convertedPending = convertCurrency({
+          amount: b.pendingAmount,
+          fromCurrency: c,
+          toCurrency: primaryCurrency,
+        });
+        const convertedOverdue = convertCurrency({
+          amount: b.overdueAmount,
+          fromCurrency: c,
+          toCurrency: primaryCurrency,
+        });
+        const convertedVerified = convertCurrency({
+          amount: b.verifiedPaymentAmount,
+          fromCurrency: c,
+          toCurrency: primaryCurrency,
+        });
+
+        activePaidAmount += convertedPaid.convertedAmount;
+        activePaidCount += b.paidCount;
+        activeDueAmount += convertedDue.convertedAmount;
+        activeDueCount += b.dueCount;
+        activePendingAmount += convertedPending.convertedAmount;
+        activePendingCount += b.pendingCount;
+        activeOverdueAmount += convertedOverdue.convertedAmount;
+        activeOverdueCount += b.overdueCount;
+        activeDraftCount += b.draftCount;
+        activeCancelledCount += b.cancelledCount;
+        activeVerifiedAmount += convertedVerified.convertedAmount;
+        activeVerifiedCount += b.verifiedPaymentCount;
+      });
+    }
+
     const calcPercent = (count) =>
-      totalCount > 0 ? Math.round((count / totalCount) * 10000) / 100 : 0;
+      activeTotalCount > 0 ? Math.round((count / activeTotalCount) * 10000) / 100 : 0;
 
     const distribution = {
-      totalCount,
+      totalCount: activeTotalCount,
       paid: {
-        count: paidCount,
-        percent: calcPercent(paidCount),
+        count: activePaidCount,
+        percent: calcPercent(activePaidCount),
         color: "#16A34A",
         label: "Paid",
       },
       pending: {
-        count: pendingCount,
-        percent: calcPercent(pendingCount),
+        count: activePendingCount,
+        percent: calcPercent(activePendingCount),
         color: "#F59E0B",
         label: "Pending",
       },
       overdue: {
-        count: overdueCount,
-        percent: calcPercent(overdueCount),
+        count: activeOverdueCount,
+        percent: calcPercent(activeOverdueCount),
         color: "#DC2626",
         label: "Overdue",
       },
       draft: {
-        count: draftCount,
-        percent: calcPercent(draftCount),
+        count: activeDraftCount,
+        percent: calcPercent(activeDraftCount),
         color: "#64748B",
         label: "Draft",
       },
       cancelled: {
-        count: cancelledCount,
-        percent: calcPercent(cancelledCount),
+        count: activeCancelledCount,
+        percent: calcPercent(activeCancelledCount),
         color: "#94A3B8",
         label: "Cancelled",
       },
     };
 
-    // Query verified payment records from payments table
-    let recentPayments = [];
-    let verifiedPaymentAmount = 0;
-
-    if (allInvoices.length > 0) {
-      const invoiceIds = allInvoices.map((i) => i.id);
-      const { data: pData } = await supabase
-        .from("payments")
-        .select("id, invoice_id, amount, status, created_at")
-        .in("invoice_id", invoiceIds)
-        .order("created_at", { ascending: false });
-
-      if (pData && pData.length > 0) {
-        const invMap = new Map(allInvoices.map((i) => [i.id, i]));
-        pData.forEach((p) => {
-          if ((p.status || "").toLowerCase() === "completed") {
-            verifiedPaymentAmount += Number(p.amount) || 0;
-          }
-        });
-
-        recentPayments = pData.slice(0, 4).map((p) => {
-          const matchedInv = invMap.get(p.invoice_id);
-          return {
-            id: p.id ? `#${p.id.slice(0, 8)}` : "—",
-            customer: matchedInv?.customer_name || "Client",
-            invoiceId: p.invoice_id ? `#${p.invoice_id.slice(0, 8)}` : "—",
-            amount: Number(p.amount) || 0,
-            formattedAmount: formatCurrency(p.amount, matchedInv?.currency || "USD"),
-            date: p.created_at ? p.created_at.split("T")[0] : "",
-            method: "PayPal Sandbox",
-            status: p.status || "completed",
-          };
-        });
-      }
-    }
-
-    // ISSUE 1 CORRECTION: Honest Financial Metrics
-    // Stop labeling PAID invoice amounts as "Total Revenue" or "Collected Revenue".
-    // Explicitly designate as "Paid Invoice Value" (settlement unverified without PayPal capture).
-    const metrics = {
-      // Corrected semantic metric: Paid Invoice Value
-      paidInvoiceValue: {
-        title: "Paid Invoice Value",
-        amount: primaryTotals.paid,
-        formatted: formatCurrency(primaryTotals.paid, primaryCurrency),
-        count: paidCount,
-        period: `${paidCount} marked paid`,
-        description: "Total value of invoices marked PAID (settlement unverified)",
-      },
-      // Backward compatible alias pointing to honest label
-      totalRevenue: {
-        title: "Paid Invoice Value",
-        amount: primaryTotals.paid,
-        formatted: formatCurrency(primaryTotals.paid, primaryCurrency),
-        period: `${paidCount} marked paid`,
-        description: "Total value of invoices marked PAID (settlement unverified)",
-      },
-      // Verified cash collection metric (strictly 0 until PayPal capture exists)
-      verifiedCollectedRevenue: {
-        title: "Verified Payments",
-        amount: verifiedPaymentAmount,
-        formatted: formatCurrency(verifiedPaymentAmount, primaryCurrency),
-        count: recentPayments.length,
-        period: "Captured in PayPal",
-        description: "Verified funds captured via PayPal gateway",
-      },
-      paidInvoices: {
-        count: paidCount,
-        amount: primaryTotals.paid,
-        formatted: formatCurrency(primaryTotals.paid, primaryCurrency),
-        period: "Status = PAID",
-        description: "Invoices marked as paid",
-      },
-      pendingInvoices: {
-        count: pendingCount,
-        amount: primaryTotals.pending,
-        formatted: formatCurrency(primaryTotals.pending, primaryCurrency),
-        period: "Awaiting payment",
-        description: "Pending client receivables",
-      },
-      overdueInvoices: {
-        count: overdueCount,
-        amount: primaryTotals.overdue,
-        formatted: formatCurrency(primaryTotals.overdue, primaryCurrency),
-        period: "Past due date",
-        description: "Requires payment follow-up",
-      },
-      outstanding: {
-        amount: primaryTotals.outstanding,
-        formatted: formatCurrency(primaryTotals.outstanding, primaryCurrency),
-        count: pendingCount + overdueCount,
-        description: "Pending and overdue invoice balance",
-      },
-      totalCount,
-      draftCount,
-      cancelledCount,
-      primaryCurrency,
-      currencyBreakdown: currencyTotals,
-    };
-
-    // Top 5 recent invoices
-    const recentInvoices = allInvoices.slice(0, 5).map((inv) => ({
+    // Format top 5 recent invoices for display
+    const recentInvoices = filteredInvoices.slice(0, 5).map((inv) => ({
       id: inv.id ? `#${inv.id.slice(0, 8)}` : "—",
       rawId: inv.id,
       customer: inv.customer_name || "Untitled Client",
       clientEmail: inv.customer_email || "",
       amount: Number(inv.amount) || 0,
       currency: inv.currency || "USD",
-      formattedAmount: formatCurrency(inv.amount, inv.currency),
+      formattedAmount: formatCurrencyDisplay(inv.amount, inv.currency || "USD"),
       issueDate: inv.created_at ? inv.created_at.split("T")[0] : "",
       dueDate: inv.due_date || "On receipt",
       status: (inv.status || "draft").toLowerCase(),
       description: inv.description || "",
     }));
 
-    // Invoiced trends per month (past 6 months)
+    // Format recent settlements
+    const invMap = new Map(allInvoices.map((i) => [i.id, i]));
+    const recentPayments = filteredPayments.slice(0, 4).map((p) => {
+      const matchedInv = p.invoice_id ? invMap.get(p.invoice_id) : null;
+      const payeeName = p.recipient_name || p.recipient_email || matchedInv?.customer_name || "Client";
+      const paymentCur = p.currency || matchedInv?.currency || "USD";
+      const paymentAmt = Number(p.amount || p.total_amount) || 0;
+      return {
+        id: p.id ? `#${p.id.slice(0, 8)}` : (p.internal_transaction_id || "—"),
+        customer: payeeName,
+        invoiceId: p.invoice_id ? `#${p.invoice_id.slice(0, 8)}` : (p.internal_transaction_id || "Direct Payment"),
+        amount: paymentAmt,
+        currency: paymentCur,
+        formattedAmount: formatCurrencyDisplay(paymentAmt, paymentCur),
+        date: p.created_at ? p.created_at.split("T")[0] : "",
+        method: "PayPal Sandbox",
+        status: (p.status || "completed").toLowerCase(),
+      };
+    });
+
+    // Invoiced trends per month for the selected/active currency
     const now = new Date();
     const months6 = [];
     for (let i = 5; i >= 0; i--) {
@@ -289,11 +372,21 @@ export async function GET() {
       let monthRevenue = 0;
       let monthInvoices = 0;
 
-      allInvoices.forEach((inv) => {
+      filteredInvoices.forEach((inv) => {
         if ((inv.status || "").toUpperCase() === "PAID" && inv.created_at) {
           const invDate = new Date(inv.created_at);
           if (invDate.getUTCFullYear() === year && invDate.getUTCMonth() === month) {
-            monthRevenue += Number(inv.amount) || 0;
+            const rawAmt = Number(inv.amount) || 0;
+            if (activeCurrency === "ALL") {
+              const converted = convertCurrency({
+                amount: rawAmt,
+                fromCurrency: inv.currency || "USD",
+                toCurrency: primaryCurrency,
+              });
+              monthRevenue += converted.convertedAmount;
+            } else {
+              monthRevenue += rawAmt;
+            }
             monthInvoices += 1;
           }
         }
@@ -307,7 +400,6 @@ export async function GET() {
       });
     }
 
-    // Past 12 months
     const months12 = [];
     for (let i = 11; i >= 0; i--) {
       const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
@@ -318,11 +410,21 @@ export async function GET() {
       let monthRevenue = 0;
       let monthInvoices = 0;
 
-      allInvoices.forEach((inv) => {
+      filteredInvoices.forEach((inv) => {
         if ((inv.status || "").toUpperCase() === "PAID" && inv.created_at) {
           const invDate = new Date(inv.created_at);
           if (invDate.getUTCFullYear() === year && invDate.getUTCMonth() === month) {
-            monthRevenue += Number(inv.amount) || 0;
+            const rawAmt = Number(inv.amount) || 0;
+            if (activeCurrency === "ALL") {
+              const converted = convertCurrency({
+                amount: rawAmt,
+                fromCurrency: inv.currency || "USD",
+                toCurrency: primaryCurrency,
+              });
+              monthRevenue += converted.convertedAmount;
+            } else {
+              monthRevenue += rawAmt;
+            }
             monthInvoices += 1;
           }
         }
@@ -336,6 +438,64 @@ export async function GET() {
       });
     }
 
+    const metrics = {
+      paidInvoiceValue: {
+        title: "Paid Invoice Value",
+        amount: activePaidAmount,
+        formatted: formatCurrencyDisplay(activePaidAmount, displayCurrency),
+        count: activePaidCount,
+        period: `${activePaidCount} marked paid`,
+        description: `Total value of invoices marked PAID (${displayCurrency})`,
+      },
+      totalRevenue: {
+        title: "Paid Invoice Value",
+        amount: activePaidAmount,
+        formatted: formatCurrencyDisplay(activePaidAmount, displayCurrency),
+        period: `${activePaidCount} marked paid`,
+        description: `Total value of invoices marked PAID (${displayCurrency})`,
+      },
+      verifiedCollectedRevenue: {
+        title: "Verified Payments",
+        amount: activeVerifiedAmount,
+        formatted: formatCurrencyDisplay(activeVerifiedAmount, displayCurrency),
+        count: activeVerifiedCount,
+        period: "Captured in PayPal",
+        description: `Verified funds captured via PayPal gateway (${displayCurrency})`,
+      },
+      paidInvoices: {
+        count: activePaidCount,
+        amount: activePaidAmount,
+        formatted: formatCurrencyDisplay(activePaidAmount, displayCurrency),
+        period: "Status = PAID",
+        description: "Invoices marked as paid",
+      },
+      pendingInvoices: {
+        count: activePendingCount,
+        amount: activePendingAmount,
+        formatted: formatCurrencyDisplay(activePendingAmount, displayCurrency),
+        period: "Awaiting payment",
+        description: "Pending client receivables",
+      },
+      overdueInvoices: {
+        count: activeOverdueCount,
+        amount: activeOverdueAmount,
+        formatted: formatCurrencyDisplay(activeOverdueAmount, displayCurrency),
+        period: "Past due date",
+        description: "Requires payment follow-up",
+      },
+      outstanding: {
+        amount: activeDueAmount,
+        formatted: formatCurrencyDisplay(activeDueAmount, displayCurrency),
+        count: activeDueCount,
+        description: `Pending and overdue receivable balance (${displayCurrency})`,
+      },
+      totalCount: activeTotalCount,
+      draftCount: activeDraftCount,
+      cancelledCount: activeCancelledCount,
+      primaryCurrency: displayCurrency,
+      currencyBreakdown: currencyTotals,
+    };
+
     return Response.json({
       status: "ok",
       data: {
@@ -348,12 +508,16 @@ export async function GET() {
           "1Y": months12,
           ALL: months12,
         },
+        availableCurrencies,
+        activeCurrency,
+        displayCurrency,
+        byCurrency: Object.values(currencyTotals),
       },
     });
   } catch (err) {
     return Response.json(
       { status: "error", message: "Failed to generate dashboard summary." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
