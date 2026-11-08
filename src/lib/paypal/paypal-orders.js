@@ -99,22 +99,31 @@ export async function createPayPalOrder({
     purchaseUnit.custom_id = String(resolvedCustomId).slice(0, 127);
   }
 
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+    "https://paypilot-ai.vercel.app"
+  ).trim().replace(/\/+$/, "");
+
+  const resolvedReturnUrl = returnUrl || `${siteUrl}/payments`;
+  const resolvedCancelUrl = cancelUrl || `${siteUrl}/payments`;
+
   const payload = {
     intent: "CAPTURE",
     purchase_units: [purchaseUnit],
-  };
-
-  if (returnUrl || cancelUrl) {
-    payload.payment_source = {
+    payment_source: {
       paypal: {
         experience_context: {
+          brand_name: "PayPilot AI",
           user_action: "PAY_NOW",
-          ...(returnUrl ? { return_url: returnUrl } : {}),
-          ...(cancelUrl ? { cancel_url: cancelUrl } : {}),
+          shipping_preference: "NO_SHIPPING",
+          return_url: resolvedReturnUrl,
+          cancel_url: resolvedCancelUrl,
         },
       },
-    };
-  }
+    },
+  };
 
   const raw = await executePayPalRequest({
     endpoint: "/v2/checkout/orders",
