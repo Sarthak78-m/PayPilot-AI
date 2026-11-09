@@ -1,5 +1,6 @@
 import { getAuthenticatedUser } from "@/lib/auth/require-user";
 import { createSupabaseAuthClient, createSupabaseServerClient } from "@/lib/supabase/server";
+import { convertCurrency } from "@/lib/payments/currency";
 
 export const dynamic = "force-dynamic";
 
@@ -99,7 +100,7 @@ export async function GET(request) {
 
     const allPayments = paymentsData || [];
 
-    // 3. Compute Overview Aggregations
+    // 3. Compute Overview Aggregations (Unified in USD via live reference exchange rates)
     let totalReceivedAmt = 0;
     let totalReceivedCount = 0;
     let pendingAmt = 0;
@@ -110,43 +111,55 @@ export async function GET(request) {
     let refundedCount = 0;
 
     allPayments.forEach((p) => {
-      const amt = Number(p.total_amount || p.amount) || 0;
+      const rawAmt = Number(p.total_amount || p.amount) || 0;
+      const matchedInv = invMap.get(p.invoice_id);
+      const curr = (p.currency || matchedInv?.currency || "USD").toUpperCase();
+
+      // Convert all figures to USD for the unified overview
+      const conversion = convertCurrency({
+        amount: rawAmt,
+        fromCurrency: curr,
+        toCurrency: "USD",
+      });
+      const amtInUsd = conversion.convertedAmount;
       const st = (p.status || "").toLowerCase();
 
       if (st === "completed" || st === "paid" || st === "settled") {
-        totalReceivedAmt += amt;
+        totalReceivedAmt += amtInUsd;
         totalReceivedCount += 1;
       } else if (["pending", "created", "order_created", "approved", "processing", "capturing", "initiated"].includes(st)) {
-        pendingAmt += amt;
+        pendingAmt += amtInUsd;
         pendingCount += 1;
       } else if (st === "failed" || st === "denied") {
-        failedAmt += amt;
+        failedAmt += amtInUsd;
         failedCount += 1;
       } else if (st === "refunded" || st === "partially_refunded") {
-        refundedAmt += amt;
+        refundedAmt += amtInUsd;
         refundedCount += 1;
       }
     });
 
     const overview = {
+      currency: "USD",
+      isUnifiedUsd: true,
       totalReceived: {
         amount: Math.round(totalReceivedAmt * 100) / 100,
-        formatted: formatCurrency(totalReceivedAmt, primaryCurrency),
+        formatted: formatCurrency(totalReceivedAmt, "USD"),
         count: totalReceivedCount,
       },
       pending: {
         amount: Math.round(pendingAmt * 100) / 100,
-        formatted: formatCurrency(pendingAmt, primaryCurrency),
+        formatted: formatCurrency(pendingAmt, "USD"),
         count: pendingCount,
       },
       failed: {
         amount: Math.round(failedAmt * 100) / 100,
-        formatted: formatCurrency(failedAmt, primaryCurrency),
+        formatted: formatCurrency(failedAmt, "USD"),
         count: failedCount,
       },
       refunded: {
         amount: Math.round(refundedAmt * 100) / 100,
-        formatted: formatCurrency(refundedAmt, primaryCurrency),
+        formatted: formatCurrency(refundedAmt, "USD"),
         count: refundedCount,
       },
     };
@@ -210,15 +223,26 @@ export async function GET(request) {
     const offset = (page - 1) * limit;
     const paginated = filtered.slice(offset, offset + limit);
 
-    // 7. Format records
+    // 7. Format records (All converted to USD by live reference exchange rate)
     const payments = paginated.map((p) => {
       const matchedInv = invMap.get(p.invoice_id);
-      const curr = p.currency || matchedInv?.currency || "USD";
+      const originalCurrency = (p.currency || matchedInv?.currency || "USD").toUpperCase();
       const rawStatus = (p.status || "pending").toLowerCase();
       const normalizedStatus =
         rawStatus === "paid" || rawStatus === "settled" ? "completed" : rawStatus;
 
-      const displayAmount = p.total_amount || p.amount;
+      const rawAmount = Number(p.total_amount || p.amount) || 0;
+
+      // Convert to USD by exchange rate
+      const usdConversion = convertCurrency({
+        amount: rawAmount,
+        fromCurrency: originalCurrency,
+        toCurrency: "USD",
+      });
+
+      const amountInUsd = usdConversion.convertedAmount;
+      const formattedUsd = formatCurrency(amountInUsd, "USD");
+      const formattedOriginal = formatCurrency(rawAmount, originalCurrency);
 
       return {
         id: p.id,
@@ -234,11 +258,18 @@ export async function GET(request) {
         rawInvoiceId: p.invoice_id,
         customer: p.recipient_name || matchedInv?.customer_name || p.payer_name || "Client",
         customerEmail: p.recipient_email || matchedInv?.customer_email || p.payer_email || "",
-        amount: Number(displayAmount) || 0,
+        amount: amountInUsd,
+        currency: "USD",
+        formattedAmount: formattedUsd,
+        amountInUsd,
+        formattedAmountInUsd: formattedUsd,
+        originalAmount: rawAmount,
+        originalCurrency,
+        formattedOriginalAmount: formattedOriginal,
+        isConverted: originalCurrency !== "USD",
+        exchangeRate: usdConversion.exchangeRate,
         baseAmount: Number(p.amount) || 0,
         fee: Number(p.transaction_fee) || 0,
-        currency: curr,
-        formattedAmount: formatCurrency(displayAmount, curr),
         date: p.created_at ? p.created_at.split("T")[0] : "",
         fullDate: p.created_at,
         status: normalizedStatus,

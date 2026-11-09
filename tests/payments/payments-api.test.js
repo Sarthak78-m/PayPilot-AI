@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { convertCurrency } from "@/lib/payments/currency";
 
 describe("Payments API Contract & Aggregations (GET /api/payments)", () => {
   it("rejects unauthenticated requests with 401 Unauthorized", async () => {
@@ -217,5 +218,38 @@ describe("Payments API Contract & Aggregations (GET /api/payments)", () => {
     const userC = { id: "merchant-user-C" };
     const userCInvoices = databaseInvoices.filter((inv) => inv.user_id === userC.id);
     assert.equal(userCInvoices.length, 0);
+  });
+
+  it("converts multi-currency transactions (e.g. INR + USD) into unified USD values for overview and table", () => {
+    const multiCurrencyPayments = [
+      { id: "p-usd", amount: 25.0, currency: "USD", status: "PENDING" },
+      { id: "p-inr-1", amount: 499.99, currency: "INR", status: "PENDING" },
+      { id: "p-inr-2", amount: 300.0, currency: "INR", status: "PENDING" },
+      { id: "p-completed", amount: 15.0, currency: "USD", status: "COMPLETED" },
+    ];
+
+    let pendingUsd = 0;
+    let completedUsd = 0;
+
+    multiCurrencyPayments.forEach((p) => {
+      const conv = convertCurrency({
+        amount: p.amount,
+        fromCurrency: p.currency,
+        toCurrency: "USD",
+      });
+      if (p.status === "PENDING") {
+        pendingUsd += conv.convertedAmount;
+      } else if (p.status === "COMPLETED") {
+        completedUsd += conv.convertedAmount;
+      }
+    });
+
+    // Instead of raw sum $824.99 (which added ₹799.99 INR directly to $25 USD):
+    // 499.99 INR / 83.5 = ~5.99 USD
+    // 300.00 INR / 83.5 = ~3.59 USD
+    // Total pending in USD is ~34.58 USD
+    assert.ok(pendingUsd < 40.0, `Expected pending amount converted to USD to be ~34.58, got ${pendingUsd}`);
+    assert.ok(pendingUsd > 30.0, `Expected pending amount converted to USD to be ~34.58, got ${pendingUsd}`);
+    assert.equal(completedUsd, 15.0);
   });
 });

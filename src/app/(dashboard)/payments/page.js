@@ -206,7 +206,9 @@ export default function PaymentsPage() {
   const displayedPayments = useMemo(() => {
     if (!currencyFilter) return payments;
     return payments.filter(
-      (p) => (p.currency || "").toUpperCase() === currencyFilter.toUpperCase()
+      (p) =>
+        (p.originalCurrency || p.currency || "").toUpperCase() ===
+        currencyFilter.toUpperCase()
     );
   }, [payments, currencyFilter]);
 
@@ -346,8 +348,14 @@ export default function PaymentsPage() {
       )}
 
       {/* 3. Payment Overview Cards (4 Metrics) */}
-      <section aria-labelledby="payments-overview">
-        <h2 id="payments-overview" className="sr-only">Payments Overview</h2>
+      <section aria-labelledby="payments-overview" className="space-y-2.5">
+        <div className="flex items-center justify-between text-xs text-[#64748B]">
+          <span className="font-semibold uppercase tracking-wider text-[11px]">Financial Settlements Overview</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-800 border border-blue-500/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+            Unified Valuation in USD (FX Converted)
+          </span>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5 lg:gap-4">
           {/* Card 1: Total Received */}
           <Card
@@ -648,8 +656,18 @@ export default function PaymentsPage() {
                       <td className="py-3 px-3 font-mono text-[#64748B]">
                         {payment.paypalOrderId || payment.orderId || "—"}
                       </td>
-                      <td className="py-3 px-3 font-mono font-bold text-[#16A34A] text-sm">
-                        +{payment.formattedAmount}
+                      <td className="py-3 px-3 font-mono">
+                        <span className="font-bold text-[#16A34A] text-sm block">
+                          +{payment.formattedAmount}
+                        </span>
+                        {payment.isConverted && (
+                          <span className="text-[10px] text-[#64748B] font-sans flex items-center gap-1 mt-0.5">
+                            <span>Orig: {payment.formattedOriginalAmount}</span>
+                            <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/10 text-blue-700 font-semibold border border-blue-500/20">
+                              Converted
+                            </span>
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-3 text-[#64748B] font-mono">
                         {payment.date || "—"}
@@ -712,6 +730,11 @@ export default function PaymentsPage() {
                       <p className="font-mono font-extrabold text-sm text-[#16A34A]">
                         +{payment.formattedAmount}
                       </p>
+                      {payment.isConverted && (
+                        <p className="text-[10px] text-[#64748B]">
+                          Orig: {payment.formattedOriginalAmount}
+                        </p>
+                      )}
                       <div className="flex items-center justify-end gap-2 mt-1">
                         {payment.status === "completed" && (
                           <button
@@ -750,11 +773,17 @@ export default function PaymentsPage() {
             {/* Amount Banner */}
             <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-1 shadow-inset-sm">
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
-                Captured Settlement Amount
+                Captured Settlement Amount (USD)
               </span>
               <div className="text-2xl font-extrabold font-mono text-[#16A34A]">
                 +{selectedPayment.formattedAmount}
               </div>
+              {selectedPayment.isConverted && (
+                <div className="text-xs text-[#64748B] pt-0.5">
+                  Original Invoice: <strong className="text-[#172033] font-mono">{selectedPayment.formattedOriginalAmount}</strong>
+                  <span className="ml-1 text-[10px] text-blue-600 font-semibold">(1 USD = 83.50 INR)</span>
+                </div>
+              )}
               <div className="flex items-center justify-center gap-1.5 pt-1">
                 {getPaymentStatusBadge(selectedPayment.status)}
                 <span className="text-[11px] text-[#64748B]">• {selectedPayment.paymentMethod || "PayPal Sandbox"}</span>
