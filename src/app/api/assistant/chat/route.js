@@ -1,5 +1,5 @@
 import { getAuthenticatedUser } from "@/lib/auth/require-user";
-import { createSupabaseAuthClient } from "@/lib/supabase/server";
+import { createSupabaseAuthClient, createSupabaseServerClient } from "@/lib/supabase/server";
 import { getGeminiClient } from "@/lib/gemini/gemini-client";
 import { buildRateLimitKey, enforceRateLimit } from "@/lib/payments/payment-rate-limit";
 
@@ -87,23 +87,32 @@ export async function POST(request) {
     // 4. Rate limiting (20 requests per minute per user/IP)
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
     const rateLimitKey = buildRateLimitKey("assistant_chat", user.id, ip);
+
+    let supabaseServerClient = null;
+    try {
+      supabaseServerClient = createSupabaseServerClient();
+    } catch {
+      // Server client may not be configured in non-service environments
+    }
+
     const rateLimitResult = await enforceRateLimit({
       key: rateLimitKey,
       limit: 20,
       windowSeconds: 60,
+      supabaseClient: supabaseServerClient,
+      allowFallback: true,
     });
 
     if (!rateLimitResult.allowed) {
       if (rateLimitResult.isServiceUnavailable) {
+        // Fall back gracefully rather than blocking the assistant chat
+        console.warn("[Assistant] Distributed rate limit check unavailable; proceeding with request.");
+      } else {
         return Response.json(
-          { status: "error", message: "Assistant rate limiting service is temporarily unavailable." },
-          { status: 503 }
+          { status: "error", message: "Too many assistant requests. Please wait a moment before sending another message." },
+          { status: 429, headers: { "Retry-After": String(rateLimitResult.retryAfter || 60) } }
         );
       }
-      return Response.json(
-        { status: "error", message: "Too many assistant requests. Please wait a moment before sending another message." },
-        { status: 429, headers: { "Retry-After": String(rateLimitResult.retryAfter || 60) } }
-      );
     }
 
     const mockRaw = request.headers.get("x-mock-gemini-raw");
@@ -220,23 +229,47 @@ ${invoiceContextSummary}`;
 
     // 7. Invoke Gemini
     const gemini = getGeminiClient();
-    const modelName = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("GEMINI_TIMEOUT")), 15000)
-    );
+    const candidateModels = [
+      process.env.GEMINI_MODEL,
+      "gemini-3.5-flash-lite",
+      "gemini-3.5-flash",
+      "gemini-3.8-flash",
+    ].filter(Boolean);
 
-    const generationPromise = gemini.models.generateContent({
-      model: modelName,
-      contents,
-      config: {
-        systemInstruction,
-        temperature: 0.3,
-      },
-    });
+    const uniqueModels = [...new Set(candidateModels)];
+    let lastErr = null;
+    let replyText = null;
 
-    const response = await Promise.race([generationPromise, timeoutPromise]);
-    const replyText = response.text || "I have analyzed your invoice records. Let me know if you would like me to draft reminder emails or summarize specific client accounts.";
+    for (const model of uniqueModels) {
+      try {
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("GEMINI_TIMEOUT")), 9000)
+        );
+
+        const generationPromise = gemini.models.generateContent({
+          model,
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.3,
+          },
+        });
+
+        const response = await Promise.race([generationPromise, timeoutPromise]);
+        if (response?.text) {
+          replyText = response.text;
+          break;
+        }
+      } catch (err) {
+        lastErr = err;
+        continue;
+      }
+    }
+
+    if (!replyText) {
+      throw lastErr || new Error("GEMINI_TIMEOUT");
+    }
 
     // Contextual suggested actions
     const suggestedActions = [];

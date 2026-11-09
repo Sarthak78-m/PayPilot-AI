@@ -40,9 +40,9 @@ export function buildRateLimitKey(scope, identifier, ip = "127.0.0.1") {
  *   error?: string
  * }>}
  */
-export async function enforceRateLimit({ key, limit, windowSeconds, supabaseClient }) {
+export async function enforceRateLimit({ key, limit, windowSeconds, supabaseClient, allowFallback = false }) {
   const isProduction = process.env.NODE_ENV === "production";
-  const allowMemoryFallback = !isProduction || process.env.ALLOW_MEMORY_RATE_LIMIT === "true";
+  const allowMemoryFallback = !isProduction || process.env.ALLOW_MEMORY_RATE_LIMIT === "true" || allowFallback;
 
   // 1. Production Mode: PostgreSQL distributed rate limiter is strictly required
   if (isProduction && !allowMemoryFallback) {

@@ -199,31 +199,53 @@ Return ONLY a JSON object conforming to this schema:
  * Generate an invoice draft using Gemini API from a natural-language description.
  */
 export async function generateInvoiceDraft(prompt, options = {}) {
-  const modelName = process.env.GEMINI_MODEL || "gemini-3.8-flash";
   const gemini = getGeminiClient();
 
   const todayStr = new Date().toISOString().split("T")[0];
   const userContent = `Today's Date: ${todayStr}\n\nUser Transaction Description:\n"${prompt}"\n\nExtract the invoice fields in JSON.`;
 
-  // Apply timeout to avoid hanging requests (15 seconds default)
+  // Prioritize fastest, most stable models first to avoid Vercel serverless function timeouts
+  const candidateModels = [
+    process.env.GEMINI_MODEL,
+    "gemini-3.5-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-3.8-flash",
+  ].filter(Boolean);
+
+  const uniqueModels = [...new Set(candidateModels)];
   const timeoutMs = options.timeoutMs || 15000;
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error("GEMINI_TIMEOUT")), timeoutMs),
-  );
+  const perModelTimeoutMs = Math.min(timeoutMs, 8000);
 
-  const generationPromise = gemini.models.generateContent({
-    model: modelName,
-    contents: userContent,
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      temperature: 0.1,
-      responseMimeType: "application/json",
-    },
-  });
+  let lastError = null;
 
-  const response = await Promise.race([generationPromise, timeoutPromise]);
-  const responseText = response.text;
+  for (const model of uniqueModels) {
+    try {
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("GEMINI_TIMEOUT")), perModelTimeoutMs)
+      );
 
-  const parsed = extractJsonFromText(responseText);
-  return sanitizeAndValidateDraft(parsed);
+      const generationPromise = gemini.models.generateContent({
+        model,
+        contents: userContent,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          temperature: 0.1,
+          responseMimeType: "application/json",
+        },
+      });
+
+      const response = await Promise.race([generationPromise, timeoutPromise]);
+      const responseText = response?.text;
+
+      if (responseText) {
+        const parsed = extractJsonFromText(responseText);
+        return sanitizeAndValidateDraft(parsed);
+      }
+    } catch (err) {
+      lastError = err;
+      continue;
+    }
+  }
+
+  throw lastError || new Error("GEMINI_TIMEOUT");
 }

@@ -141,7 +141,6 @@ export function calculateTransactionFee(amount, currency = "USD") {
 /**
  * Converts an amount from one currency to another server-side.
  * If source and target are the same, returns unchanged amount.
- * Safely handles 0 amount without throwing errors.
  *
  * @param {object} params
  * @param {number|string} params.amount - Source amount.
