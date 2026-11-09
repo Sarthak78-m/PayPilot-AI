@@ -94,4 +94,17 @@ describe("Dashboard Multi-Currency & Due Payment Feature", () => {
     assert.equal(normalizeCurrency(null), "USD");
     assert.equal(normalizeCurrency("INVALID"), "USD");
   });
+
+  it("5. Converts multi-currency portfolio into unified USD outstanding balance using 1 USD = 83.50 INR", () => {
+    const inrConv = convertCurrency({
+      amount: 799.99,
+      fromCurrency: "INR",
+      toCurrency: "USD",
+    });
+    assert.equal(inrConv.convertedAmount, 9.58);
+
+    const totalUSD = Math.round((inrConv.convertedAmount + 25.0) * 100) / 100;
+    assert.equal(totalUSD, 34.58);
+    assert.equal(formatCurrencyDisplay(totalUSD, "USD"), "$34.58");
+  });
 });

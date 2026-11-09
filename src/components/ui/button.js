@@ -13,7 +13,7 @@ export function Button({
   ...props
 }) {
   const baseStyles =
-    "inline-flex items-center justify-center font-medium transition-all duration-150 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 focus-visible:ring-offset-[#E8EDF4] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98]";
+    "inline-flex items-center justify-center font-medium transition-all duration-150 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 focus-visible:ring-offset-[#E8EDF4] dark:focus-visible:ring-offset-[#0A0D14] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98]";
 
   const sizeStyles = {
     sm: "text-xs px-3 py-1.5 rounded-lg min-h-[36px] gap-1.5",
@@ -26,13 +26,13 @@ export function Button({
     primary:
       "bg-[#2563EB] text-white shadow-primary-glow hover:bg-[#1D4ED8] active:shadow-primary-active active:scale-[0.97]",
     secondary:
-      "bg-[#E8EDF4] text-[#172033] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm active:scale-[0.97]",
+      "bg-[#E8EDF4] dark:bg-[#111726] text-[#172033] dark:text-[#F8FAFC] border border-white/80 dark:border-white/10 shadow-raised-sm hover:shadow-raised active:shadow-inset-sm active:scale-[0.97]",
     outline:
-      "bg-transparent text-[#172033] border border-[#CBD5E1] hover:bg-[#E8EDF4] hover:shadow-raised-sm active:shadow-inset-sm active:scale-[0.97]",
+      "bg-transparent text-[#172033] dark:text-[#F8FAFC] border border-[#CBD5E1] dark:border-white/15 hover:bg-[#E8EDF4] dark:hover:bg-white/5 hover:shadow-raised-sm active:shadow-inset-sm active:scale-[0.97]",
     ghost:
-      "bg-transparent text-[#172033] hover:bg-[#E8EDF4] hover:shadow-raised-sm active:shadow-inset-sm active:scale-[0.97]",
+      "bg-transparent text-[#172033] dark:text-[#F8FAFC] hover:bg-[#E8EDF4] dark:hover:bg-white/5 hover:shadow-raised-sm active:shadow-inset-sm active:scale-[0.97]",
     destructive:
-      "bg-[#DC2626] text-white shadow-[0_4px_14px_rgba(220,38,38,0.35)] hover:bg-[#B91C1C] active:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.3)] active:scale-[0.97]",
+      "bg-[#DC2626] dark:bg-[#EF4444] text-white shadow-[0_4px_14px_rgba(220,38,38,0.35)] hover:bg-[#B91C1C] dark:hover:bg-[#DC2626] active:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.3)] active:scale-[0.97]",
   };
 
   return (

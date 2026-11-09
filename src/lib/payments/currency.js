@@ -192,8 +192,9 @@ export function convertCurrency({ amount, fromCurrency, toCurrency = "USD" }) {
   const toUsdRate = BASE_USD_EXCHANGE_RATES[to] || 1.0;
 
   // 1 unit of from = (toUsdRate / fromUsdRate) units of to
-  const exchangeRate = Math.round((toUsdRate / fromUsdRate) * 10000) / 10000;
-  const converted = Math.round(base * exchangeRate * 100) / 100;
+  const exactRate = toUsdRate / fromUsdRate;
+  const exchangeRate = Math.round(exactRate * 1000000) / 1000000;
+  const converted = Math.round(((base * toUsdRate) / fromUsdRate) * 100) / 100;
 
   return {
     originalAmount: base,

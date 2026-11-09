@@ -13,7 +13,7 @@ export function AIAssistantCard() {
   return (
     <Card
       variant="raised"
-      className="relative overflow-hidden bg-gradient-to-br from-[#E8EDF4] to-[#DFE5EE] border border-white/80 p-4 sm:p-5 space-y-3"
+      className="relative overflow-hidden bg-gradient-to-br from-[#E8EDF4] to-[#DFE5EE] dark:from-[#111726] dark:to-[#161F33] border border-white/80 dark:border-white/10 p-4 sm:p-5 space-y-3"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-start gap-3">
@@ -45,8 +45,8 @@ export function AIAssistantCard() {
       </div>
 
       {/* Suggested Prompts */}
-      <div className="pt-2 border-t border-[#CBD5E1]/60">
-        <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block mb-1.5">
+      <div className="pt-2 border-t border-[#CBD5E1]/60 dark:border-white/10">
+        <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] block mb-1.5">
           Suggested prompts:
         </span>
         <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -54,7 +54,7 @@ export function AIAssistantCard() {
             <Link
               key={prompt}
               href={`/assistant?q=${encodeURIComponent(prompt)}`}
-              className="text-xs text-[#172033] bg-[#E8EDF4] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border border-white/60 transition-all flex items-center gap-1.5 hover:text-[#2563EB]"
+              className="text-xs text-[#172033] dark:text-[#F8FAFC] bg-[#E8EDF4] dark:bg-[#111726] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border border-white/60 dark:border-white/10 transition-all flex items-center gap-1.5 hover:text-[#2563EB] dark:hover:text-[#60A5FA]"
             >
               <Sparkles className="h-3 w-3 text-[#2563EB]" />
               <span>{prompt}</span>

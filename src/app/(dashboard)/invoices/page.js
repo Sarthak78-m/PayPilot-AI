@@ -14,6 +14,8 @@ import {
   Select,
   EmptyState,
   Skeleton,
+  Modal,
+  Divider,
 } from "@/components/ui";
 import {
   FileText,
@@ -30,6 +32,7 @@ import {
   Clock,
   CheckCircle2,
   Link2,
+  Trash2,
 } from "@/components/icons";
 import { PaymentLinkModal } from "@/components/invoices/payment-link-modal";
 
@@ -117,6 +120,11 @@ export default function InvoicesPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [selectedInvoiceForLink, setSelectedInvoiceForLink] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedInvoiceForDelete, setSelectedInvoiceForDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [feedback, setFeedback] = useState(null);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -226,6 +234,63 @@ export default function InvoicesPage() {
     setPage(1);
   };
 
+  useEffect(() => {
+    if (!feedback) return;
+    const timer = setTimeout(() => {
+      setFeedback(null);
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, [feedback]);
+
+  const handleOpenDeleteModal = (inv) => {
+    setSelectedInvoiceForDelete(inv);
+    setDeleteError(null);
+    setDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    if (!deleting) {
+      setDeleteModalOpen(false);
+      setSelectedInvoiceForDelete(null);
+      setDeleteError(null);
+    }
+  };
+
+  const handleConfirmDeleteInvoice = async () => {
+    if (!selectedInvoiceForDelete) return;
+
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const res = await fetch(`/api/invoices/${selectedInvoiceForDelete.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setDeleteError(data.message || `Failed to delete invoice (HTTP ${res.status}).`);
+        return;
+      }
+
+      setDeleteModalOpen(false);
+      setSelectedInvoiceForDelete(null);
+      setFeedback({
+        type: "success",
+        message: `Invoice #${selectedInvoiceForDelete.id.slice(0, 8)} deleted successfully.`,
+      });
+
+      await fetchInvoices(page, statusFilter, search);
+    } catch {
+      setDeleteError("Unable to connect to service. Please check your network connection.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const totalPages = Math.max(1, Math.ceil((pagination.total || 0) / limit));
   const startRange = pagination.total === 0 ? 0 : (page - 1) * limit + 1;
   const endRange = Math.min(page * limit, pagination.total || 0);
@@ -275,6 +340,33 @@ export default function InvoicesPage() {
           </Link>
         </div>
       </div>
+
+      {/* Notification / Feedback Banner */}
+      {feedback && (
+        <div
+          className={`p-3.5 rounded-2xl text-xs flex items-center justify-between gap-3 shadow-raised-sm ${
+            feedback.type === "success"
+              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800"
+              : "bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {feedback.type === "success" ? (
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+            )}
+            <span className="font-semibold">{feedback.message}</span>
+          </div>
+          <button
+            onClick={() => setFeedback(null)}
+            className="text-[11px] font-bold opacity-70 hover:opacity-100 transition-opacity"
+            aria-label="Dismiss message"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Filter and Search Bar Card */}
       <Card variant="raised-sm" className="p-4">
@@ -486,17 +578,30 @@ export default function InvoicesPage() {
 
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-right">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          icon={Link2}
-                          iconPosition="left"
-                          onClick={() => setSelectedInvoiceForLink(inv)}
-                          className="text-xs"
-                          title="Generate or view payment link"
-                        >
-                          Payment Link
-                        </Button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={Link2}
+                            iconPosition="left"
+                            onClick={() => setSelectedInvoiceForLink(inv)}
+                            className="text-xs"
+                            title="Generate or view payment link"
+                          >
+                            Payment Link
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            icon={Trash2}
+                            onClick={() => handleOpenDeleteModal(inv)}
+                            className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                            title="Delete invoice"
+                            aria-label={`Delete invoice #${inv.id ? inv.id.slice(0, 8) : ""}`}
+                          >
+                            Delete
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -540,16 +645,29 @@ export default function InvoicesPage() {
                   </div>
 
                   <div className="pt-2 flex justify-end">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      icon={Link2}
-                      iconPosition="left"
-                      onClick={() => setSelectedInvoiceForLink(inv)}
-                      className="w-full text-xs justify-center"
-                    >
-                      Payment Link
-                    </Button>
+                    <div className="flex items-center justify-end gap-2 w-full">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={Link2}
+                        iconPosition="left"
+                        onClick={() => setSelectedInvoiceForLink(inv)}
+                        className="flex-1 text-xs justify-center"
+                      >
+                        Payment Link
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={Trash2}
+                        onClick={() => handleOpenDeleteModal(inv)}
+                        className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                        title="Delete invoice"
+                        aria-label={`Delete invoice #${inv.id ? inv.id.slice(0, 8) : ""}`}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -602,6 +720,102 @@ export default function InvoicesPage() {
         invoice={selectedInvoiceForLink}
         onInvoiceUpdated={() => fetchInvoices(page, statusFilter, search)}
       />
+
+      {/* Delete Invoice Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        title="Delete Invoice"
+        description="Confirm permanent removal of this invoice record."
+      >
+        {selectedInvoiceForDelete && (
+          <div className="space-y-4 py-2">
+            {/* Invoice Overview Card */}
+            <div className="p-3.5 rounded-xl bg-[#E8EDF4] dark:bg-[#1E293B] shadow-inset-sm space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-mono font-bold text-sm text-[#2563EB]">
+                  #{selectedInvoiceForDelete.id ? selectedInvoiceForDelete.id.slice(0, 8) : "—"}
+                </span>
+                {getStatusBadge(selectedInvoiceForDelete.status)}
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#64748B] font-medium">Customer:</span>
+                <span className="font-bold text-[#172033] dark:text-[#F8FAFC]">
+                  {selectedInvoiceForDelete.customer_name || "Untitled Customer"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#64748B] font-medium">Amount:</span>
+                <span className="font-mono font-bold text-[#172033] dark:text-[#F8FAFC]">
+                  {formatCurrency(selectedInvoiceForDelete.amount, selectedInvoiceForDelete.currency)}
+                </span>
+              </div>
+              {selectedInvoiceForDelete.description && (
+                <div className="text-xs text-[#64748B] pt-1 border-t border-[#CBD5E1]/40 dark:border-slate-700/50">
+                  <span className="font-medium">Description: </span>
+                  <span className="italic">{selectedInvoiceForDelete.description}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Context-aware Warning Banner */}
+            {selectedInvoiceForDelete.status === "PAID" ? (
+              <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+                <AlertCircle className="h-5 w-5 shrink-0 text-amber-500 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-bold">Cannot Delete Settled Invoice</p>
+                  <p className="text-[11px] leading-relaxed opacity-90">
+                    This invoice has been marked as PAID. To ensure strict accounting compliance and preserve captured payment ledgers, paid invoices cannot be permanently deleted.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-400 flex items-start gap-2.5">
+                <AlertCircle className="h-5 w-5 shrink-0 text-red-500 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-bold">Warning: Permanent Action</p>
+                  <p className="text-[11px] leading-relaxed opacity-90">
+                    This will permanently delete invoice <span className="font-mono font-bold">#{selectedInvoiceForDelete.id ? selectedInvoiceForDelete.id.slice(0, 8) : ""}</span>. Any associated public payment links will be deactivated immediately.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Error feedback if deletion failed */}
+            {deleteError && (
+              <div className="p-3 rounded-xl bg-red-100 dark:bg-red-900/40 text-xs text-red-800 dark:text-red-200 border border-red-300 dark:border-red-800 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <Divider />
+
+            {/* Action buttons */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCloseDeleteModal}
+                disabled={deleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                icon={Trash2}
+                iconPosition="left"
+                onClick={handleConfirmDeleteInvoice}
+                loading={deleting}
+                disabled={deleting || selectedInvoiceForDelete.status === "PAID"}
+              >
+                Permanently Delete
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

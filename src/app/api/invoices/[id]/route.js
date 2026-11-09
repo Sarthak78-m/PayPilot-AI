@@ -1,5 +1,5 @@
 import { getAuthenticatedUser } from "@/lib/auth/require-user";
-import { createSupabaseAuthClient } from "@/lib/supabase/server";
+import { createSupabaseAuthClient, createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   isValidUUID,
   validateUpdateInvoiceInput,
@@ -218,7 +218,7 @@ export async function PATCH(request, { params }) {
 }
 
 // ──────────────────────────────────────────────
-// DELETE /api/invoices/[id] — Delete or cancel invoice
+// DELETE /api/invoices/[id] — Delete invoice with financial data protection
 // ──────────────────────────────────────────────
 
 export async function DELETE(request, { params }) {
@@ -240,10 +240,22 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    const supabase = await createSupabaseAuthClient();
+    // Use service role client if available to manage payment links and payments safely without RLS blocking;
+    // fallback to authenticated user client.
+    let dbClient;
+    if (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        dbClient = createSupabaseServerClient();
+      } catch {
+        dbClient = await createSupabaseAuthClient();
+      }
+    } else {
+      dbClient = await createSupabaseAuthClient();
+    }
 
     // Retrieve existing invoice to check ownership and state.
-    const { data: invoice, error: fetchError } = await supabase
+    // Strictly scoped to user_id = user.id (never trusts user ID from frontend).
+    const { data: invoice, error: fetchError } = await dbClient
       .from("invoices")
       .select("*")
       .eq("id", id)
@@ -257,101 +269,110 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    // PAID invoices must not be deleted or cancelled through this endpoint.
-    if (invoice.status === "PAID") {
+    // Retrieve associated payment records to evaluate financial integrity
+    const { data: payments, error: paymentsError } = await dbClient
+      .from("payments")
+      .select("id, status, amount, currency, paypal_order_id, paypal_capture_id")
+      .eq("invoice_id", id);
+
+    if (paymentsError) {
       return Response.json(
-        { status: "error", message: "Cannot delete or cancel a PAID invoice." },
-        { status: 409 },
+        { status: "error", message: "Failed to verify invoice payment history." },
+        { status: 500 },
       );
     }
 
-    // CANCELLED invoices should not be repeatedly modified/cancelled.
-    if (invoice.status === "CANCELLED") {
-      return Response.json(
-        { status: "error", message: "Invoice is already cancelled." },
-        { status: 409 },
-      );
-    }
+    const paymentRecords = payments || [];
 
-    // DRAFT invoices: permanent deletion if no payment records exist.
-    if (invoice.status === "DRAFT") {
-      const { data: payments } = await supabase
-        .from("payments")
-        .select("id")
-        .eq("invoice_id", id)
-        .limit(1);
-
-      if (payments && payments.length > 0) {
-        // Cancel instead if dependent records exist.
-        const { data: cancelled, error: cancelError } = await supabase
-          .from("invoices")
-          .update({ status: "CANCELLED", updated_at: new Date().toISOString() })
-          .eq("id", id)
-          .eq("user_id", user.id)
-          .select()
-          .single();
-
-        if (cancelError) {
-          return Response.json(
-            { status: "error", message: "Failed to cancel invoice." },
-            { status: 500 },
-          );
-        }
-
-        return Response.json({
-          status: "ok",
-          message: "Invoice cancelled.",
-          data: cancelled,
-        });
-      }
-
-      const { error: deleteError } = await supabase
-        .from("invoices")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", user.id);
-
-      if (deleteError) {
-        return Response.json(
-          { status: "error", message: "Failed to delete invoice." },
-          { status: 500 },
-        );
-      }
-
-      return Response.json({
-        status: "ok",
-        message: "Invoice deleted permanently.",
-      });
-    }
-
-    // PENDING or OVERDUE invoices: Cancel instead of deleting to preserve audit trail.
-    if (invoice.status === "PENDING" || invoice.status === "OVERDUE") {
-      const { data: cancelled, error: cancelError } = await supabase
-        .from("invoices")
-        .update({ status: "CANCELLED", updated_at: new Date().toISOString() })
-        .eq("id", id)
-        .eq("user_id", user.id)
-        .select()
-        .single();
-
-      if (cancelError) {
-        return Response.json(
-          { status: "error", message: "Failed to cancel invoice." },
-          { status: 500 },
-        );
-      }
-
-      return Response.json({
-        status: "ok",
-        message: "Invoice cancelled successfully.",
-        data: cancelled,
-      });
-    }
-
-    return Response.json(
-      { status: "error", message: "Unsupported invoice status for deletion." },
-      { status: 400 },
+    // Financial Protection 1: Paid or partially refunded/settled invoices must NOT be deleted
+    const hasSettledPayments = paymentRecords.some((p) =>
+      ["COMPLETED", "PARTIALLY_REFUNDED", "REFUNDED"].includes((p.status || "").toUpperCase())
     );
+
+    if (invoice.status === "PAID" || hasSettledPayments) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Paid invoices with captured payment records cannot be deleted to preserve financial audit history.",
+          code: "INVOICE_PAID_PROTECTED",
+        },
+        { status: 409 },
+      );
+    }
+
+    // Financial Protection 2: Active in-flight PayPal payment attempts must NOT be interrupted
+    const hasInFlightPayments = paymentRecords.some((p) =>
+      ["ORDER_CREATED", "APPROVED", "PROCESSING", "CAPTURING", "REFUND_PENDING"].includes((p.status || "").toUpperCase())
+    );
+
+    if (hasInFlightPayments) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Cannot delete an invoice with an active payment checkout in progress.",
+          code: "PAYMENT_IN_PROGRESS",
+        },
+        { status: 409 },
+      );
+    }
+
+    // Financial Protection 3: Clean up non-financial attempt records (e.g. FAILED, CANCELLED, CREATED, INITIATED, PENDING)
+    if (paymentRecords.length > 0) {
+      const paymentIds = paymentRecords.map((p) => p.id);
+
+      // Clean up audit logs for these non-completed attempts
+      try {
+        await dbClient
+          .from("payment_audit_logs")
+          .delete()
+          .in("payment_id", paymentIds);
+      } catch {
+        // Non-fatal if table not present
+      }
+
+      // Delete non-settled payment attempts so foreign key on payments.invoice_id is satisfied
+      const { error: payDeleteError } = await dbClient
+        .from("payments")
+        .delete()
+        .in("id", paymentIds);
+
+      if (payDeleteError) {
+        return Response.json(
+          { status: "error", message: "Failed to clean up associated payment attempts." },
+          { status: 500 },
+        );
+      }
+    }
+
+    // Financial Protection 4: Clean up any invoice payment links so public checkout is instantly invalidated
+    try {
+      await dbClient
+        .from("invoice_payment_links")
+        .delete()
+        .eq("invoice_id", id);
+    } catch {
+      // Non-fatal if table not present
+    }
+
+    // Permanent Deletion: Delete the authorized invoice record
+    const { error: deleteError } = await dbClient
+      .from("invoices")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (deleteError) {
+      return Response.json(
+        { status: "error", message: "Failed to delete invoice." },
+        { status: 500 },
+      );
+    }
+
+    return Response.json({
+      status: "ok",
+      message: "Invoice deleted permanently.",
+      data: { id },
+    });
   } catch {
     return Response.json(
       { status: "error", message: "An unexpected error occurred." },

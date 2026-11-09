@@ -33,7 +33,7 @@ export function Checkbox({
         />
         <label
           htmlFor={checkboxId}
-          className="w-5 h-5 rounded-md bg-[#E8EDF4] border border-[#D1D8E2] shadow-inset-sm flex items-center justify-center cursor-pointer transition-all duration-150 peer-focus-visible:ring-2 peer-focus-visible:ring-[#2563EB] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[#E8EDF4] peer-checked:bg-[#2563EB] peer-checked:border-[#2563EB] peer-checked:shadow-primary-glow peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"
+          className="w-5 h-5 rounded-md bg-[#E8EDF4] dark:bg-[#0D121D] border border-[#D1D8E2] dark:border-[#1E293B] shadow-inset-sm flex items-center justify-center cursor-pointer transition-all duration-150 peer-focus-visible:ring-2 peer-focus-visible:ring-[#2563EB] dark:focus-visible:ring-[#3B82F6] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[#E8EDF4] dark:peer-focus-visible:ring-offset-[#0A0D14] peer-checked:bg-[#2563EB] dark:peer-checked:bg-[#3B82F6] peer-checked:border-[#2563EB] dark:peer-checked:border-[#3B82F6] peer-checked:shadow-primary-glow peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"
         >
           <svg
             className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-150 stroke-[3]"
@@ -53,18 +53,18 @@ export function Checkbox({
             <label
               htmlFor={checkboxId}
               className={`text-sm font-medium cursor-pointer ${
-                disabled ? "text-[#94A3B8] cursor-not-allowed" : "text-[#172033]"
+                disabled ? "text-[#94A3B8] dark:text-[#64748B] cursor-not-allowed" : "text-[#172033] dark:text-[#F8FAFC]"
               }`}
             >
               {label}
             </label>
           )}
           {description && (
-            <span className={`text-xs ${disabled ? "text-[#CBD5E1]" : "text-[#64748B]"}`}>
+            <span className={`text-xs ${disabled ? "text-[#CBD5E1] dark:text-[#475569]" : "text-[#64748B] dark:text-[#94A3B8]"}`}>
               {description}
             </span>
           )}
-          {error && <span className="text-xs text-[#DC2626] font-medium mt-0.5">{error}</span>}
+          {error && <span className="text-xs text-[#DC2626] dark:text-[#EF4444] font-medium mt-0.5">{error}</span>}
         </div>
       )}
     </div>

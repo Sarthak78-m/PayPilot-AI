@@ -129,6 +129,7 @@ export function createMockDatabase() {
       let orConditions = null;
       let updatePayload = null;
       let insertPayload = null;
+      let isDelete = false;
       let isSingle = false;
       let isMaybeSingle = false;
       let limitCount = null;
@@ -200,6 +201,10 @@ export function createMockDatabase() {
           insertPayload = payload;
           return queryBuilder;
         },
+        delete() {
+          isDelete = true;
+          return queryBuilder;
+        },
         upsert(payload, opts) {
           insertPayload = payload;
           return queryBuilder;
@@ -238,6 +243,19 @@ export function createMockDatabase() {
           if (passesAnd && passesOr) {
             matched.push({ id, row });
           }
+        }
+
+        // Handle DELETE
+        if (isDelete) {
+          const deleted = [];
+          for (const { id, row } of matched) {
+            store.delete(id);
+            deleted.push(row);
+          }
+          return {
+            data: isSingle || isMaybeSingle ? (deleted[0] || null) : deleted,
+            error: null,
+          };
         }
 
         // 2. Perform UPDATE if requested

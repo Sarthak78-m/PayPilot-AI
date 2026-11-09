@@ -181,7 +181,7 @@ export async function GET(request) {
       initCurrencyBucket("USD");
     }
 
-    // Format all currency totals with their native symbols
+    // Format all currency totals with their native symbols and unified USD conversions
     Object.values(currencyTotals).forEach((ct) => {
       ct.formattedDue = formatCurrencyDisplay(ct.dueAmount, ct.currency);
       ct.formattedPending = formatCurrencyDisplay(ct.pendingAmount, ct.currency);
@@ -189,26 +189,47 @@ export async function GET(request) {
       ct.formattedPaid = formatCurrencyDisplay(ct.paidAmount, ct.currency);
       ct.formattedTotal = formatCurrencyDisplay(ct.totalAmount, ct.currency);
       ct.formattedVerified = formatCurrencyDisplay(ct.verifiedPaymentAmount, ct.currency);
+
+      const convDue = convertCurrency({
+        amount: ct.dueAmount,
+        fromCurrency: ct.currency,
+        toCurrency: "USD",
+      });
+      const convPaid = convertCurrency({
+        amount: ct.paidAmount,
+        fromCurrency: ct.currency,
+        toCurrency: "USD",
+      });
+      const convTotal = convertCurrency({
+        amount: ct.totalAmount,
+        fromCurrency: ct.currency,
+        toCurrency: "USD",
+      });
+
+      ct.convertedDueUSD = convDue.convertedAmount;
+      ct.convertedPaidUSD = convPaid.convertedAmount;
+      ct.convertedTotalUSD = convTotal.convertedAmount;
+      ct.formattedConvertedDue = formatCurrencyDisplay(convDue.convertedAmount, "USD");
+      ct.formattedConvertedPaid = formatCurrencyDisplay(convPaid.convertedAmount, "USD");
+      ct.formattedConvertedTotal = formatCurrencyDisplay(convTotal.convertedAmount, "USD");
+      ct.exchangeRateText = ct.currency === "USD" ? "Baseline Currency (1:1)" : `1 USD ≈ 83.50 ${ct.currency}`;
     });
 
-    // Determine active currency
-    const primaryCurrency = availableCurrencies[0] || "USD";
-    const isAllCurrencies = requestedCurrency === "ALL";
-    const activeCurrency = isAllCurrencies
-      ? "ALL"
+    // Baseline unified platform currency is strictly USD
+    const isUSDUnified =
+      !requestedCurrency ||
+      requestedCurrency === "ALL" ||
+      requestedCurrency === "USD";
+
+    const activeCurrency = isUSDUnified
+      ? "USD"
       : availableCurrencies.includes(requestedCurrency)
       ? requestedCurrency
-      : primaryCurrency;
+      : "USD";
 
-    // Filter or Aggregate Invoices based on active currency
-    const filteredInvoices = activeCurrency === "ALL"
-      ? allInvoices
-      : allInvoices.filter((inv) => (inv.currency || "USD").toUpperCase() === activeCurrency);
-
-    // Filter or Aggregate Payments based on active currency
-    const filteredPayments = activeCurrency === "ALL"
-      ? userPayments
-      : userPayments.filter((p) => (p.currency || "USD").toUpperCase() === activeCurrency);
+    let displayCurrency = activeCurrency;
+    let filteredInvoices = [];
+    let filteredPayments = [];
 
     // Active metrics computation
     let activePaidAmount = 0;
@@ -221,15 +242,80 @@ export async function GET(request) {
     let activeOverdueCount = 0;
     let activeDraftCount = 0;
     let activeCancelledCount = 0;
-    let activeTotalCount = filteredInvoices.length;
+    let activeTotalCount = 0;
     let activeVerifiedAmount = 0;
     let activeVerifiedCount = 0;
 
-    let displayCurrency = primaryCurrency;
+    if (isUSDUnified) {
+      displayCurrency = "USD";
+      filteredInvoices = allInvoices;
+      filteredPayments = userPayments;
 
-    if (activeCurrency !== "ALL" && currencyTotals[activeCurrency]) {
-      const b = currencyTotals[activeCurrency];
+      allInvoices.forEach((inv) => {
+        const rawAmt = Number(inv.amount) || 0;
+        const invCurr = (inv.currency || "USD").toUpperCase();
+        const st = (inv.status || "DRAFT").toUpperCase();
+        const isPastDue = inv.due_date && inv.due_date < nowStr;
+
+        const conv = convertCurrency({
+          amount: rawAmt,
+          fromCurrency: invCurr,
+          toCurrency: "USD",
+        });
+        const usdVal = conv.convertedAmount || 0;
+
+        if (st === "PAID") {
+          activePaidAmount += usdVal;
+          activePaidCount += 1;
+        } else if (st === "OVERDUE" || (st === "PENDING" && isPastDue)) {
+          activeOverdueAmount += usdVal;
+          activeOverdueCount += 1;
+          activeDueAmount += usdVal;
+          activeDueCount += 1;
+        } else if (st === "PENDING") {
+          activePendingAmount += usdVal;
+          activePendingCount += 1;
+          activeDueAmount += usdVal;
+          activeDueCount += 1;
+        } else if (st === "DRAFT") {
+          activeDraftCount += 1;
+        } else if (st === "CANCELLED") {
+          activeCancelledCount += 1;
+        }
+      });
+
+      userPayments.forEach((p) => {
+        const pCurr = (p.currency || "USD").toUpperCase();
+        const pStatus = (p.status || "").toLowerCase();
+        const pAmt = Number(p.amount || p.total_amount) || 0;
+        if (pStatus === "completed" || pStatus === "paid" || pStatus === "settled") {
+          const conv = convertCurrency({
+            amount: pAmt,
+            fromCurrency: pCurr,
+            toCurrency: "USD",
+          });
+          activeVerifiedAmount += conv.convertedAmount;
+          activeVerifiedCount += 1;
+        }
+      });
+
+      activePaidAmount = Math.round(activePaidAmount * 100) / 100;
+      activeDueAmount = Math.round(activeDueAmount * 100) / 100;
+      activePendingAmount = Math.round(activePendingAmount * 100) / 100;
+      activeOverdueAmount = Math.round(activeOverdueAmount * 100) / 100;
+      activeVerifiedAmount = Math.round(activeVerifiedAmount * 100) / 100;
+      activeTotalCount = allInvoices.length;
+    } else {
+      // Non-USD single currency view (e.g. INR)
       displayCurrency = activeCurrency;
+      filteredInvoices = allInvoices.filter(
+        (inv) => (inv.currency || "USD").toUpperCase() === activeCurrency
+      );
+      filteredPayments = userPayments.filter(
+        (p) => (p.currency || "USD").toUpperCase() === activeCurrency
+      );
+
+      const b = currencyTotals[activeCurrency] || initCurrencyBucket(activeCurrency);
       activePaidAmount = b.paidAmount;
       activePaidCount = b.paidCount;
       activeDueAmount = b.dueAmount;
@@ -242,50 +328,7 @@ export async function GET(request) {
       activeCancelledCount = b.cancelledCount;
       activeVerifiedAmount = b.verifiedPaymentAmount;
       activeVerifiedCount = b.verifiedPaymentCount;
-    } else {
-      // "ALL" Currencies: Convert to primary currency using exchange rates for consolidated view
-      displayCurrency = primaryCurrency;
-      availableCurrencies.forEach((c) => {
-        const b = currencyTotals[c];
-        const convertedPaid = convertCurrency({
-          amount: b.paidAmount,
-          fromCurrency: c,
-          toCurrency: primaryCurrency,
-        });
-        const convertedDue = convertCurrency({
-          amount: b.dueAmount,
-          fromCurrency: c,
-          toCurrency: primaryCurrency,
-        });
-        const convertedPending = convertCurrency({
-          amount: b.pendingAmount,
-          fromCurrency: c,
-          toCurrency: primaryCurrency,
-        });
-        const convertedOverdue = convertCurrency({
-          amount: b.overdueAmount,
-          fromCurrency: c,
-          toCurrency: primaryCurrency,
-        });
-        const convertedVerified = convertCurrency({
-          amount: b.verifiedPaymentAmount,
-          fromCurrency: c,
-          toCurrency: primaryCurrency,
-        });
-
-        activePaidAmount += convertedPaid.convertedAmount;
-        activePaidCount += b.paidCount;
-        activeDueAmount += convertedDue.convertedAmount;
-        activeDueCount += b.dueCount;
-        activePendingAmount += convertedPending.convertedAmount;
-        activePendingCount += b.pendingCount;
-        activeOverdueAmount += convertedOverdue.convertedAmount;
-        activeOverdueCount += b.overdueCount;
-        activeDraftCount += b.draftCount;
-        activeCancelledCount += b.cancelledCount;
-        activeVerifiedAmount += convertedVerified.convertedAmount;
-        activeVerifiedCount += b.verifiedPaymentCount;
-      });
+      activeTotalCount = filteredInvoices.length;
     }
 
     const calcPercent = (count) =>
@@ -377,11 +420,11 @@ export async function GET(request) {
           const invDate = new Date(inv.created_at);
           if (invDate.getUTCFullYear() === year && invDate.getUTCMonth() === month) {
             const rawAmt = Number(inv.amount) || 0;
-            if (activeCurrency === "ALL") {
+            if (isUSDUnified) {
               const converted = convertCurrency({
                 amount: rawAmt,
                 fromCurrency: inv.currency || "USD",
-                toCurrency: primaryCurrency,
+                toCurrency: "USD",
               });
               monthRevenue += converted.convertedAmount;
             } else {
@@ -415,11 +458,11 @@ export async function GET(request) {
           const invDate = new Date(inv.created_at);
           if (invDate.getUTCFullYear() === year && invDate.getUTCMonth() === month) {
             const rawAmt = Number(inv.amount) || 0;
-            if (activeCurrency === "ALL") {
+            if (isUSDUnified) {
               const converted = convertCurrency({
                 amount: rawAmt,
                 fromCurrency: inv.currency || "USD",
-                toCurrency: primaryCurrency,
+                toCurrency: "USD",
               });
               monthRevenue += converted.convertedAmount;
             } else {

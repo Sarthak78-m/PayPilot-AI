@@ -61,23 +61,21 @@ export function InitiatePaymentModal({
       ? convertCurrency({ amount: feeCalc?.totalAmount || amountNum, fromCurrency: "INR", toCurrency: "USD" })
       : null;
 
-  useEffect(() => {
-    if (!isOpen) {
-      // Reset form on close
-      setStep(1);
-      setAmount("");
-      setCurrency("USD");
-      setCategory("Consulting");
-      setRecipientEmail("");
-      setRecipientName("");
-      setDescription("");
-      setTermsAccepted(false);
-      setInitiating(false);
-      setFormError(null);
-      setInitiatedTxn(null);
-      setCapturedReceipt(null);
-    }
-  }, [isOpen]);
+  const handleClose = () => {
+    setStep(1);
+    setAmount("");
+    setCurrency("USD");
+    setCategory("Consulting");
+    setRecipientEmail("");
+    setRecipientName("");
+    setDescription("");
+    setTermsAccepted(false);
+    setInitiating(false);
+    setFormError(null);
+    setInitiatedTxn(null);
+    setCapturedReceipt(null);
+    if (onClose) onClose();
+  };
   const handleFillDemoData = () => {
     setAmount("25.00");
     setCurrency("USD");
@@ -187,7 +185,7 @@ export function InitiatePaymentModal({
                 onClick={handleFillDemoData}
                 icon={Sparkles}
                 iconPosition="left"
-                className="shrink-0 bg-white hover:bg-blue-50 text-[#2563EB] border border-blue-200 shadow-sm font-semibold"
+                className="shrink-0 bg-white dark:bg-black/20 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-[#2563EB] dark:text-[#60A5FA] border border-blue-200 dark:border-blue-800 shadow-sm font-semibold"
               >
                 Fill Demo Data ($25)
               </Button>
@@ -342,7 +340,7 @@ export function InitiatePaymentModal({
             <Divider />
 
             <div className="flex items-center justify-end gap-2 pt-1">
-              <Button variant="ghost" size="sm" type="button" onClick={onClose}>
+              <Button variant="ghost" size="sm" type="button" onClick={handleClose}>
                 Cancel
               </Button>
               <Button
@@ -423,7 +421,7 @@ export function InitiatePaymentModal({
       {step === 3 && capturedReceipt && (
         <PaymentReceiptModal
           isOpen={true}
-          onClose={onClose}
+          onClose={handleClose}
           payment={capturedReceipt}
         />
       )}

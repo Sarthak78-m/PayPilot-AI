@@ -15,13 +15,27 @@ const emptySubscribe = () => () => {};
 const themeListeners = new Set();
 function subscribeTheme(callback) {
   themeListeners.add(callback);
+  let mediaQueryList;
   if (typeof window !== "undefined") {
     window.addEventListener("storage", callback);
+    if (window.matchMedia) {
+      try {
+        mediaQueryList = window.matchMedia("(prefers-color-scheme: dark)");
+        if (mediaQueryList.addEventListener) {
+          mediaQueryList.addEventListener("change", callback);
+        }
+      } catch {}
+    }
   }
   return () => {
     themeListeners.delete(callback);
     if (typeof window !== "undefined") {
       window.removeEventListener("storage", callback);
+      if (mediaQueryList && mediaQueryList.removeEventListener) {
+        try {
+          mediaQueryList.removeEventListener("change", callback);
+        } catch {}
+      }
     }
   };
 }

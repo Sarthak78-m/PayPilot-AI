@@ -83,23 +83,23 @@ export function Header({
     : "FP";
 
   return (
-    <header className="sticky top-0 z-10 bg-[#E8EDF4]/90 backdrop-blur-md border-b border-[#CBD5E1]/60 px-4 sm:px-5 lg:px-6 py-3 transition-all">
+    <header className="sticky top-0 z-10 bg-[#E8EDF4]/90 dark:bg-[#111726]/90 backdrop-blur-md border-b border-[#CBD5E1]/60 dark:border-white/10 px-4 sm:px-5 lg:px-6 py-3 transition-all">
       <div className="flex items-center justify-between gap-3">
         {/* Left: Mobile Toggle & Page Title */}
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onOpenMobile}
-            className="lg:hidden p-2 rounded-xl text-[#64748B] hover:text-[#172033] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all shrink-0"
+            className="lg:hidden p-2 rounded-xl text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all shrink-0"
             aria-label="Open navigation menu"
           >
             <Menu className="h-5 w-5" />
           </button>
 
           <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-[#172033] truncate leading-tight">
+            <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-[#172033] dark:text-[#F8FAFC] truncate leading-tight">
               {title}
             </h1>
-            <p className="text-xs text-[#64748B] hidden sm:block truncate mt-0.5">
+            <p className="text-xs text-[#64748B] dark:text-[#94A3B8] hidden sm:block truncate mt-0.5">
               {greeting} • {subtitle}
             </p>
           </div>
@@ -117,13 +117,13 @@ export function Header({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Filter invoices, clients, payments..."
-              className="w-full bg-[#E8EDF4] text-[#172033] placeholder-[#64748B] dark:placeholder-[#94A3B8] text-xs sm:text-sm rounded-xl py-2 pl-9 pr-8 shadow-inset-sm border border-[#D1D8E2] dark:border-[#1E293B] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] focus:outline-none transition-all"
+              className="w-full bg-[#E8EDF4] dark:bg-[#0D121D] text-[#172033] dark:text-[#F8FAFC] placeholder-[#64748B] dark:placeholder-[#94A3B8] text-xs sm:text-sm rounded-xl py-2 pl-9 pr-8 shadow-inset-sm border border-[#D1D8E2] dark:border-[#1E293B] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] focus:outline-none transition-all"
             />
 
             {searchQuery && (
               <button
                 onClick={() => onSearchChange("")}
-                className="absolute right-2.5 text-[#64748B] hover:text-[#172033] p-1 rounded-md"
+                className="absolute right-2.5 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] p-1 rounded-md"
                 aria-label="Clear search"
               >
                 <X className="h-3.5 w-3.5" />
@@ -157,19 +157,19 @@ export function Header({
                 setShowNotifications(!showNotifications);
                 if (unreadNotifications > 0) setUnreadNotifications(0);
               }}
-              className="relative p-2.5 rounded-xl text-[#64748B] hover:text-[#172033] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all"
+              className="relative p-2.5 rounded-xl text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all"
               aria-label="Notifications"
             >
               <Bell className="h-4 w-4" />
               {unreadNotifications > 0 && (
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#2563EB] ring-2 ring-[#E8EDF4]" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#2563EB] ring-2 ring-[#E8EDF4] dark:ring-[#111726]" />
               )}
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-[#E8EDF4] shadow-raised-lg border border-white/60 p-4 space-y-3 z-30 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-[#E8EDF4] dark:bg-[#111726] shadow-raised-lg border border-white/60 dark:border-white/10 p-4 space-y-3 z-30 animate-in fade-in zoom-in-95 duration-150">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#172033]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#172033] dark:text-[#F8FAFC]">
                     Notifications
                   </span>
                   <Badge variant="neutral" size="sm">
@@ -177,10 +177,10 @@ export function Header({
                   </Badge>
                 </div>
                 <Divider />
-                <div className="py-6 text-center text-[#64748B]">
+                <div className="py-6 text-center text-[#64748B] dark:text-[#94A3B8]">
                   <Bell className="h-7 w-7 mx-auto mb-2 text-[#94A3B8] opacity-60" />
-                  <p className="text-xs font-semibold text-[#172033]">No notifications yet</p>
-                  <p className="text-[11px] text-[#64748B] mt-0.5">
+                  <p className="text-xs font-semibold text-[#172033] dark:text-[#F8FAFC]">No notifications yet</p>
+                  <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] mt-0.5">
                     We&apos;ll notify you when important billing or account updates arrive.
                   </p>
                 </div>
@@ -198,16 +198,16 @@ export function Header({
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white font-bold text-xs flex items-center justify-center shadow-primary-glow">
                 {initials}
               </div>
-              <ChevronDown className="h-3.5 w-3.5 text-[#64748B] hidden sm:block" />
+              <ChevronDown className="h-3.5 w-3.5 text-[#64748B] dark:text-[#94A3B8] hidden sm:block" />
             </button>
 
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-[#E8EDF4] shadow-raised-lg border border-white/60 p-2 space-y-1 z-30 animate-in fade-in zoom-in-95 duration-150 text-xs">
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-[#E8EDF4] dark:bg-[#111726] shadow-raised-lg border border-white/60 dark:border-white/10 p-2 space-y-1 z-30 animate-in fade-in zoom-in-95 duration-150 text-xs">
                 <div className="px-3 py-2">
-                  <p className="font-bold text-[#172033] truncate">
+                  <p className="font-bold text-[#172033] dark:text-[#F8FAFC] truncate">
                     {displayName || "PayPilot Freelancer"}
                   </p>
-                  <p className="text-[11px] text-[#64748B] truncate mt-0.5">
+                  <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] truncate mt-0.5">
                     {currentUser?.email || "Signed in with Supabase"}
                   </p>
                 </div>
@@ -217,7 +217,7 @@ export function Header({
                 <Link
                   href="/settings"
                   onClick={() => setShowUserMenu(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#64748B] hover:text-[#172033] hover:shadow-raised-sm active:shadow-inset-sm transition-all"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:shadow-raised-sm active:shadow-inset-sm transition-all"
                 >
                   <Settings className="h-3.5 w-3.5" />
                   <span>Account Settings</span>
@@ -229,7 +229,7 @@ export function Header({
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#DC2626] hover:bg-red-50 hover:shadow-raised-sm active:shadow-inset-sm transition-all text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#DC2626] dark:text-[#EF4444] hover:bg-red-50 dark:hover:bg-red-950/30 hover:shadow-raised-sm active:shadow-inset-sm transition-all text-left"
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   <span>Sign Out</span>

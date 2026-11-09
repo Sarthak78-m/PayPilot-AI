@@ -31,7 +31,7 @@ export function ThemeToggle({
   if (variant === "pill") {
     return (
       <div
-        className={`inline-flex items-center p-1 rounded-xl bg-[#E8EDF4] shadow-inset-sm border border-[#CBD5E1]/60 ${className}`}
+        className={`inline-flex items-center p-1 rounded-xl bg-[#E8EDF4] dark:bg-[#0D121D] shadow-inset-sm border border-[#CBD5E1]/60 dark:border-white/10 ${className}`}
         role="group"
         aria-label="Theme selection"
         {...props}
@@ -42,7 +42,7 @@ export function ThemeToggle({
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all select-none ${
             !isDark
               ? "bg-[#2563EB] text-white shadow-primary-glow"
-              : "text-[#64748B] hover:text-[#172033]"
+              : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
           }`}
           aria-pressed={!isDark}
         >
@@ -56,7 +56,7 @@ export function ThemeToggle({
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all select-none ${
             isDark
               ? "bg-[#3B82F6] text-white shadow-primary-glow"
-              : "text-[#64748B] hover:text-[#172033]"
+              : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
           }`}
           aria-pressed={isDark}
         >
@@ -85,7 +85,7 @@ export function ThemeToggle({
     <button
       type="button"
       onClick={toggleTheme}
-      className={`inline-flex items-center justify-center font-medium bg-[#E8EDF4] text-[#172033] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm active:scale-[0.97] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] select-none border border-white/60 dark:border-white/10 ${
+      className={`inline-flex items-center justify-center font-medium bg-[#E8EDF4] dark:bg-[#111726] text-[#172033] dark:text-[#F8FAFC] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm active:scale-[0.97] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] select-none border border-white/60 dark:border-white/10 ${
         sizeClasses[size] || sizeClasses.md
       } ${className}`}
       aria-label={label}
@@ -98,7 +98,7 @@ export function ThemeToggle({
         />
       ) : (
         <Moon
-          className={`${iconSizes[size] || "h-4 w-4"} text-[#64748B] hover:text-[#172033] transition-transform duration-300 hover:-rotate-12`}
+          className={`${iconSizes[size] || "h-4 w-4"} text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] transition-transform duration-300 hover:-rotate-12`}
         />
       )}
 

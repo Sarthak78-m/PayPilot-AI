@@ -19,21 +19,26 @@ export function CurrencyBreakdownCard({
     return null;
   }
 
+  const totalDueUSD = byCurrency.reduce(
+    (sum, item) => sum + (Number(item.convertedDueUSD) || (item.currency === "USD" ? Number(item.dueAmount) || 0 : 0)),
+    0
+  );
+
   return (
     <Card variant="raised" className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <CardTitle className="text-base sm:text-lg">
               Due & Settled Payments by Currency
             </CardTitle>
             <Badge variant="primary" size="sm">
-              {byCurrency.length} {byCurrency.length === 1 ? "Currency" : "Currencies"}
+              Unified Receivables: ${totalDueUSD.toFixed(2)} USD
             </Badge>
           </div>
           <CardDescription className="text-xs">
-            Authoritative breakdown of outstanding receivables and verified collections for each currency
+            Authoritative breakdown of outstanding receivables and verified collections unified in USD at reference exchange rates
           </CardDescription>
         </div>
 
@@ -47,7 +52,7 @@ export function CurrencyBreakdownCard({
                   : "bg-[#E8EDF4] text-[#64748B] hover:text-[#172033]"
               }`}
             >
-              All Currencies
+              All Currencies (USD)
             </button>
           </div>
         )}
@@ -111,6 +116,11 @@ export function CurrencyBreakdownCard({
                   <p className="font-mono font-extrabold text-[#DC2626] text-sm sm:text-base">
                     {item.formattedDue || `${item.symbol}0.00`}
                   </p>
+                  {item.currency !== "USD" && item.formattedConvertedDue && (
+                    <span className="text-[11px] font-semibold text-[#2563EB] dark:text-[#60A5FA] block font-mono">
+                      ≈ {item.formattedConvertedDue}
+                    </span>
+                  )}
                   <span className="text-[10px] text-[#64748B] block truncate">
                     {item.dueCount} {item.dueCount === 1 ? "invoice due" : "invoices due"}
                   </span>
@@ -125,6 +135,11 @@ export function CurrencyBreakdownCard({
                   <p className="font-mono font-extrabold text-[#16A34A] text-sm sm:text-base">
                     {item.formattedPaid || `${item.symbol}0.00`}
                   </p>
+                  {item.currency !== "USD" && item.formattedConvertedPaid && (
+                    <span className="text-[11px] font-semibold text-[#16A34A] block font-mono">
+                      ≈ {item.formattedConvertedPaid}
+                    </span>
+                  )}
                   <span className="text-[10px] text-[#64748B] block truncate">
                     {item.paidCount} {item.paidCount === 1 ? "settled" : "settled"}
                   </span>
@@ -133,10 +148,19 @@ export function CurrencyBreakdownCard({
 
               {/* Bottom Total Bar */}
               <div className="pt-2 border-t border-[#CBD5E1]/40 flex items-center justify-between text-xs">
-                <span className="text-[#64748B]">Total Invoiced:</span>
-                <span className="font-mono font-bold text-[#172033]">
-                  {item.formattedTotal || `${item.symbol}0.00`}
+                <span className="text-[10px] text-[#64748B]">
+                  {item.exchangeRateText || (item.currency === "USD" ? "Base 1:1" : "1 USD ≈ 83.50 INR")}
                 </span>
+                <div className="text-right">
+                  <span className="font-mono font-bold text-[#172033] block">
+                    {item.formattedTotal || `${item.symbol}0.00`}
+                  </span>
+                  {item.currency !== "USD" && item.formattedConvertedTotal && (
+                    <span className="text-[10px] text-[#64748B] font-mono block">
+                      ≈ {item.formattedConvertedTotal}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           );

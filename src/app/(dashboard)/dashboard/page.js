@@ -26,8 +26,8 @@ export default function DashboardPage() {
   const [is401, setIs401] = useState(false);
 
   const [period, setPeriod] = useState("6M");
-  const [selectedCurrency, setSelectedCurrency] = useState("ALL");
-  const [availableCurrencies, setAvailableCurrencies] = useState(["INR", "USD"]);
+  const [selectedCurrency, setSelectedCurrency] = useState("USD");
+  const [availableCurrencies, setAvailableCurrencies] = useState(["USD", "INR"]);
   const [byCurrency, setByCurrency] = useState([]);
 
   const [metrics, setMetrics] = useState(null);
@@ -200,7 +200,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between md:justify-end gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-[#CBD5E1]/60">
           {metrics?.outstanding && (
             <div className="text-xs text-[#64748B] flex items-center gap-1.5">
-              <span>Due Receivables ({selectedCurrency}):</span>
+              <span>Due Receivables ({selectedCurrency === "ALL" ? "USD" : selectedCurrency}):</span>
               <strong className="text-[#DC2626] font-mono font-bold text-sm">
                 {metrics.outstanding.formatted}
               </strong>

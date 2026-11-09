@@ -14,7 +14,7 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#E8EDF4] text-[#172033] flex overflow-x-hidden">
+    <div className="min-h-screen bg-[#E8EDF4] dark:bg-[#0A0D14] text-[#172033] dark:text-[#F8FAFC] flex overflow-x-hidden">
       {/* Sidebar (Desktop sticky & Mobile drawer) */}
       <Sidebar
         mobileOpen={mobileOpen}

@@ -105,10 +105,10 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
           >
             <PayPilotLogo className="h-8 w-8 sm:h-9 sm:w-9 transition-transform group-hover:scale-105" />
             <div className="flex flex-col">
-              <span className="text-base font-extrabold tracking-tight text-[#172033] leading-none">
+              <span className="text-base font-extrabold tracking-tight text-[#172033] dark:text-[#F8FAFC] leading-none">
                 PayPilot<span className="text-[#2563EB]">.AI</span>
               </span>
-              <span className="text-[10px] font-semibold text-[#64748B] tracking-wider uppercase mt-1">
+              <span className="text-[10px] font-semibold text-[#64748B] dark:text-[#94A3B8] tracking-wider uppercase mt-1">
                 Fintech Invoicing
               </span>
             </div>
@@ -119,7 +119,7 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
             <button
               type="button"
               onClick={onCloseMobile}
-              className="lg:hidden p-2 rounded-xl text-[#64748B] hover:text-[#172033] shadow-raised-sm active:shadow-inset-sm"
+              className="lg:hidden p-2 rounded-xl text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] shadow-raised-sm active:shadow-inset-sm"
               aria-label="Close navigation sidebar"
             >
               <X className="h-5 w-5" />
@@ -144,14 +144,14 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
                 onClick={onCloseMobile}
                 className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-150 select-none group ${
                   isActive
-                    ? "bg-[#E8EDF4] text-[#2563EB] shadow-inset-sm font-semibold border-l-4 border-[#2563EB]"
-                    : "text-[#64748B] hover:text-[#172033] hover:shadow-raised-sm active:shadow-inset-sm"
+                    ? "bg-[#E8EDF4] dark:bg-[#161F33] text-[#2563EB] dark:text-[#3B82F6] shadow-inset-sm font-semibold border-l-4 border-[#2563EB] dark:border-[#3B82F6]"
+                    : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:shadow-raised-sm active:shadow-inset-sm"
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span
                     className={`shrink-0 transition-colors ${
-                      isActive ? "text-[#2563EB]" : "text-[#64748B] group-hover:text-[#172033]"
+                      isActive ? "text-[#2563EB] dark:text-[#3B82F6]" : "text-[#64748B] dark:text-[#94A3B8] group-hover:text-[#172033] dark:group-hover:text-[#F8FAFC]"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -175,20 +175,20 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
         <Divider />
 
         <div className="flex items-center justify-between px-1">
-          <span className="text-[11px] font-semibold text-[#64748B]">Theme</span>
+          <span className="text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8]">Theme</span>
           <ThemeToggle variant="pill" size="sm" />
         </div>
 
-        <div className="p-2.5 rounded-xl bg-[#E8EDF4] shadow-raised-sm border border-white/80 dark:border-white/10 flex items-center justify-between gap-2">
+        <div className="p-2.5 rounded-xl bg-[#E8EDF4] dark:bg-[#161F33] shadow-raised-sm border border-white/80 dark:border-white/10 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-primary-glow">
               {initials || <User className="h-4 w-4" />}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-[#172033] truncate leading-tight">
+              <p className="text-xs font-bold text-[#172033] dark:text-[#F8FAFC] truncate leading-tight">
                 {displayName}
               </p>
-              <p className="text-[10px] text-[#64748B] truncate leading-tight mt-0.5">
+              <p className="text-[10px] text-[#64748B] dark:text-[#94A3B8] truncate leading-tight mt-0.5">
                 {displayEmail}
               </p>
             </div>
@@ -199,7 +199,7 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
               type="button"
               onClick={handleLogout}
               disabled={loggingOut}
-              className="p-1.5 rounded-lg text-[#64748B] hover:text-[#DC2626] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-colors shrink-0"
+              className="p-1.5 rounded-lg text-[#64748B] dark:text-[#94A3B8] hover:text-[#DC2626] dark:hover:text-[#EF4444] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-colors shrink-0"
               title="Sign out of PayPilot AI"
               aria-label="Sign out"
             >
@@ -221,7 +221,7 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
   return (
     <>
       {/* Desktop Sticky Sidebar */}
-      <aside className="hidden lg:flex w-60 shrink-0 h-screen sticky top-0 flex-col border-r border-[#CBD5E1]/60 bg-[#E8EDF4] p-4 z-20">
+      <aside className="hidden lg:flex w-60 shrink-0 h-screen sticky top-0 flex-col border-r border-[#CBD5E1]/60 dark:border-white/10 bg-[#E8EDF4] dark:bg-[#0A0D14] p-4 z-20">
         {sidebarContent}
       </aside>
 
@@ -236,7 +236,7 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
           />
 
           {/* Drawer Surface */}
-          <div className="relative w-64 max-w-[85vw] h-full bg-[#E8EDF4] shadow-raised-lg p-4 flex flex-col z-10 animate-in slide-in-from-left duration-200">
+          <div className="relative w-64 max-w-[85vw] h-full bg-[#E8EDF4] dark:bg-[#111726] shadow-raised-lg p-4 flex flex-col z-10 animate-in slide-in-from-left duration-200">
             {sidebarContent}
           </div>
         </div>

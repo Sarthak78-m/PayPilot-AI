@@ -21,6 +21,7 @@ import {
   Trash2,
 } from "@/components/icons";
 import { getSessionUser, deleteAccount } from "@/lib/auth/auth-client";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -82,6 +83,10 @@ export default function SettingsPage() {
         return;
       }
 
+      try {
+        const supabase = createSupabaseBrowserClient();
+        await supabase.auth.signOut();
+      } catch {}
       setDeleteModalOpen(false);
       router.push("/login?message=Your+account+has+been+permanently+deleted.");
     } catch {

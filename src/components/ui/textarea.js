@@ -20,9 +20,9 @@ export function Textarea({
   const errorId = error ? `${textareaId}-error` : undefined;
   const helperId = helperText ? `${textareaId}-helper` : undefined;
 
-  let stateClasses = "border border-[#D1D8E2] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]";
+  let stateClasses = "border border-[#D1D8E2] dark:border-[#1E293B] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-[#3B82F6]";
   if (error) {
-    stateClasses = "border-[#DC2626] text-[#DC2626] focus:border-[#DC2626] focus:ring-2 focus:ring-[#DC2626]";
+    stateClasses = "border-[#DC2626] dark:border-[#EF4444] text-[#DC2626] dark:text-[#EF4444] focus:border-[#DC2626] dark:focus:border-[#EF4444] focus:ring-2 focus:ring-[#DC2626]";
   }
 
   const currentLength = typeof value === "string" ? value.length : 0;
@@ -33,14 +33,14 @@ export function Textarea({
         {label && (
           <label
             htmlFor={textareaId}
-            className="text-xs font-semibold uppercase tracking-wider text-[#172033]"
+            className="text-xs font-semibold uppercase tracking-wider text-[#172033] dark:text-[#F8FAFC]"
           >
             {label}
-            {required && <span className="text-[#DC2626] ml-1" aria-hidden="true">*</span>}
+            {required && <span className="text-[#DC2626] dark:text-[#EF4444] ml-1" aria-hidden="true">*</span>}
           </label>
         )}
         {maxLength && (
-          <span className="text-[11px] text-[#64748B]">
+          <span className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">
             {currentLength}/{maxLength}
           </span>
         )}
@@ -56,12 +56,12 @@ export function Textarea({
         value={value}
         aria-invalid={Boolean(error)}
         aria-describedby={errorId || helperId}
-        className={`w-full bg-[#E8EDF4] text-[#172033] placeholder-[#94A3B8] text-sm rounded-xl p-3.5 shadow-inset-sm transition-all duration-150 focus:outline-none disabled:opacity-50 disabled:bg-[#DCE3EC] disabled:cursor-not-allowed resize-y ${stateClasses} ${textareaClassName}`}
+        className={`w-full bg-[#E8EDF4] dark:bg-[#0D121D] text-[#172033] dark:text-[#F8FAFC] placeholder-[#94A3B8] dark:placeholder-[#64748B] text-sm rounded-xl p-3.5 shadow-inset-sm transition-all duration-150 focus:outline-none disabled:opacity-50 disabled:bg-[#DCE3EC] dark:disabled:bg-[#141C2E] disabled:cursor-not-allowed resize-y ${stateClasses} ${textareaClassName}`}
         {...props}
       />
 
       {error ? (
-        <p id={errorId} className="text-xs text-[#DC2626] font-medium flex items-center gap-1">
+        <p id={errorId} className="text-xs text-[#DC2626] dark:text-[#EF4444] font-medium flex items-center gap-1">
           <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path
               fillRule="evenodd"
@@ -72,7 +72,7 @@ export function Textarea({
           {error}
         </p>
       ) : helperText ? (
-        <p id={helperId} className="text-xs text-[#64748B]">
+        <p id={helperId} className="text-xs text-[#64748B] dark:text-[#94A3B8]">
           {helperText}
         </p>
       ) : null}
