@@ -16,6 +16,7 @@ import {
 } from "@/components/icons";
 import { sendAssistantMessage } from "@/lib/api/assistant-service";
 import { getSessionUser } from "@/lib/auth/auth-client";
+import { FormattedMessage } from "@/components/assistant/formatted-message";
 
 const EXAMPLE_PROMPTS = [
   {
@@ -306,16 +307,16 @@ function AssistantChatView() {
                 <div
                   className={`flex flex-col ${
                     isUser ? "items-end" : "items-start"
-                  } max-w-[85%] sm:max-w-[75%]`}
+                  } max-w-[90%] sm:max-w-[82%] lg:max-w-[78%]`}
                 >
                   <div
                     className={`p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                       isUser
                         ? "bg-[#2563EB] text-white shadow-primary-glow rounded-tr-sm"
-                        : "bg-[#E8EDF4] border border-white/70 shadow-raised-sm text-[#172033] rounded-tl-sm whitespace-pre-wrap"
+                        : "bg-[#E8EDF4] border border-white/70 shadow-raised-sm text-[#172033] rounded-tl-sm w-full"
                     }`}
                   >
-                    {message.content}
+                    <FormattedMessage content={message.content} isUser={isUser} />
                   </div>
 
                   {/* Metadata */}
