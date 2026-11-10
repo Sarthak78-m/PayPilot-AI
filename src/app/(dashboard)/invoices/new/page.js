@@ -438,7 +438,7 @@ export default function NewInvoicePage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
                   Live Preview
                 </span>
                 <Badge variant="neutral" size="sm" dot>
