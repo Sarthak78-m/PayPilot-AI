@@ -24,25 +24,25 @@ export function FinancialSummaryCard({
       icon: DollarSign,
       iconColor: "text-[#2563EB]",
       iconBg: "bg-blue-500/10",
-      pillBg: "bg-blue-100 text-[#2563EB]",
+      pillBg: "bg-blue-100 text-[#2563EB] dark:bg-blue-900/30 dark:text-[#60A5FA]",
     },
     paid: {
       icon: CheckCircle2,
       iconColor: "text-[#16A34A]",
       iconBg: "bg-emerald-500/10",
-      pillBg: "bg-emerald-100 text-[#16A34A]",
+      pillBg: "bg-emerald-100 text-[#16A34A] dark:bg-emerald-900/30 dark:text-[#4ADE80]",
     },
     pending: {
       icon: Clock,
       iconColor: "text-[#F59E0B]",
       iconBg: "bg-amber-500/10",
-      pillBg: "bg-amber-100 text-[#B45309]",
+      pillBg: "bg-amber-100 text-[#B45309] dark:bg-amber-900/30 dark:text-[#FBBF24]",
     },
     overdue: {
       icon: AlertCircle,
       iconColor: "text-[#DC2626]",
       iconBg: "bg-red-500/10",
-      pillBg: "bg-red-100 text-[#DC2626]",
+      pillBg: "bg-red-100 text-[#DC2626] dark:bg-red-900/30 dark:text-[#F87171]",
     },
   };
 
@@ -63,15 +63,15 @@ export function FinancialSummaryCard({
     >
       <div className="flex items-start justify-between gap-2.5">
         <div className="min-w-0">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block truncate">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] block truncate">
             {title}
           </span>
           {isExplicitEmpty ? (
-            <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
+            <div className="text-xs sm:text-sm font-medium text-[#64748B] dark:text-[#94A3B8] mt-1.5 leading-snug">
               {displayEmptyText}
             </div>
           ) : (
-            <div className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight mt-1 font-mono truncate">
+            <div className="text-xl sm:text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight mt-1 font-mono truncate">
               {amount}
             </div>
           )}
@@ -84,7 +84,7 @@ export function FinancialSummaryCard({
         </div>
       </div>
 
-      <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
+      <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 dark:border-white/10 flex items-center justify-between text-xs text-[#64748B] dark:text-[#94A3B8]">
         <div className="flex items-center gap-1.5 truncate">
           {!isExplicitEmpty && trend && (
             <span
@@ -97,7 +97,7 @@ export function FinancialSummaryCard({
         </div>
 
         {!isExplicitEmpty && count !== undefined && (
-          <span className="font-mono font-semibold text-[#172033] shrink-0 ml-1.5 text-[11px]">
+          <span className="font-mono font-semibold text-[#172033] dark:text-[#F8FAFC] shrink-0 ml-1.5 text-[11px]">
             {count} {count === 1 ? "inv" : "invs"}
           </span>
         )}

@@ -205,15 +205,6 @@ export async function GET(request) {
       );
     }
 
-    const { count, error: countError } = await countQuery;
-
-    if (countError) {
-      return Response.json(
-        { status: "error", message: "Failed to retrieve invoices." },
-        { status: 500 },
-      );
-    }
-
     // Build data query.
     const offset = (page - 1) * limit;
 
@@ -238,9 +229,13 @@ export async function GET(request) {
       );
     }
 
-    const { data, error } = await dataQuery;
+    // Execute count and paginated query in parallel
+    const [{ count, error: countError }, { data, error }] = await Promise.all([
+      countQuery,
+      dataQuery,
+    ]);
 
-    if (error) {
+    if (countError || error) {
       return Response.json(
         { status: "error", message: "Failed to retrieve invoices." },
         { status: 500 },

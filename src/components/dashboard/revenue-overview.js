@@ -35,16 +35,16 @@ export function RevenueOverview({
               {currency}
             </Badge>
           </div>
-          <p className="text-xs text-[#64748B] mt-0.5">
+          <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
             Total paid invoice value for selected period:{" "}
-            <span className="font-mono font-bold text-[#172033]">
+            <span className="font-mono font-bold text-[#172033] dark:text-[#F8FAFC]">
               {formatCurrencyDisplay(totalInPeriod, currency)}
             </span>
           </p>
         </div>
 
         {/* Time-Period Toggle Buttons */}
-        <div className="p-1 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center gap-1 self-start sm:self-auto">
+        <div className="p-1 rounded-xl bg-[#E8EDF4] dark:bg-[#0D121D] shadow-inset-sm flex items-center gap-1 self-start sm:self-auto">
           {periods.map((p) => {
             const isActive = period === p.value;
             return (
@@ -54,7 +54,7 @@ export function RevenueOverview({
                 className={`text-xs font-semibold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg transition-all duration-150 select-none ${
                   isActive
                     ? "bg-[#2563EB] text-white shadow-primary-glow"
-                    : "text-[#64748B] hover:text-[#172033]"
+                    : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                 }`}
               >
                 {p.label}
@@ -84,8 +84,8 @@ export function RevenueOverview({
             </div>
           ) : data.length === 0 || maxRevenue === 0 ? (
             <div className="h-full w-full flex flex-col items-center justify-center text-center p-4">
-              <p className="text-xs font-bold text-[#172033]">No Settled Invoices Yet</p>
-              <p className="text-[11px] text-[#64748B] max-w-xs mt-0.5">
+              <p className="text-xs font-bold text-[#172033] dark:text-[#F8FAFC]">No Settled Invoices Yet</p>
+              <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] max-w-xs mt-0.5">
                 Revenue trends will display monthly invoiced settlements once payments are recorded.
               </p>
             </div>
@@ -105,7 +105,7 @@ export function RevenueOverview({
                   >
                     {/* Neumorphic Tooltip */}
                     {isHovered && (
-                      <div className="absolute top-2 z-20 p-2.5 rounded-xl bg-[#172033] text-white shadow-raised-lg text-xs pointer-events-none transform -translate-y-1 transition-all">
+                      <div className="absolute top-2 z-20 p-2.5 rounded-xl bg-[#172033] dark:bg-[#0A0D14] text-white shadow-raised-lg border border-white/10 text-xs pointer-events-none transform -translate-y-1 transition-all">
                         <p className="font-semibold text-blue-200">{item.month || item.label}</p>
                         <p className="text-sm font-mono font-bold mt-0.5">
                           {formatCurrencyDisplay(item.revenue, currency)}
@@ -131,7 +131,7 @@ export function RevenueOverview({
                     {/* X-Axis Label */}
                     <span
                       className={`mt-2 text-[11px] font-semibold transition-colors truncate max-w-full ${
-                        isHovered ? "text-[#2563EB]" : "text-[#64748B]"
+                        isHovered ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#94A3B8]"
                       }`}
                     >
                       {item.label}
@@ -145,7 +145,7 @@ export function RevenueOverview({
       </div>
 
       {/* Footer Meta */}
-      <div className="flex items-center justify-between text-xs text-[#64748B] pt-2 border-t border-[#CBD5E1]/60">
+      <div className="flex items-center justify-between text-xs text-[#64748B] dark:text-[#94A3B8] pt-2 border-t border-[#CBD5E1]/60 dark:border-white/10">
         <span className="flex items-center gap-1.5 font-medium text-[#16A34A] text-[11px] sm:text-xs">
           <TrendingUp className="h-3.5 w-3.5" />
           <span>Settled invoice value trajectory</span>

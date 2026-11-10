@@ -14,6 +14,7 @@ import {
   LogOut,
   X,
   User,
+  ShieldCheck,
 } from "@/components/icons";
 import { Badge, Divider, ThemeToggle } from "@/components/ui";
 import { getSessionUser, logoutUser } from "@/lib/auth/auth-client";
@@ -167,6 +168,35 @@ export function Sidebar({ mobileOpen = false, onCloseMobile = () => {} }) {
               </Link>
             );
           })}
+
+          {currentUser?.isAdmin && (
+            <Link
+              href="/admin/payments"
+              onClick={onCloseMobile}
+              className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-150 select-none group ${
+                pathname.startsWith("/admin")
+                  ? "bg-[#E8EDF4] dark:bg-[#161F33] text-[#2563EB] dark:text-[#3B82F6] shadow-inset-sm font-semibold border-l-4 border-[#2563EB] dark:border-[#3B82F6]"
+                  : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:shadow-raised-sm active:shadow-inset-sm"
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span
+                  className={`shrink-0 transition-colors ${
+                    pathname.startsWith("/admin")
+                      ? "text-[#2563EB] dark:text-[#3B82F6]"
+                      : "text-[#64748B] dark:text-[#94A3B8] group-hover:text-[#172033] dark:group-hover:text-[#F8FAFC]"
+                  }`}
+                >
+                  <ShieldCheck className="h-5 w-5" />
+                </span>
+                <span className="truncate">Admin Center</span>
+              </div>
+
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-600 text-white shrink-0 ml-1.5">
+                Admin
+              </span>
+            </Link>
+          )}
         </nav>
       </div>
 

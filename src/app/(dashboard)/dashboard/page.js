@@ -158,9 +158,9 @@ export default function DashboardPage() {
       )}
 
       {/* Currency Switcher & Due Receivables Quick Bar */}
-      <div className="p-3 sm:p-3.5 rounded-2xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-raised-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="p-3 sm:p-3.5 rounded-2xl bg-[#E8EDF4] dark:bg-[#111726] border border-[#CBD5E1]/60 dark:border-white/10 shadow-raised-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-[#172033] uppercase tracking-wider flex items-center gap-1.5 mr-1">
+          <span className="text-xs font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider flex items-center gap-1.5 mr-1">
             <Filter className="h-3.5 w-3.5 text-[#2563EB]" />
             <span>Currency:</span>
           </span>
@@ -170,7 +170,7 @@ export default function DashboardPage() {
             className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${
               selectedCurrency === "ALL"
                 ? "bg-[#2563EB] text-white shadow-primary-glow"
-                : "bg-white/80 dark:bg-black/20 text-[#64748B] hover:text-[#172033] shadow-inset-sm"
+                : "bg-white/80 dark:bg-black/20 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] shadow-inset-sm"
             }`}
           >
             All Currencies
@@ -186,7 +186,7 @@ export default function DashboardPage() {
                 className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 ${
                   isSelected
                     ? "bg-[#2563EB] text-white shadow-primary-glow"
-                    : "bg-white/80 dark:bg-black/20 text-[#64748B] hover:text-[#172033] shadow-inset-sm"
+                    : "bg-white/80 dark:bg-black/20 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] shadow-inset-sm"
                 }`}
               >
                 <span>{c}</span>
@@ -197,9 +197,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Right side: Dynamic Due Payments status & Refresh */}
-        <div className="flex items-center justify-between md:justify-end gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-[#CBD5E1]/60">
+        <div className="flex items-center justify-between md:justify-end gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-[#CBD5E1]/60 dark:border-white/10">
           {metrics?.outstanding && (
-            <div className="text-xs text-[#64748B] flex items-center gap-1.5">
+            <div className="text-xs text-[#64748B] dark:text-[#94A3B8] flex items-center gap-1.5">
               <span>Due Receivables ({selectedCurrency === "ALL" ? "USD" : selectedCurrency}):</span>
               <strong className="text-[#DC2626] font-mono font-bold text-sm">
                 {metrics.outstanding.formatted}
@@ -210,7 +210,7 @@ export default function DashboardPage() {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="p-1.5 sm:p-2 rounded-xl bg-white/80 dark:bg-black/20 text-[#64748B] hover:text-[#2563EB] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm border border-white/80 dark:border-white/10 transition-all disabled:opacity-50 flex items-center gap-1.5 text-xs font-semibold shrink-0"
+            className="p-1.5 sm:p-2 rounded-xl bg-white/80 dark:bg-black/20 text-[#64748B] dark:text-[#94A3B8] hover:text-[#2563EB] dark:hover:text-[#60A5FA] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm border border-white/80 dark:border-white/10 transition-all disabled:opacity-50 flex items-center gap-1.5 text-xs font-semibold shrink-0"
             title="Refresh dashboard metrics"
             aria-label="Refresh dashboard metrics"
           >
@@ -222,17 +222,17 @@ export default function DashboardPage() {
 
       {/* Empty Account Welcome CTA Banner */}
       {isEmptyAccount && (
-        <div className="p-5 rounded-2xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-raised-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-5 rounded-2xl bg-[#E8EDF4] dark:bg-[#111726] border border-[#CBD5E1]/60 dark:border-white/10 shadow-raised-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="h-6 w-6 rounded-lg bg-blue-500/10 text-[#2563EB] flex items-center justify-center font-bold text-xs">
                 ✦
               </span>
-              <p className="font-bold text-[#172033] text-sm">
+              <p className="font-bold text-[#172033] dark:text-[#F8FAFC] text-sm">
                 Welcome to PayPilot AI!
               </p>
             </div>
-            <p className="text-xs text-[#64748B]">
+            <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
               You haven&apos;t created any invoices yet. Create your first invoice or generate one with AI to view live financial performance.
             </p>
           </div>

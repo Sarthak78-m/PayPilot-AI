@@ -57,34 +57,29 @@ export async function GET(request) {
 
     const supabase = await createSupabaseAuthClient();
 
-    // 1. Query all invoices for the authenticated user
-    const { data: invoices, error: invError } = await supabase
-      .from("invoices")
-      .select("id, customer_name, customer_email, description, amount, currency, due_date, status, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+    // Query invoices and payments in parallel for fastest response
+    const [invoicesRes, paymentsRes] = await Promise.all([
+      supabase
+        .from("invoices")
+        .select("id, customer_name, customer_email, description, amount, currency, due_date, status, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("payments")
+        .select("id, invoice_id, amount, currency, status, total_amount, internal_transaction_id, recipient_name, recipient_email, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+    ]);
 
-    if (invError) {
+    if (invoicesRes.error) {
       return Response.json(
         { status: "error", message: "Failed to retrieve invoice metrics." },
         { status: 500 }
       );
     }
 
-    const allInvoices = invoices || [];
-
-    // 2. Query payments for this user (both invoice-linked and direct dashboard transactions)
-    let userPayments = [];
-    try {
-      const { data: pData } = await supabase
-        .from("payments")
-        .select("id, invoice_id, amount, currency, status, total_amount, internal_transaction_id, recipient_name, recipient_email, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      userPayments = pData || [];
-    } catch {
-      userPayments = [];
-    }
+    const allInvoices = invoicesRes.data || [];
+    const userPayments = paymentsRes.data || [];
 
     // 3. Build comprehensive Multi-Currency Breakdown (Due & Paid by Currency)
     const currencyTotals = {};
@@ -230,6 +225,8 @@ export async function GET(request) {
     let displayCurrency = activeCurrency;
     let filteredInvoices = [];
     let filteredPayments = [];
+
+    const nowStr = new Date().toISOString().split("T")[0];
 
     // Active metrics computation
     let activePaidAmount = 0;

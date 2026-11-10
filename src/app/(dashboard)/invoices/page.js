@@ -301,11 +301,11 @@ export default function InvoicesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold text-[#172033] tracking-tight">
+            <h1 className="text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight">
               Invoices & Billing
             </h1>
           </div>
-          <p className="text-xs text-[#64748B] mt-0.5">
+          <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
             Manage client receivables, filter payment states, and track balances.
           </p>
         </div>
@@ -403,7 +403,7 @@ export default function InvoicesPage() {
             <button
               onClick={handleRefresh}
               disabled={refreshing || loading}
-              className="p-2.5 rounded-xl bg-[#E8EDF4] text-[#64748B] hover:text-[#2563EB] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all disabled:opacity-50"
+              className="p-2.5 rounded-xl bg-[#E8EDF4] dark:bg-[#161F33] text-[#64748B] dark:text-[#94A3B8] hover:text-[#2563EB] dark:hover:text-[#60A5FA] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all disabled:opacity-50"
               title="Refresh invoices"
               aria-label="Refresh invoices list"
             >
@@ -414,9 +414,9 @@ export default function InvoicesPage() {
 
         {/* Active Filter Indicators */}
         {(search || statusFilter) && (
-          <div className="mt-3 pt-3 border-t border-[#CBD5E1]/40 flex items-center justify-between text-xs text-[#64748B]">
+          <div className="mt-3 pt-3 border-t border-[#CBD5E1]/40 dark:border-white/10 flex items-center justify-between text-xs text-[#64748B] dark:text-[#94A3B8]">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-[#172033]">Active Filters:</span>
+              <span className="font-semibold text-[#172033] dark:text-[#F8FAFC]">Active Filters:</span>
               {search && (
                 <Badge variant="neutral" size="sm">
                   Search: &ldquo;{search}&rdquo;
@@ -430,7 +430,7 @@ export default function InvoicesPage() {
             </div>
             <button
               onClick={handleClearFilters}
-              className="text-xs font-semibold text-[#2563EB] hover:underline"
+              className="text-xs font-semibold text-[#2563EB] dark:text-[#60A5FA] hover:underline"
             >
               Clear All
             </button>
@@ -442,7 +442,7 @@ export default function InvoicesPage() {
       <Card variant="raised-lg" className="overflow-hidden">
         {/* Error Banner */}
         {error && (
-          <div className="p-4 bg-red-50 border-b border-red-200 text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-4 bg-red-50 dark:bg-red-950/40 border-b border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
               <span className="font-medium">{error.message}</span>
@@ -515,9 +515,9 @@ export default function InvoicesPage() {
           <>
             {/* Desktop Table */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#172033]" aria-label="Invoices list">
+              <table className="w-full text-left text-xs text-[#172033] dark:text-[#F8FAFC]" aria-label="Invoices list">
                 <thead>
-                  <tr className="bg-[#E8EDF4]/60 border-b border-[#CBD5E1]/60 text-[#64748B] uppercase tracking-wider font-semibold text-[11px]">
+                  <tr className="bg-[#E8EDF4]/60 dark:bg-[#111726]/60 border-b border-[#CBD5E1]/60 dark:border-white/10 text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider font-semibold text-[11px]">
                     <th className="py-3 px-4">Invoice ID</th>
                     <th className="py-3 px-4">Customer</th>
                     <th className="py-3 px-4">Description</th>
@@ -528,41 +528,41 @@ export default function InvoicesPage() {
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#CBD5E1]/40">
+                <tbody className="divide-y divide-[#CBD5E1]/40 dark:divide-white/10">
                   {invoices.map((inv) => (
                     <tr
                       key={inv.id}
-                      className="hover:bg-[#CBD5E1]/20 transition-colors group"
+                      className="hover:bg-[#CBD5E1]/20 dark:hover:bg-white/5 transition-colors group"
                     >
                       {/* ID */}
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#2563EB]">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#2563EB] dark:text-[#60A5FA]">
                         #{inv.id ? inv.id.slice(0, 8) : "—"}
                       </td>
 
                       {/* Customer */}
                       <td className="py-3.5 px-4">
-                        <p className="font-bold text-[#172033]">{inv.customer_name || "Untitled Customer"}</p>
+                        <p className="font-bold text-[#172033] dark:text-[#F8FAFC]">{inv.customer_name || "Untitled Customer"}</p>
                         {inv.customer_email && (
-                          <p className="text-[11px] text-[#64748B] truncate max-w-[180px]">
+                          <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] truncate max-w-[180px]">
                             {inv.customer_email}
                           </p>
                         )}
                       </td>
 
                       {/* Description */}
-                      <td className="py-3.5 px-4 text-[#64748B] max-w-[220px]">
+                      <td className="py-3.5 px-4 text-[#64748B] dark:text-[#94A3B8] max-w-[220px]">
                         <p className="truncate" title={inv.description}>
                           {inv.description || "No description"}
                         </p>
                       </td>
 
                       {/* Amount */}
-                      <td className="py-3.5 px-4 font-mono font-bold text-sm text-[#172033]">
+                      <td className="py-3.5 px-4 font-mono font-bold text-sm text-[#172033] dark:text-[#F8FAFC]">
                         {formatCurrency(inv.amount, inv.currency)}
                       </td>
 
                       {/* Due Date */}
-                      <td className="py-3.5 px-4 text-[#64748B] font-mono">
+                      <td className="py-3.5 px-4 text-[#64748B] dark:text-[#94A3B8] font-mono">
                         {formatDate(inv.due_date)}
                       </td>
 
@@ -572,7 +572,7 @@ export default function InvoicesPage() {
                       </td>
 
                       {/* Created Date */}
-                      <td className="py-3.5 px-4 text-[#64748B] font-mono text-[11px]">
+                      <td className="py-3.5 px-4 text-[#64748B] dark:text-[#94A3B8] font-mono text-[11px]">
                         {formatDate(inv.created_at)}
                       </td>
 
@@ -610,11 +610,11 @@ export default function InvoicesPage() {
             </div>
 
             {/* Mobile Card View */}
-            <div className="md:hidden divide-y divide-[#CBD5E1]/40">
+            <div className="md:hidden divide-y divide-[#CBD5E1]/40 dark:divide-white/10">
               {invoices.map((inv) => (
                 <div key={inv.id} className="p-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-[#2563EB] text-xs">
+                    <span className="font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] text-xs">
                       #{inv.id ? inv.id.slice(0, 8) : "—"}
                     </span>
                     {getStatusBadge(inv.status)}
@@ -622,23 +622,23 @@ export default function InvoicesPage() {
 
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-bold text-[#172033] text-sm">
+                      <p className="font-bold text-[#172033] dark:text-[#F8FAFC] text-sm">
                         {inv.customer_name || "Untitled Customer"}
                       </p>
                       {inv.customer_email && (
-                        <p className="text-xs text-[#64748B]">{inv.customer_email}</p>
+                        <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">{inv.customer_email}</p>
                       )}
                       {inv.description && (
-                        <p className="text-xs text-[#64748B] line-clamp-1 mt-0.5">
+                        <p className="text-xs text-[#64748B] dark:text-[#94A3B8] line-clamp-1 mt-0.5">
                           {inv.description}
                         </p>
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-mono font-bold text-base text-[#172033]">
+                      <p className="font-mono font-bold text-base text-[#172033] dark:text-[#F8FAFC]">
                         {formatCurrency(inv.amount, inv.currency)}
                       </p>
-                      <p className="text-[11px] text-[#64748B] font-mono">
+                      <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] font-mono">
                         Due: {formatDate(inv.due_date)}
                       </p>
                     </div>
@@ -674,11 +674,11 @@ export default function InvoicesPage() {
             </div>
 
             {/* Pagination Controls */}
-            <div className="p-4 bg-[#E8EDF4]/40 border-t border-[#CBD5E1]/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#64748B]">
+            <div className="p-4 bg-[#E8EDF4]/40 dark:bg-[#111726]/40 border-t border-[#CBD5E1]/50 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#64748B] dark:text-[#94A3B8]">
               <div>
-                Showing <span className="font-bold text-[#172033]">{startRange}</span> to{" "}
-                <span className="font-bold text-[#172033]">{endRange}</span> of{" "}
-                <span className="font-bold text-[#172033]">{pagination.total || 0}</span> invoices
+                Showing <span className="font-bold text-[#172033] dark:text-[#F8FAFC]">{startRange}</span> to{" "}
+                <span className="font-bold text-[#172033] dark:text-[#F8FAFC]">{endRange}</span> of{" "}
+                <span className="font-bold text-[#172033] dark:text-[#F8FAFC]">{pagination.total || 0}</span> invoices
               </div>
 
               <div className="flex items-center gap-1.5">
@@ -693,7 +693,7 @@ export default function InvoicesPage() {
                   Previous
                 </Button>
 
-                <div className="px-3 py-1 text-xs font-semibold text-[#172033]">
+                <div className="px-3 py-1 text-xs font-semibold text-[#172033] dark:text-[#F8FAFC]">
                   Page {page} of {totalPages}
                 </div>
 
@@ -731,7 +731,7 @@ export default function InvoicesPage() {
         {selectedInvoiceForDelete && (
           <div className="space-y-4 py-2">
             {/* Invoice Overview Card */}
-            <div className="p-3.5 rounded-xl bg-[#E8EDF4] dark:bg-[#1E293B] shadow-inset-sm space-y-2">
+            <div className="p-3.5 rounded-xl bg-[#E8EDF4] dark:bg-[#111726] shadow-inset-sm space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-mono font-bold text-sm text-[#2563EB]">
                   #{selectedInvoiceForDelete.id ? selectedInvoiceForDelete.id.slice(0, 8) : "—"}
@@ -739,19 +739,19 @@ export default function InvoicesPage() {
                 {getStatusBadge(selectedInvoiceForDelete.status)}
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#64748B] font-medium">Customer:</span>
+                <span className="text-[#64748B] dark:text-[#94A3B8] font-medium">Customer:</span>
                 <span className="font-bold text-[#172033] dark:text-[#F8FAFC]">
                   {selectedInvoiceForDelete.customer_name || "Untitled Customer"}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#64748B] font-medium">Amount:</span>
+                <span className="text-[#64748B] dark:text-[#94A3B8] font-medium">Amount:</span>
                 <span className="font-mono font-bold text-[#172033] dark:text-[#F8FAFC]">
                   {formatCurrency(selectedInvoiceForDelete.amount, selectedInvoiceForDelete.currency)}
                 </span>
               </div>
               {selectedInvoiceForDelete.description && (
-                <div className="text-xs text-[#64748B] pt-1 border-t border-[#CBD5E1]/40 dark:border-slate-700/50">
+                <div className="text-xs text-[#64748B] dark:text-[#94A3B8] pt-1 border-t border-[#CBD5E1]/40 dark:border-white/10">
                   <span className="font-medium">Description: </span>
                   <span className="italic">{selectedInvoiceForDelete.description}</span>
                 </div>

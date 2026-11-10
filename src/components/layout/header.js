@@ -13,6 +13,7 @@ import {
   ChevronDown,
   X,
   Sparkles,
+  ShieldCheck,
 } from "@/components/icons";
 import { Button, Badge, Divider, ThemeToggle } from "@/components/ui";
 import { getSessionUser, logoutUser } from "@/lib/auth/auth-client";
@@ -222,6 +223,17 @@ export function Header({
                   <Settings className="h-3.5 w-3.5" />
                   <span>Account Settings</span>
                 </Link>
+
+                {currentUser?.isAdmin && (
+                  <Link
+                    href="/admin/payments"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#2563EB] dark:text-[#3B82F6] hover:text-[#1D4ED8] dark:hover:text-[#60A5FA] hover:shadow-raised-sm active:shadow-inset-sm transition-all font-semibold"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span>Admin Portal</span>
+                  </Link>
+                )}
 
 
 

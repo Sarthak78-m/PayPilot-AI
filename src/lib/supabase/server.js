@@ -1,8 +1,21 @@
 import "server-only";
 
+import dns from "node:dns";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch {
+  // Ignore if unsupported in environment
+}
+
+let cachedPublicServerClient = null;
+let cachedPublicServerConfigKey = null;
+
+let cachedServerClient = null;
+let cachedServerConfigKey = null;
 
 function getSupabasePublicConfig() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -46,13 +59,21 @@ export async function createSupabaseAuthClient() {
 
 export function createSupabasePublicServerClient() {
   const { supabaseUrl, supabasePublishableKey } = getSupabasePublicConfig();
+  const configKey = `${supabaseUrl}::${supabasePublishableKey}`;
 
-  return createClient(supabaseUrl, supabasePublishableKey, {
+  if (cachedPublicServerClient && cachedPublicServerConfigKey === configKey) {
+    return cachedPublicServerClient;
+  }
+
+  cachedPublicServerClient = createClient(supabaseUrl, supabasePublishableKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
   });
+  cachedPublicServerConfigKey = configKey;
+
+  return cachedPublicServerClient;
 }
 
 export function createSupabaseServerClient() {
@@ -65,10 +86,18 @@ export function createSupabaseServerClient() {
     throw new Error("Missing Supabase server environment variables.");
   }
 
-  return createClient(supabaseUrl, secretKey, {
+  const configKey = `${supabaseUrl}::${secretKey}`;
+  if (cachedServerClient && cachedServerConfigKey === configKey) {
+    return cachedServerClient;
+  }
+
+  cachedServerClient = createClient(supabaseUrl, secretKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
   });
+  cachedServerConfigKey = configKey;
+
+  return cachedServerClient;
 }

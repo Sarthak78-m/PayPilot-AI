@@ -1,6 +1,13 @@
 import "server-only";
 
+import dns from "node:dns";
 import { GoogleGenAI } from "@google/genai";
+
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch {
+  // Ignore if unsupported
+}
 
 let geminiClient;
 

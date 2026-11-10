@@ -107,7 +107,7 @@ export function PaymentLinkModal({
     >
       <div className="space-y-5 pt-1">
         {/* Invoice Summary Header */}
-        <div className="p-4 rounded-2xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-inset-sm space-y-2 text-xs">
+        <div className="p-4 rounded-2xl bg-[#E8EDF4] dark:bg-[#111726] border border-[#CBD5E1]/60 dark:border-white/10 shadow-inset-sm space-y-2 text-xs">
           <div className="flex items-center justify-between">
             <span className="font-mono font-bold text-[#2563EB]">
               Invoice #{invoice.id ? invoice.id.slice(0, 8) : "—"}
@@ -130,10 +130,10 @@ export function PaymentLinkModal({
           </div>
 
           <div className="flex items-baseline justify-between pt-1">
-            <span className="text-[#64748B] font-medium truncate max-w-[200px]">
+            <span className="text-[#64748B] dark:text-[#94A3B8] font-medium truncate max-w-[200px]">
               {invoice.customer_name || "Client"}
             </span>
-            <span className="font-mono font-extrabold text-base text-[#172033]">
+            <span className="font-mono font-extrabold text-base text-[#172033] dark:text-[#F8FAFC]">
               {invoice.currency} {Number(invoice.amount || 0).toFixed(2)}
             </span>
           </div>
@@ -141,7 +141,7 @@ export function PaymentLinkModal({
 
         {/* Error Notification */}
         {error && (
-          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2.5">
+          <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300 flex items-start gap-2.5">
             <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
             <div className="leading-relaxed">{error}</div>
           </div>
@@ -152,12 +152,12 @@ export function PaymentLinkModal({
           <div className="space-y-4">
             {/* Terminal States Guard */}
             {isPaid ? (
-              <div className="p-4 rounded-2xl bg-[#DCFCE7] border border-[#86EFAC] text-xs text-[#15803D] space-y-1">
+              <div className="p-4 rounded-2xl bg-[#DCFCE7] dark:bg-emerald-950/40 border border-[#86EFAC] dark:border-emerald-900/50 text-xs text-[#15803D] dark:text-[#4ADE80] space-y-1">
                 <p className="font-bold">Invoice Already Paid</p>
                 <p>This invoice has already been fully settled. Payment links cannot be generated for settled invoices.</p>
               </div>
             ) : isCancelled ? (
-              <div className="p-4 rounded-2xl bg-[#E2E8F0] border border-[#CBD5E1] text-xs text-[#475569] space-y-1">
+              <div className="p-4 rounded-2xl bg-[#E2E8F0] dark:bg-slate-800 border border-[#CBD5E1] dark:border-slate-700 text-xs text-[#475569] dark:text-slate-300 space-y-1">
                 <p className="font-bold">Invoice Cancelled</p>
                 <p>This invoice is cancelled. Reactivate the invoice before creating payment links.</p>
               </div>
@@ -165,9 +165,9 @@ export function PaymentLinkModal({
               <>
                 {/* Expiration Selection */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-[#172033] flex items-center justify-between">
+                  <label className="text-xs font-semibold text-[#172033] dark:text-[#F8FAFC] flex items-center justify-between">
                     <span>Link Expiration Window</span>
-                    <span className="text-[11px] text-[#64748B]">1 to 30 Days</span>
+                    <span className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">1 to 30 Days</span>
                   </label>
                   <Select
                     value={String(expiresInDays)}
@@ -181,32 +181,32 @@ export function PaymentLinkModal({
                       </option>
                     ))}
                   </Select>
-                  <p className="text-[11px] text-[#64748B]">
+                  <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">
                     After expiration, the link rejects checkout attempts automatically.
                   </p>
                 </div>
 
                 {/* Explicit DRAFT Issuance Guard */}
                 {isDraft && (
-                  <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-3">
+                  <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-xs text-amber-900 dark:text-amber-200 space-y-3">
                     <div className="flex items-start gap-2.5">
                       <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-bold text-amber-900">Draft Invoice Requires Issuance</p>
-                        <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                        <p className="font-bold text-amber-900 dark:text-amber-200">Draft Invoice Requires Issuance</p>
+                        <p className="text-[11px] text-amber-800 dark:text-amber-300 mt-0.5 leading-relaxed">
                           This invoice is currently in DRAFT status. Payment links cannot be issued for draft invoices without explicitly transitioning the invoice to PENDING.
                         </p>
                       </div>
                     </div>
 
-                    <label className="flex items-center gap-2.5 p-2 rounded-xl bg-white/70 border border-amber-300/80 cursor-pointer select-none">
+                    <label className="flex items-center gap-2.5 p-2 rounded-xl bg-white/70 dark:bg-black/20 border border-amber-300/80 dark:border-amber-700/60 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         checked={allowDraftTransition}
                         onChange={(e) => setAllowDraftTransition(e.target.checked)}
                         className="h-4 w-4 rounded text-[#2563EB] focus:ring-[#2563EB] border-[#CBD5E1]"
                       />
-                      <span className="text-xs font-bold text-[#172033]">
+                      <span className="text-xs font-bold text-[#172033] dark:text-[#F8FAFC]">
                         Issue invoice now (transition DRAFT to PENDING)
                       </span>
                     </label>
@@ -214,7 +214,7 @@ export function PaymentLinkModal({
                 )}
 
                 {/* Re-generation Invalidation Warning */}
-                <div className="flex items-start gap-2 p-3 rounded-xl bg-[#E8EDF4] border border-[#CBD5E1]/50 text-[11px] text-[#64748B]">
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-[#E8EDF4] dark:bg-[#111726] border border-[#CBD5E1]/50 dark:border-white/10 text-[11px] text-[#64748B] dark:text-[#94A3B8]">
                   <Clock className="h-4 w-4 shrink-0 text-[#2563EB] mt-0.5" />
                   <span>
                     Generating a new link automatically revokes and invalidates any previous payment link for this invoice.
@@ -244,20 +244,20 @@ export function PaymentLinkModal({
         ) : (
           /* Post-Generation View: Display URL, Copy, & Expiry */
           <div className="space-y-4">
-            <div className="p-4 rounded-2xl bg-[#DCFCE7] border border-[#86EFAC] text-xs text-[#15803D] flex items-center gap-2.5">
+            <div className="p-4 rounded-2xl bg-[#DCFCE7] dark:bg-emerald-950/40 border border-[#86EFAC] dark:border-emerald-900/50 text-xs text-[#15803D] dark:text-[#4ADE80] flex items-center gap-2.5">
               <Check className="h-4 w-4 shrink-0" />
               <span className="font-bold">Public payment link generated successfully!</span>
             </div>
 
             {/* Generated URL Box */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#172033]">Public Checkout URL</label>
+              <label className="text-xs font-semibold text-[#172033] dark:text-[#F8FAFC]">Public Checkout URL</label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   readOnly
                   value={linkResult.paymentUrl}
-                  className="flex-1 text-xs font-mono px-3.5 py-2.5 rounded-xl bg-white border border-[#CBD5E1] text-[#172033] shadow-inset-sm select-all focus:outline-none"
+                  className="flex-1 text-xs font-mono px-3.5 py-2.5 rounded-xl bg-[#E8EDF4] dark:bg-[#0D121D] border border-[#CBD5E1] dark:border-white/10 text-[#172033] dark:text-[#F8FAFC] shadow-inset-sm select-all focus:outline-none"
                   aria-label="Public payment URL"
                 />
                 <Button
@@ -274,10 +274,10 @@ export function PaymentLinkModal({
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-inset-sm space-y-1.5 text-xs">
-              <div className="flex items-center justify-between text-[#64748B]">
+            <div className="p-3.5 rounded-xl bg-[#E8EDF4] dark:bg-[#111726] border border-[#CBD5E1]/60 dark:border-white/10 shadow-inset-sm space-y-1.5 text-xs">
+              <div className="flex items-center justify-between text-[#64748B] dark:text-[#94A3B8]">
                 <span>Valid Until</span>
-                <span className="font-bold text-[#172033]">
+                <span className="font-bold text-[#172033] dark:text-[#F8FAFC]">
                   {new Date(linkResult.expiresAt).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "short",
@@ -287,13 +287,13 @@ export function PaymentLinkModal({
                   })}
                 </span>
               </div>
-              <p className="text-[11px] text-[#64748B]">
+              <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">
                 Share this link with your client. They can review the invoice and complete payment with PayPal without needing an account.
               </p>
             </div>
 
             {/* Invalidation Notice */}
-            <p className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+            <p className="text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-xl border border-amber-200 dark:border-amber-900/50">
               Notice: If you generate another payment link in the future, this link will be automatically revoked.
             </p>
 
@@ -302,7 +302,7 @@ export function PaymentLinkModal({
                 href={linkResult.paymentUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs font-bold text-[#2563EB] hover:underline flex items-center gap-1"
+                className="text-xs font-bold text-[#2563EB] dark:text-[#60A5FA] hover:underline flex items-center gap-1"
               >
                 <span>Preview Checkout Page</span>
                 <ExternalLink className="h-3.5 w-3.5" />

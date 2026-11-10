@@ -5,7 +5,17 @@
  * Follows strict backend protection rules: never fabricates fake authentication.
  */
 
+let cachedUserPromise = null;
+let cachedUserTimestamp = 0;
+const USER_CACHE_TTL_MS = 10000; // 10 seconds
+
+export function clearSessionUserCache() {
+  cachedUserPromise = null;
+  cachedUserTimestamp = 0;
+}
+
 export async function loginUser({ email, password }) {
+  clearSessionUserCache();
   try {
     const res = await fetch("/api/auth/login", {
       method: "POST",
@@ -26,6 +36,7 @@ export async function loginUser({ email, password }) {
       };
     }
 
+    clearSessionUserCache();
     return {
       success: true,
       status: res.status,
@@ -42,6 +53,7 @@ export async function loginUser({ email, password }) {
 }
 
 export async function registerUser({ name, email, password }) {
+  clearSessionUserCache();
   try {
     const res = await fetch("/api/auth/register", {
       method: "POST",
@@ -71,6 +83,7 @@ export async function registerUser({ name, email, password }) {
       };
     }
 
+    clearSessionUserCache();
     return {
       success: true,
       status: res.status,
@@ -89,6 +102,7 @@ export async function registerUser({ name, email, password }) {
 }
 
 export async function logoutUser() {
+  clearSessionUserCache();
   try {
     const res = await fetch("/api/auth/logout", {
       method: "POST",
@@ -96,6 +110,7 @@ export async function logoutUser() {
       credentials: "include",
     });
 
+    clearSessionUserCache();
     const data = await res.json().catch(() => ({}));
     return {
       success: res.ok,
@@ -110,24 +125,36 @@ export async function logoutUser() {
 }
 
 export async function getSessionUser() {
-  try {
-    const res = await fetch("/api/auth/me", {
-      method: "GET",
-      credentials: "include",
-    });
+  const now = Date.now();
+  if (cachedUserPromise && now - cachedUserTimestamp < USER_CACHE_TTL_MS) {
+    return cachedUserPromise;
+  }
 
-    if (!res.ok) {
+  cachedUserTimestamp = now;
+  cachedUserPromise = (async () => {
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        cachedUserPromise = null;
+        return { authenticated: false, user: null };
+      }
+
+      const data = await res.json().catch(() => ({}));
+      return {
+        authenticated: true,
+        user: data.user || null,
+      };
+    } catch {
+      cachedUserPromise = null;
       return { authenticated: false, user: null };
     }
+  })();
 
-    const data = await res.json().catch(() => ({}));
-    return {
-      authenticated: true,
-      user: data.user || null,
-    };
-  } catch {
-    return { authenticated: false, user: null };
-  }
+  return cachedUserPromise;
 }
 
 export async function requestPasswordReset({ email }) {
@@ -213,6 +240,7 @@ export async function deleteAccount({ confirmation } = {}) {
       };
     }
 
+    clearSessionUserCache();
     return {
       success: true,
       status: res.status,

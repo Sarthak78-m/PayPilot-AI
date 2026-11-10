@@ -38,7 +38,7 @@ export function InvoiceStatusDistribution({ distribution }) {
       </div>
 
       {/* Segmented Neumorphic Meter (All 5 statuses using totalCount as common denominator) */}
-      <div className="h-4 w-full rounded-full bg-[#E8EDF4] shadow-inset-sm p-0.5 flex overflow-hidden">
+      <div className="h-4 w-full rounded-full bg-[#E8EDF4] dark:bg-[#0D121D] shadow-inset-sm p-0.5 flex overflow-hidden">
         {paid.percent > 0 && (
           <div
             style={{ width: `${paid.percent}%` }}
@@ -81,7 +81,7 @@ export function InvoiceStatusDistribution({ distribution }) {
         {statusCards.map((st) => (
           <div
             key={st.label}
-            className="p-2 sm:p-2.5 rounded-xl bg-[#E8EDF4] shadow-raised-sm text-center space-y-0.5"
+            className="p-2 sm:p-2.5 rounded-xl bg-[#E8EDF4] dark:bg-[#161F33] shadow-raised-sm text-center space-y-0.5"
           >
             <div className={`flex items-center justify-center gap-1.5 ${st.textColor}`}>
               <span className={`h-2 w-2 rounded-full ${st.dotBg}`} />
@@ -89,10 +89,10 @@ export function InvoiceStatusDistribution({ distribution }) {
                 {st.label}
               </span>
             </div>
-            <p className="text-sm sm:text-base font-extrabold text-[#172033] font-mono">
+            <p className="text-sm sm:text-base font-extrabold text-[#172033] dark:text-[#F8FAFC] font-mono">
               {st.percent}%
             </p>
-            <p className="text-[10px] text-[#64748B] font-mono">
+            <p className="text-[10px] text-[#64748B] dark:text-[#94A3B8] font-mono">
               {st.count} {st.count === 1 ? "inv" : "invs"}
             </p>
           </div>

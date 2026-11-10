@@ -60,7 +60,7 @@ export function RecentInvoices({ invoices = [], searchQuery = "" }) {
 
         <Link
           href="/invoices"
-          className="inline-flex items-center gap-1 text-xs font-bold text-[#2563EB] hover:text-[#1D4ED8] hover:underline transition-colors shrink-0"
+          className="inline-flex items-center gap-1 text-xs font-bold text-[#2563EB] hover:text-[#1D4ED8] dark:text-[#60A5FA] dark:hover:text-[#93C5FD] hover:underline transition-colors shrink-0"
         >
           <span>View All</span>
           <ArrowRight className="h-3.5 w-3.5" />
@@ -83,9 +83,9 @@ export function RecentInvoices({ invoices = [], searchQuery = "" }) {
         <>
           {/* Desktop & Tablet Table View */}
           <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full text-left text-xs text-[#172033]" aria-label="Recent Invoices">
+            <table className="w-full text-left text-xs text-[#172033] dark:text-[#F8FAFC]" aria-label="Recent Invoices">
               <thead>
-                <tr className="border-b border-[#CBD5E1]/60 text-[#64748B] uppercase tracking-wider font-semibold text-[11px]">
+                <tr className="border-b border-[#CBD5E1]/60 dark:border-white/10 text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider font-semibold text-[11px]">
                   <th className="py-2.5 px-2">Invoice ID</th>
                   <th className="py-2.5 px-3">Customer</th>
                   <th className="py-2.5 px-3">Amount</th>
@@ -94,25 +94,25 @@ export function RecentInvoices({ invoices = [], searchQuery = "" }) {
                   <th className="py-2.5 px-2 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#CBD5E1]/40">
+              <tbody className="divide-y divide-[#CBD5E1]/40 dark:divide-white/10">
                 {filtered.map((invoice) => (
                   <tr
                     key={invoice.id}
-                    className="hover:bg-[#CBD5E1]/20 transition-colors group"
+                    className="hover:bg-[#CBD5E1]/20 dark:hover:bg-white/5 transition-colors group"
                   >
-                    <td className="py-2.5 px-2 font-mono font-bold text-[#2563EB]">
+                    <td className="py-2.5 px-2 font-mono font-bold text-[#2563EB] dark:text-[#60A5FA]">
                       {invoice.id}
                     </td>
                     <td className="py-2.5 px-3">
-                      <p className="font-semibold text-[#172033]">{invoice.customer}</p>
-                      <p className="text-[11px] text-[#64748B] truncate max-w-[160px]">
+                      <p className="font-semibold text-[#172033] dark:text-[#F8FAFC]">{invoice.customer}</p>
+                      <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] truncate max-w-[160px]">
                         {invoice.clientEmail}
                       </p>
                     </td>
-                    <td className="py-2.5 px-3 font-mono font-bold text-[#172033]">
+                    <td className="py-2.5 px-3 font-mono font-bold text-[#172033] dark:text-[#F8FAFC]">
                       {invoice.formattedAmount}
                     </td>
-                    <td className="py-2.5 px-3 text-[#64748B] font-mono">
+                    <td className="py-2.5 px-3 text-[#64748B] dark:text-[#94A3B8] font-mono">
                       {invoice.dueDate}
                     </td>
                     <td className="py-2.5 px-3">
@@ -121,7 +121,7 @@ export function RecentInvoices({ invoices = [], searchQuery = "" }) {
                     <td className="py-2.5 px-2 text-right">
                       <Link
                         href={`/invoices`}
-                        className="p-1.5 rounded-lg text-[#64748B] hover:text-[#2563EB] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all inline-flex items-center gap-1 text-[11px] font-semibold"
+                        className="p-1.5 rounded-lg text-[#64748B] hover:text-[#2563EB] dark:text-[#94A3B8] dark:hover:text-[#60A5FA] shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all inline-flex items-center gap-1 text-[11px] font-semibold"
                       >
                         <span>View</span>
                         <ChevronRight className="h-3 w-3" />
@@ -138,10 +138,10 @@ export function RecentInvoices({ invoices = [], searchQuery = "" }) {
             {filtered.map((invoice) => (
               <div
                 key={invoice.id}
-                className="p-3 rounded-xl bg-[#E8EDF4] shadow-raised-sm space-y-1.5 text-xs"
+                className="p-3 rounded-xl bg-[#E8EDF4] dark:bg-[#161F33] shadow-raised-sm space-y-1.5 text-xs"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-[#2563EB] text-xs">
+                  <span className="font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] text-xs">
                     {invoice.id}
                   </span>
                   {getStatusBadge(invoice.status)}
@@ -149,16 +149,16 @@ export function RecentInvoices({ invoices = [], searchQuery = "" }) {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-bold text-[#172033]">{invoice.customer}</p>
-                    <p className="text-[11px] text-[#64748B]">Due: {invoice.dueDate}</p>
+                    <p className="font-bold text-[#172033] dark:text-[#F8FAFC]">{invoice.customer}</p>
+                    <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">Due: {invoice.dueDate}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono font-bold text-sm text-[#172033]">
+                    <p className="font-mono font-bold text-sm text-[#172033] dark:text-[#F8FAFC]">
                       {invoice.formattedAmount}
                     </p>
                     <Link
                       href="/invoices"
-                      className="text-[11px] font-semibold text-[#2563EB] hover:underline"
+                      className="text-[11px] font-semibold text-[#2563EB] hover:underline dark:text-[#60A5FA]"
                     >
                       Inspect →
                     </Link>

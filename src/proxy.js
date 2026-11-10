@@ -1,7 +1,14 @@
+import dns from "node:dns";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/invoices", "/payments", "/assistant", "/settings"];
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch {
+  // Ignore if unsupported in environment
+}
+
+const PROTECTED_PREFIXES = ["/dashboard", "/invoices", "/payments", "/assistant", "/settings", "/admin"];
 
 export async function proxy(request) {
   let response = NextResponse.next({ request });

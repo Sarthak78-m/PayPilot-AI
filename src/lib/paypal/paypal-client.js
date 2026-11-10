@@ -1,6 +1,13 @@
 import "server-only";
 
+import dns from "node:dns";
 import { getPayPalAccessToken } from "./paypal-auth";
+
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch {
+  // Ignore if unsupported
+}
 import {
   PayPalError,
   PayPalAuthError,

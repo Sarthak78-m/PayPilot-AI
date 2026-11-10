@@ -1,4 +1,6 @@
 import { getAuthenticatedUser } from "@/lib/auth/require-user";
+import { isAdminUser } from "@/lib/auth/roles";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET() {
   try {
@@ -9,6 +11,21 @@ export async function GET() {
         { status: "error", message: "Authentication is required." },
         { status: 401 },
       );
+    }
+
+    let isAdmin = isAdminUser(user);
+    if (!isAdmin) {
+      try {
+        const serverSupabase = createSupabaseServerClient();
+        const { data: profile } = await serverSupabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+        isAdmin = isAdminUser(user, profile);
+      } catch {
+        isAdmin = false;
+      }
     }
 
     const name =
@@ -22,6 +39,7 @@ export async function GET() {
         id: user.id,
         email: user.email,
         name,
+        isAdmin: Boolean(isAdmin),
       },
     });
   } catch {
