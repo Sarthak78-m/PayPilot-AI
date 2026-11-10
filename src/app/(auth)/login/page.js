@@ -120,11 +120,11 @@ function LoginContent() {
     <Card variant="raised-lg" className="w-full">
       <CardHeader className="text-center sm:text-left">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-[#172033]">
+          <CardTitle className="text-2xl font-bold text-[#172033] dark:text-[#F8FAFC]">
             Welcome Back
           </CardTitle>
         </div>
-        <CardDescription className="text-sm mt-1">
+        <CardDescription className="text-sm mt-1 text-[#64748B] dark:text-[#94A3B8]">
           Sign in to manage your invoices, track payments, and access the AI financial pilot.
         </CardDescription>
       </CardHeader>
@@ -135,7 +135,7 @@ function LoginContent() {
       {displayedError && (
         <div
           role="alert"
-          className="mb-5 p-3.5 rounded-xl bg-red-50 border border-[#DC2626]/30 text-[#DC2626] text-xs leading-relaxed flex items-start gap-2.5 shadow-inset-sm"
+          className="mb-5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-[#DC2626]/30 dark:border-red-900/50 text-[#DC2626] dark:text-red-300 text-xs leading-relaxed flex items-start gap-2.5 shadow-inset-sm"
         >
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
           <div className="space-y-1">
@@ -148,7 +148,7 @@ function LoginContent() {
       {displayedSuccess && (
         <div
           role="status"
-          className="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-[#16A34A]/30 text-[#16A34A] text-xs leading-relaxed flex items-center gap-2.5 shadow-inset-sm"
+          className="mb-5 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-[#16A34A]/30 dark:border-emerald-900/50 text-[#16A34A] dark:text-emerald-300 text-xs leading-relaxed flex items-center gap-2.5 shadow-inset-sm"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <p className="font-semibold">{displayedSuccess}</p>
@@ -190,7 +190,7 @@ function LoginContent() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-[#64748B] hover:text-[#172033] p-1 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+              className="text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] p-1 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
               aria-label={showPassword ? "Hide password" : "Show password"}
               tabIndex={-1}
             >
@@ -214,7 +214,7 @@ function LoginContent() {
 
           <Link
             href="/forgot-password"
-            className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] hover:underline transition-colors"
+            className="text-xs font-semibold text-[#2563EB] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] hover:underline transition-colors"
           >
             Forgot password?
           </Link>
@@ -235,11 +235,11 @@ function LoginContent() {
         </Button>
       </form>
 
-      <CardFooter className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs text-[#64748B] pt-4 mt-6">
+      <CardFooter className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs text-[#64748B] dark:text-[#94A3B8] pt-4 mt-6">
         <span>Don&apos;t have an account yet?</span>
         <Link
           href="/register"
-          className="font-bold text-[#2563EB] hover:text-[#1D4ED8] hover:underline transition-colors"
+          className="font-bold text-[#2563EB] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] hover:underline transition-colors"
         >
           Create free account
         </Link>

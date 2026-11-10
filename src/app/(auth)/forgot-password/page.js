@@ -69,12 +69,12 @@ export default function ForgotPasswordPage() {
           <Badge variant="primary" size="sm">
             Check Your Email
           </Badge>
-          <CardTitle className="text-2xl font-bold text-[#172033]">
+          <CardTitle className="text-2xl font-bold text-[#172033] dark:text-[#F8FAFC]">
             Reset Link Dispatched
           </CardTitle>
-          <CardDescription className="text-sm max-w-sm mx-auto leading-relaxed">
+          <CardDescription className="text-sm max-w-sm mx-auto leading-relaxed text-[#64748B] dark:text-[#94A3B8]">
             If an account exists for{" "}
-            <span className="font-semibold text-[#172033]">{email}</span>, a password reset link has been sent. Please check your inbox and your spam or junk folder.
+            <span className="font-semibold text-[#172033] dark:text-[#F8FAFC]">{email}</span>, a password reset link has been sent. Please check your inbox and your spam or junk folder.
           </CardDescription>
         </div>
 
@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
               setIsSubmitted(false);
               setEmail("");
             }}
-            className="text-xs font-semibold text-[#64748B] hover:text-[#2563EB] transition-colors"
+            className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] hover:text-[#2563EB] dark:hover:text-[#60A5FA] transition-colors"
           >
             Didn&apos;t receive anything? Try another email
           </button>
@@ -111,11 +111,11 @@ export default function ForgotPasswordPage() {
     <Card variant="raised-lg" className="w-full">
       <CardHeader className="text-center sm:text-left">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-[#172033]">
+          <CardTitle className="text-2xl font-bold text-[#172033] dark:text-[#F8FAFC]">
             Reset Password
           </CardTitle>
         </div>
-        <CardDescription className="text-sm mt-1">
+        <CardDescription className="text-sm mt-1 text-[#64748B] dark:text-[#94A3B8]">
           Enter the email address associated with your PayPilot AI account and we will send you a recovery link.
         </CardDescription>
       </CardHeader>
@@ -125,7 +125,7 @@ export default function ForgotPasswordPage() {
       {error && (
         <div
           role="alert"
-          className="mb-5 p-3.5 rounded-xl bg-red-50 border border-[#DC2626]/30 text-[#DC2626] text-xs leading-relaxed flex items-start gap-2.5 shadow-inset-sm"
+          className="mb-5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-[#DC2626]/30 dark:border-red-900/50 text-[#DC2626] dark:text-red-300 text-xs leading-relaxed flex items-start gap-2.5 shadow-inset-sm"
         >
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
           <div className="space-y-1">
@@ -171,7 +171,7 @@ export default function ForgotPasswordPage() {
       <CardFooter className="flex items-center justify-center pt-4 mt-6">
         <Link
           href="/login"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#64748B] hover:text-[#2563EB] transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] hover:text-[#2563EB] dark:hover:text-[#60A5FA] transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Remember your password? Back to Sign In</span>

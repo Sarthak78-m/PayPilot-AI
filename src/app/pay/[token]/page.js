@@ -242,7 +242,7 @@ export default function CustomerPaymentPage() {
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-xl font-bold text-[#172033] tracking-tight">
+              <h2 className="text-xl font-bold text-[#172033] dark:text-[#F8FAFC] tracking-tight">
                 {errorState.code === "LINK_EXPIRED"
                   ? "Payment Link Has Expired"
                   : errorState.code === "LINK_REVOKED"
@@ -256,7 +256,7 @@ export default function CustomerPaymentPage() {
                   : "Payment Link Unavailable"}
               </h2>
 
-              <p className="text-sm text-[#64748B] max-w-md mx-auto leading-relaxed">
+              <p className="text-sm text-[#64748B] dark:text-[#94A3B8] max-w-md mx-auto leading-relaxed">
                 {errorState.code === "LINK_EXPIRED"
                   ? "This checkout link has expired. Please contact the merchant to request a regenerated payment link."
                   : errorState.code === "LINK_REVOKED"
@@ -297,10 +297,10 @@ export default function CustomerPaymentPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-sm sm:text-base text-[#172033]">
+                      <span className="font-extrabold text-sm sm:text-base text-[#172033] dark:text-[#F8FAFC]">
                         Payment Completed & Verified
                       </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                         Settled
                       </span>
                     </div>
@@ -376,7 +376,7 @@ export default function CustomerPaymentPage() {
               <Badge variant="warning" size="md" dot>
                 Payment Processing
               </Badge>
-              <h2 className="text-2xl font-extrabold text-[#172033] tracking-tight pt-1">
+              <h2 className="text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight pt-1">
                 Payment Awaiting Clearance
               </h2>
               <p className="text-xs text-[#64748B] max-w-md mx-auto">
@@ -384,7 +384,7 @@ export default function CustomerPaymentPage() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-inset-sm space-y-3 text-left text-xs">
+            <div className="p-5 rounded-2xl bg-[#E8EDF4] dark:bg-[#111726] border border-[#CBD5E1]/60 dark:border-white/10 shadow-inset-sm space-y-3 text-left text-xs">
               <div className="flex justify-between items-center py-1 border-b border-[#CBD5E1]/40">
                 <span className="text-[#64748B]">Pending Amount</span>
                 <span className="font-mono font-bold text-base text-[#172033]">
@@ -422,7 +422,7 @@ export default function CustomerPaymentPage() {
               <Badge variant="warning" size="md" dot>
                 Transaction Status: CANCELLED
               </Badge>
-              <h2 className="text-2xl font-extrabold text-[#172033] tracking-tight pt-1">
+              <h2 className="text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight pt-1">
                 Payment Cancelled
               </h2>
               <p className="text-xs text-[#64748B] max-w-md mx-auto">
@@ -460,7 +460,7 @@ export default function CustomerPaymentPage() {
               <Badge variant="error" size="md" dot>
                 Transaction Status: FAILED
               </Badge>
-              <h2 className="text-2xl font-extrabold text-[#172033] tracking-tight pt-1">
+              <h2 className="text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight pt-1">
                 Payment Failed
               </h2>
               <p className="text-xs text-[#64748B] max-w-md mx-auto">
@@ -499,19 +499,19 @@ export default function CustomerPaymentPage() {
                       {invoice.status === "OVERDUE" ? "Overdue Invoice" : "Payment Due"}
                     </Badge>
                   </div>
-                  <h1 className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight">
+                  <h1 className="text-xl sm:text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight">
                     {invoice.description || "Invoice Balance Due"}
                   </h1>
                   {invoice.customerName && (
                     <p className="text-xs text-[#64748B] mt-1">
-                      Billed to: <span className="font-semibold text-[#172033]">{invoice.customerName}</span>
+                      Billed to: <span className="font-semibold text-[#172033] dark:text-[#F8FAFC]">{invoice.customerName}</span>
                     </p>
                   )}
                 </div>
 
                 <div className="text-left sm:text-right shrink-0">
                   <p className="text-[11px] uppercase tracking-wider text-[#64748B] font-semibold">Total Amount</p>
-                  <p className="text-2xl sm:text-3xl font-extrabold font-mono text-[#172033] tracking-tight mt-0.5">
+                  <p className="text-2xl sm:text-3xl font-extrabold font-mono text-[#172033] dark:text-[#F8FAFC] tracking-tight mt-0.5">
                     {formatCurrency(invoice.amount, invoice.currency)}
                   </p>
                 </div>
@@ -521,7 +521,7 @@ export default function CustomerPaymentPage() {
 
               {/* Invoice Detail Rows */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div className="p-3.5 rounded-xl bg-[#E8EDF4] border border-white/80 shadow-inset-sm">
+                <div className="p-3.5 rounded-xl bg-[#E8EDF4] dark:bg-[#161F33] border border-white/80 dark:border-white/10 shadow-inset-sm">
                   <div className="flex items-center gap-2 text-[#64748B] mb-1">
                     <Calendar className="h-4 w-4" />
                     <span>Due Date</span>
@@ -531,7 +531,7 @@ export default function CustomerPaymentPage() {
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#E8EDF4] border border-white/80 shadow-inset-sm">
+                <div className="p-3.5 rounded-xl bg-[#E8EDF4] dark:bg-[#161F33] border border-white/80 dark:border-white/10 shadow-inset-sm">
                   <div className="flex items-center gap-2 text-[#64748B] mb-1">
                     <Clock className="h-4 w-4" />
                     <span>Link Validity</span>
@@ -547,7 +547,7 @@ export default function CustomerPaymentPage() {
               {/* Payment Section */}
               <div className="space-y-4 pt-1">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-[#172033] tracking-tight">Select Payment Option</h3>
+                  <h3 className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC] tracking-tight">Select Payment Option</h3>
                   <span className="text-[11px] text-[#64748B]">Official PayPal Sandbox</span>
                 </div>
 
@@ -567,7 +567,7 @@ export default function CustomerPaymentPage() {
       </main>
 
       {/* D. Footer */}
-      <footer className="max-w-2xl mx-auto w-full mt-10 pt-6 border-t border-[#CBD5E1]/40 text-center text-xs text-[#64748B] space-y-2 no-print">
+      <footer className="max-w-2xl mx-auto w-full mt-10 pt-6 border-t border-[#CBD5E1]/40 dark:border-white/10 text-center text-xs text-[#64748B] dark:text-[#94A3B8] space-y-2 no-print">
         <div className="flex items-center justify-center gap-4 flex-wrap">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="h-3.5 w-3.5 text-[#16A34A]" />

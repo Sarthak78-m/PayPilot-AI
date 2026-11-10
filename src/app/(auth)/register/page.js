@@ -97,11 +97,11 @@ export default function RegisterPage() {
     <Card variant="raised-lg" className="w-full">
       <CardHeader className="text-center sm:text-left">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-[#172033]">
+          <CardTitle className="text-2xl font-bold text-[#172033] dark:text-[#F8FAFC]">
             Get Started
           </CardTitle>
         </div>
-        <CardDescription className="text-sm mt-1">
+        <CardDescription className="text-sm mt-1 text-[#64748B] dark:text-[#94A3B8]">
           Create your PayPilot AI account to generate invoices, automate billing, and get paid faster.
         </CardDescription>
       </CardHeader>
@@ -111,7 +111,7 @@ export default function RegisterPage() {
       {serverError && (
         <div
           role="alert"
-          className="mb-5 p-3.5 rounded-xl bg-red-50 border border-[#DC2626]/30 text-[#DC2626] text-xs leading-relaxed flex items-start gap-2.5 shadow-inset-sm"
+          className="mb-5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-[#DC2626]/30 dark:border-red-900/50 text-[#DC2626] dark:text-red-300 text-xs leading-relaxed flex items-start gap-2.5 shadow-inset-sm"
         >
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
           <div className="space-y-1">
@@ -173,7 +173,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-[#64748B] hover:text-[#172033] p-1 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+                className="text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] p-1 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 tabIndex={-1}
               >
@@ -184,8 +184,8 @@ export default function RegisterPage() {
 
           {/* Password Validation Checklist */}
           {formData.password && (
-            <div className="p-2.5 rounded-xl bg-[#E8EDF4] shadow-inset-sm space-y-1.5 text-xs text-[#64748B]">
-              <p className="font-semibold text-[11px] uppercase tracking-wider text-[#172033]">
+            <div className="p-2.5 rounded-xl bg-[#E8EDF4] dark:bg-[#111726] shadow-inset-sm space-y-1.5 text-xs text-[#64748B] dark:text-[#94A3B8]">
+              <p className="font-semibold text-[11px] uppercase tracking-wider text-[#172033] dark:text-[#F8FAFC]">
                 Password Requirements
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 pt-1">
@@ -265,7 +265,7 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="text-[#64748B] hover:text-[#172033] p-1 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+              className="text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] p-1 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
               aria-label={showConfirmPassword ? "Hide password" : "Show password"}
               tabIndex={-1}
             >

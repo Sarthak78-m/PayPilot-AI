@@ -425,7 +425,7 @@ export function PayPalCheckout({
       {/* Official PayPal Buttons Container */}
       <div className="relative">
         {isProcessing && (
-          <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-xs rounded-xl flex items-center justify-center gap-2 text-xs font-semibold text-[#172033] shadow-raised-sm p-4">
+          <div className="absolute inset-0 z-20 bg-[#E8EDF4]/90 dark:bg-[#111726]/90 backdrop-blur-xs rounded-xl flex items-center justify-center gap-2 text-xs font-semibold text-[#172033] dark:text-[#F8FAFC] shadow-raised-sm p-4">
             <svg className="animate-spin h-5 w-5 text-[#0070BA]" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -444,7 +444,7 @@ export function PayPalCheckout({
       </div>
 
       {/* Security & Verification Footer */}
-      <div className="flex items-center justify-between text-[11px] text-[#64748B] pt-1">
+      <div className="flex items-center justify-between text-[11px] text-[#64748B] dark:text-[#94A3B8] pt-1">
         <div className="flex items-center gap-1.5">
           <ShieldCheck className="h-3.5 w-3.5 text-[#16A34A]" />
           <span>Official PayPal Checkout</span>

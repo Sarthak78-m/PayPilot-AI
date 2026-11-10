@@ -198,7 +198,7 @@ export default function AdminPaymentsPage() {
             <h1 className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight">
               Administrative Payment Management
             </h1>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/30">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-[#2563EB]/10 text-[#2563EB] dark:text-[#60A5FA] border border-[#2563EB]/30 dark:border-[#2563EB]/50">
               Admin Portal
             </span>
           </div>
@@ -275,7 +275,7 @@ export default function AdminPaymentsPage() {
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] block">
             Total System Records
           </span>
-          <div className="text-xl sm:text-2xl font-extrabold font-mono text-[#172033]">
+          <div className="text-xl sm:text-2xl font-extrabold font-mono text-[#172033] dark:text-[#F8FAFC]">
             {overview.totalTransactions || 0}
           </div>
           <p className="text-[11px] text-[#64748B]">
@@ -285,13 +285,13 @@ export default function AdminPaymentsPage() {
       </div>
 
       {/* 3. Navigation Tabs */}
-      <div className="flex border-b border-[#CBD5E1]/60 text-xs font-semibold text-[#64748B] gap-4">
+      <div className="flex border-b border-[#CBD5E1]/60 dark:border-white/10 text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] gap-4">
         <button
           onClick={() => setActiveTab("transactions")}
           className={`pb-2.5 transition-all border-b-2 ${
             activeTab === "transactions"
-              ? "border-[#2563EB] text-[#2563EB] font-bold"
-              : "border-transparent hover:text-[#172033]"
+              ? "border-[#2563EB] text-[#2563EB] dark:text-[#60A5FA] dark:border-[#60A5FA] font-bold"
+              : "border-transparent hover:text-[#172033] dark:hover:text-[#F8FAFC]"
           }`}
         >
           All System Transactions
@@ -301,8 +301,8 @@ export default function AdminPaymentsPage() {
           onClick={() => setActiveTab("webhooks")}
           className={`pb-2.5 transition-all border-b-2 ${
             activeTab === "webhooks"
-              ? "border-[#2563EB] text-[#2563EB] font-bold"
-              : "border-transparent hover:text-[#172033]"
+              ? "border-[#2563EB] text-[#2563EB] dark:text-[#60A5FA] dark:border-[#60A5FA] font-bold"
+              : "border-transparent hover:text-[#172033] dark:hover:text-[#F8FAFC]"
           }`}
         >
           PayPal Webhook History ({webhooks.length || 0})
@@ -312,8 +312,8 @@ export default function AdminPaymentsPage() {
           onClick={() => setActiveTab("audit")}
           className={`pb-2.5 transition-all border-b-2 ${
             activeTab === "audit"
-              ? "border-[#2563EB] text-[#2563EB] font-bold"
-              : "border-transparent hover:text-[#172033]"
+              ? "border-[#2563EB] text-[#2563EB] dark:text-[#60A5FA] dark:border-[#60A5FA] font-bold"
+              : "border-transparent hover:text-[#172033] dark:hover:text-[#F8FAFC]"
           }`}
         >
           Security Audit Trail ({auditLogs.length || 0})
@@ -324,7 +324,7 @@ export default function AdminPaymentsPage() {
       {activeTab === "transactions" && (
         <Card variant="raised" className="space-y-4">
           {/* Filter Bar */}
-          <div className="p-3 rounded-2xl bg-[#E8EDF4] shadow-inset-sm border border-[#CBD5E1]/60 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          <div className="p-3 rounded-2xl bg-[#E8EDF4] dark:bg-[#111726] shadow-inset-sm border border-[#CBD5E1]/60 dark:border-white/10 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             <form onSubmit={(e) => { e.preventDefault(); loadData(); }} className="flex-1 max-w-md flex items-center gap-2">
               <div className="relative w-full flex items-center">
                 <Search className="h-4 w-4 absolute left-3.5 text-[#64748B]" />
@@ -333,7 +333,7 @@ export default function AdminPaymentsPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search ref ID, order ID, or capture ID..."
-                  className="w-full bg-[#E8EDF4] text-[#172033] placeholder-[#94A3B8] text-xs sm:text-sm rounded-xl py-2 pl-9 pr-8 shadow-inset-sm border border-[#D1D8E2] focus:border-[#2563EB] focus:outline-none"
+                  className="w-full bg-[#E8EDF4] dark:bg-[#0D121D] text-[#172033] dark:text-[#F8FAFC] placeholder-[#94A3B8] text-xs sm:text-sm rounded-xl py-2 pl-9 pr-8 shadow-inset-sm border border-[#D1D8E2] dark:border-white/10 focus:border-[#2563EB] focus:outline-none"
                 />
               </div>
               <Button type="submit" variant="secondary" size="sm">
@@ -362,9 +362,9 @@ export default function AdminPaymentsPage() {
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#172033]" aria-label="Admin Payments Ledger">
+              <table className="w-full text-left text-xs text-[#172033] dark:text-[#F8FAFC]" aria-label="Admin Payments Ledger">
                 <thead>
-                  <tr className="border-b border-[#CBD5E1]/60 text-[#64748B] uppercase tracking-wider font-semibold text-[11px]">
+                  <tr className="border-b border-[#CBD5E1]/60 dark:border-white/10 text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider font-semibold text-[11px]">
                     <th className="py-2.5 px-3">Transaction Ref</th>
                     <th className="py-2.5 px-3">Order / Capture ID</th>
                     <th className="py-2.5 px-3">Payer / Client</th>
@@ -374,7 +374,7 @@ export default function AdminPaymentsPage() {
                     <th className="py-2.5 px-3 text-right">Admin Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#CBD5E1]/40">
+                <tbody className="divide-y divide-[#CBD5E1]/40 dark:divide-white/10">
                   {payments.map((p) => {
                     const isRefundable =
                       (p.status === "completed" || p.status === "COMPLETED" || p.status === "partially_refunded") &&
@@ -389,7 +389,7 @@ export default function AdminPaymentsPage() {
                           <span className="text-[10px] text-[#64748B]">{p.category || "Payment"}</span>
                         </td>
                         <td className="py-3 px-3 font-mono text-[11px]">
-                          {p.orderId && <div className="text-[#172033] select-all">Ord: {p.orderId}</div>}
+                          {p.orderId && <div className="text-[#172033] dark:text-[#F8FAFC] select-all">Ord: {p.orderId}</div>}
                           {p.captureId && <div className="text-[#15803D] select-all">Cap: {p.captureId}</div>}
                           {!p.orderId && !p.captureId && "—"}
                         </td>
@@ -457,9 +457,9 @@ export default function AdminPaymentsPage() {
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#172033]" aria-label="Webhook Events Ledger">
+              <table className="w-full text-left text-xs text-[#172033] dark:text-[#F8FAFC]" aria-label="Webhook Events Ledger">
                 <thead>
-                  <tr className="border-b border-[#CBD5E1]/60 text-[#64748B] uppercase tracking-wider font-semibold text-[11px]">
+                  <tr className="border-b border-[#CBD5E1]/60 dark:border-white/10 text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider font-semibold text-[11px]">
                     <th className="py-2.5 px-3">Event ID</th>
                     <th className="py-2.5 px-3">Event Type</th>
                     <th className="py-2.5 px-3">Verification</th>
@@ -468,7 +468,7 @@ export default function AdminPaymentsPage() {
                     <th className="py-2.5 px-3 text-right">Payload</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#CBD5E1]/40">
+                <tbody className="divide-y divide-[#CBD5E1]/40 dark:divide-white/10">
                   {webhooks.map((w) => (
                     <tr key={w.id} className="hover:bg-[#CBD5E1]/20">
                       <td className="py-3 px-3 font-mono font-bold text-[#2563EB] select-all">
@@ -524,9 +524,9 @@ export default function AdminPaymentsPage() {
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#172033]" aria-label="Audit Logs Ledger">
+              <table className="w-full text-left text-xs text-[#172033] dark:text-[#F8FAFC]" aria-label="Audit Logs Ledger">
                 <thead>
-                  <tr className="border-b border-[#CBD5E1]/60 text-[#64748B] uppercase tracking-wider font-semibold text-[11px]">
+                  <tr className="border-b border-[#CBD5E1]/60 dark:border-white/10 text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider font-semibold text-[11px]">
                     <th className="py-2.5 px-3">Event Type</th>
                     <th className="py-2.5 px-3">Payment ID</th>
                     <th className="py-2.5 px-3">IP Address</th>
@@ -534,7 +534,7 @@ export default function AdminPaymentsPage() {
                     <th className="py-2.5 px-3 text-right">Details</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#CBD5E1]/40">
+                <tbody className="divide-y divide-[#CBD5E1]/40 dark:divide-white/10">
                   {auditLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-[#CBD5E1]/20">
                       <td className="py-3 px-3 font-semibold text-[#2563EB]">

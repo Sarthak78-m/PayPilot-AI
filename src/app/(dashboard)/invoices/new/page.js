@@ -445,20 +445,20 @@ export default function NewInvoicePage() {
                   Initial Status: Draft
                 </Badge>
               </div>
-              <p className="text-sm font-bold text-[#172033]">
+              <p className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC]">
                 {formData.customer_name.trim() || "Client Name Unspecified"}
               </p>
-              <p className="text-xs text-[#64748B]">
+              <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
                 {formData.customer_email.trim() || "No recipient email set"}
                 {formData.due_date ? ` • Due on ${formData.due_date}` : " • Due on receipt"}
               </p>
             </div>
 
             <div className="text-left sm:text-right">
-              <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider block">
+              <span className="text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider block">
                 Total Billed
               </span>
-              <span className="text-2xl font-extrabold text-[#172033] font-mono">
+              <span className="text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] font-mono">
                 {formattedAmountPreview()}
               </span>
             </div>

@@ -224,7 +224,7 @@ function AssistantChatView() {
       {/* 2. Main Chat Surface */}
       <Card
         variant="raised"
-        className="flex-1 flex flex-col min-h-0 p-0 overflow-hidden border border-[#CBD5E1]/60"
+        className="flex-1 flex flex-col min-h-0 p-0 overflow-hidden border border-[#CBD5E1]/60 dark:border-white/10"
       >
         {/* Conversation Stream Container */}
         <div
@@ -241,10 +241,10 @@ function AssistantChatView() {
                   <Bot className="h-7 w-7 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-[#172033] tracking-tight">
+                  <h2 className="text-lg sm:text-xl font-bold text-[#172033] dark:text-[#F8FAFC] tracking-tight">
                     How can I assist your business today?
                   </h2>
-                  <p className="text-xs sm:text-sm text-[#64748B] max-w-md mx-auto mt-1 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[#64748B] dark:text-[#94A3B8] max-w-md mx-auto mt-1 leading-relaxed">
                     Select a suggested inquiry below or enter your own query to analyze your receivables and collections.
                   </p>
                 </div>
@@ -258,7 +258,7 @@ function AssistantChatView() {
                     type="button"
                     onClick={() => handleSendMessage(prompt.title)}
                     disabled={loading}
-                    className="p-3.5 rounded-xl bg-[#E8EDF4] border border-white/60 shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all text-left group flex flex-col justify-between gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+                    className="p-3.5 rounded-xl bg-[#E8EDF4] dark:bg-[#161F33] border border-white/60 dark:border-white/10 shadow-raised-sm hover:shadow-raised active:shadow-inset-sm transition-all text-left group flex flex-col justify-between gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center justify-between gap-2">
@@ -267,11 +267,11 @@ function AssistantChatView() {
                         </span>
                         <Sparkles className="h-3 w-3 text-[#2563EB] opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
-                      <p className="text-xs font-bold text-[#172033] group-hover:text-[#2563EB] transition-colors">
+                      <p className="text-xs font-bold text-[#172033] dark:text-[#F8FAFC] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">
                         {prompt.title}
                       </p>
                     </div>
-                    <p className="text-[11px] text-[#64748B] leading-snug">
+                    <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] leading-snug">
                       {prompt.description}
                     </p>
                   </button>
@@ -296,7 +296,7 @@ function AssistantChatView() {
                   className={`h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center shrink-0 shadow-raised-sm text-xs font-bold ${
                     isUser
                       ? "bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white shadow-primary-glow"
-                      : "bg-[#E8EDF4] text-[#2563EB] border border-white/80"
+                      : "bg-[#E8EDF4] dark:bg-[#161F33] text-[#2563EB] dark:text-[#60A5FA] border border-white/80 dark:border-white/10"
                   }`}
                   aria-hidden="true"
                 >
@@ -313,14 +313,14 @@ function AssistantChatView() {
                     className={`p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                       isUser
                         ? "bg-[#2563EB] text-white shadow-primary-glow rounded-tr-sm"
-                        : "bg-[#E8EDF4] border border-white/70 shadow-raised-sm text-[#172033] rounded-tl-sm w-full"
+                        : "bg-[#E8EDF4] dark:bg-[#161F33] border border-white/70 dark:border-white/10 shadow-raised-sm text-[#172033] dark:text-[#F8FAFC] rounded-tl-sm w-full"
                     }`}
                   >
                     <FormattedMessage content={message.content} isUser={isUser} />
                   </div>
 
                   {/* Metadata */}
-                  <div className="flex items-center gap-1.5 mt-1 text-[10px] text-[#64748B] px-1">
+                  <div className="flex items-center gap-1.5 mt-1 text-[10px] text-[#64748B] dark:text-[#94A3B8] px-1">
                     <Clock className="h-2.5 w-2.5 opacity-60" />
                     <span>{message.timestamp}</span>
                   </div>
@@ -332,16 +332,16 @@ function AssistantChatView() {
           {/* Loading Indicator (Assistant Thinking) */}
           {loading && (
             <div className="flex items-start gap-2.5 sm:gap-3">
-              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#E8EDF4] text-[#2563EB] border border-white/80 flex items-center justify-center shrink-0 shadow-raised-sm">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#E8EDF4] dark:bg-[#161F33] text-[#2563EB] dark:text-[#60A5FA] border border-white/80 dark:border-white/10 flex items-center justify-center shrink-0 shadow-raised-sm">
                 <Bot className="h-4 w-4" />
               </div>
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-[#E8EDF4] border border-white/70 shadow-raised-sm rounded-tl-sm flex items-center gap-2">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-[#E8EDF4] dark:bg-[#161F33] border border-white/70 dark:border-white/10 shadow-raised-sm rounded-tl-sm flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   <span className="h-2 w-2 rounded-full bg-[#2563EB] animate-bounce [animation-delay:-0.3s]" />
                   <span className="h-2 w-2 rounded-full bg-[#2563EB] animate-bounce [animation-delay:-0.15s]" />
                   <span className="h-2 w-2 rounded-full bg-[#2563EB] animate-bounce" />
                 </div>
-                <span className="text-xs text-[#64748B] ml-1.5 font-medium">
+                <span className="text-xs text-[#64748B] dark:text-[#94A3B8] ml-1.5 font-medium">
                   Consulting AI Assistant...
                 </span>
               </div>
@@ -350,7 +350,7 @@ function AssistantChatView() {
 
           {/* Truthful Error State Banner */}
           {activeError && (
-            <div className="p-4 rounded-xl bg-red-50 border border-red-200 shadow-raised-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+            <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 shadow-raised-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
               <div className="flex items-start gap-2.5">
                 <AlertCircle className="h-5 w-5 text-[#DC2626] shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
@@ -388,7 +388,7 @@ function AssistantChatView() {
         <Divider />
 
         {/* 3. Pinned Message Input */}
-        <div className="p-3 sm:p-4 bg-[#E8EDF4] shrink-0">
+        <div className="p-3 sm:p-4 bg-[#E8EDF4] dark:bg-[#111726] border-t border-[#CBD5E1]/40 dark:border-white/10 shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -406,14 +406,14 @@ function AssistantChatView() {
                 rows={2}
                 placeholder="Ask PayPilot AI about your receivables, invoices, or cashflow..."
                 aria-label="Message prompt"
-                className="w-full bg-[#E8EDF4] text-[#172033] placeholder-[#94A3B8] text-xs sm:text-sm rounded-xl p-3 shadow-inset-sm border border-[#D1D8E2] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] focus:outline-none transition-all resize-none disabled:opacity-50 disabled:cursor-not-allowed leading-relaxed"
+                className="w-full bg-[#E8EDF4] dark:bg-[#0D121D] text-[#172033] dark:text-[#F8FAFC] placeholder-[#94A3B8] text-xs sm:text-sm rounded-xl p-3 shadow-inset-sm border border-[#D1D8E2] dark:border-white/10 focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] focus:outline-none transition-all resize-none disabled:opacity-50 disabled:cursor-not-allowed leading-relaxed"
               />
             </div>
 
             <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-              <span className="text-[10px] text-[#64748B] hidden lg:inline">
-                <kbd className="px-1.5 py-0.5 bg-[#CBD5E1]/60 rounded text-[9px] font-mono">Enter ↵</kbd> send •{" "}
-                <kbd className="px-1.5 py-0.5 bg-[#CBD5E1]/60 rounded text-[9px] font-mono">Shift + Enter</kbd> new line
+              <span className="text-[10px] text-[#64748B] dark:text-[#94A3B8] hidden lg:inline">
+                <kbd className="px-1.5 py-0.5 bg-[#CBD5E1]/60 dark:bg-white/10 text-[#172033] dark:text-[#F8FAFC] rounded text-[9px] font-mono">Enter ↵</kbd> send •{" "}
+                <kbd className="px-1.5 py-0.5 bg-[#CBD5E1]/60 dark:bg-white/10 text-[#172033] dark:text-[#F8FAFC] rounded text-[9px] font-mono">Shift + Enter</kbd> new line
               </span>
 
               <Button

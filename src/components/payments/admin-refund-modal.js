@@ -95,8 +95,8 @@ export function AdminRefundModal({
       maxWidth="max-w-md"
     >
       {successData ? (
-        <div className="space-y-4 pt-2 text-xs text-[#172033]">
-          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2 shadow-inset-sm">
+        <div className="space-y-4 pt-2 text-xs text-[#172033] dark:text-[#F8FAFC]">
+          <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-center space-y-2 shadow-inset-sm">
             <div className="h-10 w-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
               <CheckCircle2 className="h-6 w-6" />
             </div>
@@ -109,7 +109,7 @@ export function AdminRefundModal({
             </div>
           </div>
 
-          <div className="space-y-2 p-3 rounded-xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-inset-sm">
+          <div className="space-y-2 p-3 rounded-xl bg-[#E8EDF4] dark:bg-[#111726] border border-[#CBD5E1]/60 dark:border-white/10 shadow-inset-sm">
             <div className="flex justify-between items-center py-0.5 border-b border-[#CBD5E1]/40">
               <span className="text-[#64748B]">PayPal Refund ID:</span>
               <span className="font-mono font-bold select-all text-[#2563EB]">
@@ -137,16 +137,16 @@ export function AdminRefundModal({
           </div>
         </div>
       ) : (
-        <form onSubmit={handleExecuteRefund} className="space-y-4 pt-2 text-xs text-[#172033]">
+        <form onSubmit={handleExecuteRefund} className="space-y-4 pt-2 text-xs text-[#172033] dark:text-[#F8FAFC]">
           {error && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 flex items-center gap-2">
               <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Balance card */}
-          <div className="p-3 rounded-xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-inset-sm space-y-1">
+          <div className="p-3 rounded-xl bg-[#E8EDF4] dark:bg-[#111726] border border-[#CBD5E1]/60 dark:border-white/10 shadow-inset-sm space-y-1">
             <div className="flex justify-between items-center">
               <span className="text-[#64748B]">Original Total:</span>
               <span className="font-mono font-semibold">{formatCurrencyDisplay(totalAmount, currency)}</span>
@@ -156,14 +156,14 @@ export function AdminRefundModal({
               <span className="font-mono text-[#64748B]">{formatCurrencyDisplay(alreadyRefunded, currency)}</span>
             </div>
             <div className="flex justify-between items-center pt-1 border-t border-[#CBD5E1]/40 font-bold">
-              <span className="text-[#172033]">Available to Refund:</span>
+              <span className="text-[#172033] dark:text-[#F8FAFC]">Available to Refund:</span>
               <span className="font-mono text-[#2563EB]">{formatCurrencyDisplay(remainingRefundable, currency)}</span>
             </div>
           </div>
 
           {/* Refund type selector */}
           <div className="space-y-2">
-            <label className="block text-[11px] font-semibold text-[#172033] uppercase tracking-wider">
+            <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider">
               Refund Option
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -173,7 +173,7 @@ export function AdminRefundModal({
                 className={`p-2.5 rounded-xl border text-center transition-all ${
                   refundType === "full"
                     ? "bg-[#2563EB]/10 border-[#2563EB] text-[#2563EB] font-bold"
-                    : "bg-[#E8EDF4] border-[#CBD5E1]/60 text-[#64748B] hover:text-[#172033]"
+                    : "bg-[#E8EDF4] dark:bg-[#161F33] border-[#CBD5E1]/60 dark:border-white/10 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                 }`}
               >
                 Full Refund ({formatCurrencyDisplay(remainingRefundable, currency)})
@@ -185,7 +185,7 @@ export function AdminRefundModal({
                 className={`p-2.5 rounded-xl border text-center transition-all ${
                   refundType === "partial"
                     ? "bg-[#2563EB]/10 border-[#2563EB] text-[#2563EB] font-bold"
-                    : "bg-[#E8EDF4] border-[#CBD5E1]/60 text-[#64748B] hover:text-[#172033]"
+                    : "bg-[#E8EDF4] dark:bg-[#161F33] border-[#CBD5E1]/60 dark:border-white/10 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                 }`}
               >
                 Partial Refund
@@ -195,7 +195,7 @@ export function AdminRefundModal({
 
           {refundType === "partial" && (
             <div>
-              <label className="block text-[11px] font-semibold text-[#172033] uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider mb-1">
                 Partial Refund Amount ({currency})
               </label>
               <Input
@@ -212,7 +212,7 @@ export function AdminRefundModal({
           )}
 
           <div>
-            <label className="block text-[11px] font-semibold text-[#172033] uppercase tracking-wider mb-1">
+            <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider mb-1">
               Refund Reason / Note to Payer
             </label>
             <Input

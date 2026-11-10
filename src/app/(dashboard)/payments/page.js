@@ -247,14 +247,14 @@ export default function PaymentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight">
               Payments & Settlements
             </h1>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-amber-500/10 text-amber-800 border border-amber-500/30">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30 dark:border-amber-500/40">
               PayPal Sandbox
             </span>
           </div>
-          <p className="text-xs text-[#64748B] mt-0.5">
+          <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
             Process Sandbox payments, inspect financial settlements, and generate official payment receipts.
           </p>
         </div>
@@ -301,7 +301,7 @@ export default function PaymentsPage() {
 
       {/* 2. Authentication & Error Banners */}
       {is401 && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-raised-sm">
+        <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-raised-sm">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
             <span className="font-semibold">{error}</span>
@@ -318,7 +318,7 @@ export default function PaymentsPage() {
       )}
 
       {!is401 && error && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center justify-between gap-3 shadow-raised-sm">
+        <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300 flex items-center justify-between gap-3 shadow-raised-sm">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
             <span>{error}</span>
@@ -337,7 +337,7 @@ export default function PaymentsPage() {
 
       {/* Settlement Notice */}
       {isFallback && !error && (
-        <div className="p-3.5 rounded-2xl bg-[#E8EDF4] border border-[#CBD5E1]/60 shadow-raised-sm flex items-center justify-between text-xs text-[#64748B]">
+        <div className="p-3.5 rounded-2xl bg-[#E8EDF4] dark:bg-[#111726] border border-[#CBD5E1]/60 dark:border-white/10 shadow-raised-sm flex items-center justify-between text-xs text-[#64748B] dark:text-[#94A3B8]">
           <div className="flex items-center gap-2 truncate">
             <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
             <span className="truncate">
@@ -349,9 +349,9 @@ export default function PaymentsPage() {
 
       {/* 3. Payment Overview Cards (4 Metrics) */}
       <section aria-labelledby="payments-overview" className="space-y-2.5">
-        <div className="flex items-center justify-between text-xs text-[#64748B]">
+        <div className="flex items-center justify-between text-xs text-[#64748B] dark:text-[#94A3B8]">
           <span className="font-semibold uppercase tracking-wider text-[11px]">Financial Settlements Overview</span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-800 border border-blue-500/20">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-800 dark:text-blue-300 border border-blue-500/20 dark:border-blue-500/40">
             <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
             Unified Valuation in USD (FX Converted)
           </span>
@@ -364,15 +364,15 @@ export default function PaymentsPage() {
           >
             <div className="flex items-start justify-between gap-2.5">
               <div className="min-w-0">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block truncate">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] block truncate">
                   Total Payments Received
                 </span>
                 {hasPaymentRecords && overview.totalReceived ? (
-                  <div className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight mt-1 font-mono truncate">
+                  <div className="text-xl sm:text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight mt-1 font-mono truncate">
                     {overview.totalReceived.formatted}
                   </div>
                 ) : (
-                  <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
+                  <div className="text-xs sm:text-sm font-medium text-[#64748B] dark:text-[#94A3B8] mt-1.5 leading-snug">
                     No settlements yet
                   </div>
                 )}
@@ -382,11 +382,11 @@ export default function PaymentsPage() {
               </div>
             </div>
 
-            <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
+            <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 dark:border-white/10 flex items-center justify-between text-xs text-[#64748B] dark:text-[#94A3B8]">
               <span className="font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] bg-emerald-100 text-[#16A34A] shrink-0">
                 Captured
               </span>
-              <span className="font-mono font-semibold text-[#172033] text-[11px]">
+              <span className="font-mono font-semibold text-[#172033] dark:text-[#F8FAFC] text-[11px]">
                 {overview.totalReceived?.count || 0} {overview.totalReceived?.count === 1 ? "record" : "records"}
               </span>
             </div>
@@ -399,15 +399,15 @@ export default function PaymentsPage() {
           >
             <div className="flex items-start justify-between gap-2.5">
               <div className="min-w-0">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block truncate">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] block truncate">
                   Pending Settlements
                 </span>
                 {overview.pending && overview.pending.count > 0 ? (
-                  <div className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight mt-1 font-mono truncate">
+                  <div className="text-xl sm:text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight mt-1 font-mono truncate">
                     {overview.pending.formatted}
                   </div>
                 ) : (
-                  <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
+                  <div className="text-xs sm:text-sm font-medium text-[#64748B] dark:text-[#94A3B8] mt-1.5 leading-snug">
                     No pending payouts
                   </div>
                 )}
@@ -417,11 +417,11 @@ export default function PaymentsPage() {
               </div>
             </div>
 
-            <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
+            <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 dark:border-white/10 flex items-center justify-between text-xs text-[#64748B] dark:text-[#94A3B8]">
               <span className="font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] bg-amber-100 text-[#B45309] shrink-0">
                 Active
               </span>
-              <span className="font-mono font-semibold text-[#172033] text-[11px]">
+              <span className="font-mono font-semibold text-[#172033] dark:text-[#F8FAFC] text-[11px]">
                 {overview.pending?.count || 0} in-flight
               </span>
             </div>
@@ -434,7 +434,7 @@ export default function PaymentsPage() {
           >
             <div className="flex items-start justify-between gap-2.5">
               <div className="min-w-0">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block truncate">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] block truncate">
                   Failed Payments
                 </span>
                 {overview.failed && overview.failed.count > 0 ? (
@@ -442,7 +442,7 @@ export default function PaymentsPage() {
                     {overview.failed.formatted}
                   </div>
                 ) : (
-                  <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
+                  <div className="text-xs sm:text-sm font-medium text-[#64748B] dark:text-[#94A3B8] mt-1.5 leading-snug">
                     No failed payments
                   </div>
                 )}
@@ -452,11 +452,11 @@ export default function PaymentsPage() {
               </div>
             </div>
 
-            <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
+            <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 dark:border-white/10 flex items-center justify-between text-xs text-[#64748B] dark:text-[#94A3B8]">
               <span className="font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] bg-red-100 text-[#DC2626] shrink-0">
                 Status
               </span>
-              <span className="font-mono font-semibold text-[#172033] text-[11px]">
+              <span className="font-mono font-semibold text-[#172033] dark:text-[#F8FAFC] text-[11px]">
                 {overview.failed?.count || 0} failed
               </span>
             </div>
@@ -469,15 +469,15 @@ export default function PaymentsPage() {
           >
             <div className="flex items-start justify-between gap-2.5">
               <div className="min-w-0">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block truncate">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] block truncate">
                   Refunded Payments
                 </span>
                 {overview.refunded && overview.refunded.count > 0 ? (
-                  <div className="text-xl sm:text-2xl font-extrabold text-[#172033] tracking-tight mt-1 font-mono truncate">
+                  <div className="text-xl sm:text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight mt-1 font-mono truncate">
                     {overview.refunded.formatted}
                   </div>
                 ) : (
-                  <div className="text-xs sm:text-sm font-medium text-[#64748B] mt-1.5 leading-snug">
+                  <div className="text-xs sm:text-sm font-medium text-[#64748B] dark:text-[#94A3B8] mt-1.5 leading-snug">
                     No refunds recorded
                   </div>
                 )}
@@ -487,11 +487,11 @@ export default function PaymentsPage() {
               </div>
             </div>
 
-            <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 flex items-center justify-between text-xs text-[#64748B]">
+            <div className="pt-2.5 mt-2.5 border-t border-[#CBD5E1]/60 dark:border-white/10 flex items-center justify-between text-xs text-[#64748B] dark:text-[#94A3B8]">
               <span className="font-semibold px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] bg-blue-100 text-[#2563EB] shrink-0">
                 Reversed
               </span>
-              <span className="font-mono font-semibold text-[#172033] text-[11px]">
+              <span className="font-mono font-semibold text-[#172033] dark:text-[#F8FAFC] text-[11px]">
                 {overview.refunded?.count || 0} refunds
               </span>
             </div>
@@ -522,7 +522,7 @@ export default function PaymentsPage() {
         </div>
 
         {/* Filter Controls Bar */}
-        <div className="p-3 rounded-2xl bg-[#E8EDF4] shadow-inset-sm border border-[#CBD5E1]/60 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div className="p-3 rounded-2xl bg-[#E8EDF4] dark:bg-[#111726] shadow-inset-sm border border-[#CBD5E1]/60 dark:border-white/10 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search Input */}
           <form onSubmit={handleSearchSubmit} className="flex-1 max-w-md flex items-center gap-2">
             <div className="relative w-full flex items-center">
@@ -534,7 +534,7 @@ export default function PaymentsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search ref ID, order ID, or payee..."
-                className="w-full bg-[#E8EDF4] text-[#172033] placeholder-[#94A3B8] text-xs sm:text-sm rounded-xl py-2 pl-9 pr-8 shadow-inset-sm border border-[#D1D8E2] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] focus:outline-none transition-all"
+                className="w-full bg-[#E8EDF4] dark:bg-[#0D121D] text-[#172033] dark:text-[#F8FAFC] placeholder-[#94A3B8] text-xs sm:text-sm rounded-xl py-2 pl-9 pr-8 shadow-inset-sm border border-[#D1D8E2] dark:border-white/10 focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] focus:outline-none transition-all"
               />
               {search && (
                 <button
@@ -543,7 +543,7 @@ export default function PaymentsPage() {
                     setSearch("");
                     loadData(statusFilter, "");
                   }}
-                  className="absolute right-2.5 text-[#64748B] hover:text-[#172033] p-1 rounded-md"
+                  className="absolute right-2.5 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] p-1 rounded-md"
                   aria-label="Clear search"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -617,9 +617,9 @@ export default function PaymentsPage() {
           <>
             {/* Desktop & Tablet Table */}
             <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#172033]" aria-label="Payments Ledger">
+              <table className="w-full text-left text-xs text-[#172033] dark:text-[#F8FAFC]" aria-label="Payments Ledger">
                 <thead>
-                  <tr className="border-b border-[#CBD5E1]/60 text-[#64748B] uppercase tracking-wider font-semibold text-[11px]">
+                  <tr className="border-b border-[#CBD5E1]/60 dark:border-white/10 text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider font-semibold text-[11px]">
                     <th className="py-2.5 px-3">Transaction Ref</th>
                     <th className="py-2.5 px-3">Customer / Category</th>
                     <th className="py-2.5 px-3">PayPal Order ID</th>
@@ -629,14 +629,14 @@ export default function PaymentsPage() {
                     <th className="py-2.5 px-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#CBD5E1]/40">
+                <tbody className="divide-y divide-[#CBD5E1]/40 dark:divide-white/10">
                   {displayedPayments.map((payment) => (
                     <tr
                       key={payment.id}
-                      className="hover:bg-[#CBD5E1]/20 transition-colors group"
+                      className="hover:bg-[#CBD5E1]/20 dark:hover:bg-white/5 transition-colors group"
                     >
                       <td className="py-3 px-3">
-                        <span className="font-mono font-bold text-[#2563EB] block">
+                        <span className="font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] block">
                           {payment.internalReference || payment.transactionRef || payment.id.slice(0, 12)}
                         </span>
                         {payment.paypalCaptureId && (
@@ -646,14 +646,14 @@ export default function PaymentsPage() {
                         )}
                       </td>
                       <td className="py-3 px-3">
-                        <span className="font-semibold text-[#172033] block">
+                        <span className="font-semibold text-[#172033] dark:text-[#F8FAFC] block">
                           {payment.customer}
                         </span>
                         <span className="text-[11px] text-[#64748B]">
                           {payment.category || payment.invoiceId || "PayPal Sandbox"}
                         </span>
                       </td>
-                      <td className="py-3 px-3 font-mono text-[#64748B]">
+                      <td className="py-3 px-3 font-mono text-[#64748B] dark:text-[#94A3B8]">
                         {payment.paypalOrderId || payment.orderId || "—"}
                       </td>
                       <td className="py-3 px-3 font-mono">
@@ -669,7 +669,7 @@ export default function PaymentsPage() {
                           </span>
                         )}
                       </td>
-                      <td className="py-3 px-3 text-[#64748B] font-mono">
+                      <td className="py-3 px-3 text-[#64748B] dark:text-[#94A3B8] font-mono">
                         {payment.date || "—"}
                       </td>
                       <td className="py-3 px-3">
@@ -710,7 +710,7 @@ export default function PaymentsPage() {
               {displayedPayments.map((payment) => (
                 <div
                   key={payment.id}
-                  className="p-3.5 rounded-2xl bg-[#E8EDF4] shadow-raised-sm border border-white/60 space-y-2 text-xs"
+                  className="p-3.5 rounded-2xl bg-[#E8EDF4] dark:bg-[#161F33] shadow-raised-sm border border-white/60 dark:border-white/10 space-y-2 text-xs"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-bold text-[#2563EB]">
@@ -721,7 +721,7 @@ export default function PaymentsPage() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172033]">{payment.customer}</p>
+                      <p className="font-bold text-[#172033] dark:text-[#F8FAFC]">{payment.customer}</p>
                       <p className="text-[11px] text-[#64748B]">
                         {payment.category} • {payment.date}
                       </p>
@@ -746,7 +746,7 @@ export default function PaymentsPage() {
                         )}
                         <button
                           onClick={() => setSelectedPayment(payment)}
-                          className="text-[11px] font-semibold text-[#2563EB] hover:underline"
+                          className="text-[11px] font-semibold text-[#2563EB] dark:text-[#60A5FA] hover:underline"
                         >
                           Details →
                         </button>
@@ -771,7 +771,7 @@ export default function PaymentsPage() {
         {selectedPayment && (
           <div className="space-y-4 pt-2 text-xs">
             {/* Amount Banner */}
-            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-1 shadow-inset-sm">
+            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-center space-y-1 shadow-inset-sm">
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
                 Captured Settlement Amount (USD)
               </span>
@@ -792,40 +792,40 @@ export default function PaymentsPage() {
 
             {/* Details Grid */}
             <div className="space-y-2.5">
-              <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
-                <span className="text-[#64748B] font-medium">Transaction Reference:</span>
-                <span className="font-mono font-bold text-[#172033] select-all">
+              <div className="p-3 rounded-xl bg-[#E8EDF4] dark:bg-[#0D121D] border border-transparent dark:border-white/10 shadow-inset-sm flex items-center justify-between">
+                <span className="text-[#64748B] dark:text-[#94A3B8] font-medium">Transaction Reference:</span>
+                <span className="font-mono font-bold text-[#172033] dark:text-[#F8FAFC] select-all">
                   {selectedPayment.internalReference || selectedPayment.transactionRef || selectedPayment.id}
                 </span>
               </div>
 
               {selectedPayment.paypalOrderId && (
-                <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
-                  <span className="text-[#64748B] font-medium">PayPal Order ID:</span>
+                <div className="p-3 rounded-xl bg-[#E8EDF4] dark:bg-[#0D121D] border border-transparent dark:border-white/10 shadow-inset-sm flex items-center justify-between">
+                  <span className="text-[#64748B] dark:text-[#94A3B8] font-medium">PayPal Order ID:</span>
                   <span className="font-mono text-[#2563EB] select-all">{selectedPayment.paypalOrderId}</span>
                 </div>
               )}
 
               {selectedPayment.paypalCaptureId && (
-                <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
-                  <span className="text-[#64748B] font-medium">PayPal Capture ID:</span>
+                <div className="p-3 rounded-xl bg-[#E8EDF4] dark:bg-[#0D121D] border border-transparent dark:border-white/10 shadow-inset-sm flex items-center justify-between">
+                  <span className="text-[#64748B] dark:text-[#94A3B8] font-medium">PayPal Capture ID:</span>
                   <span className="font-mono text-[#16A34A] select-all">{selectedPayment.paypalCaptureId}</span>
                 </div>
               )}
 
-              <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
-                <span className="text-[#64748B] font-medium">Payer / Client:</span>
-                <span className="font-bold text-[#172033]">{selectedPayment.customer}</span>
+              <div className="p-3 rounded-xl bg-[#E8EDF4] dark:bg-[#0D121D] border border-transparent dark:border-white/10 shadow-inset-sm flex items-center justify-between">
+                <span className="text-[#64748B] dark:text-[#94A3B8] font-medium">Payer / Client:</span>
+                <span className="font-bold text-[#172033] dark:text-[#F8FAFC]">{selectedPayment.customer}</span>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
-                <span className="text-[#64748B] font-medium">Settlement Date:</span>
-                <span className="font-mono text-[#172033]">{selectedPayment.date || "Recorded at settlement"}</span>
+              <div className="p-3 rounded-xl bg-[#E8EDF4] dark:bg-[#0D121D] border border-transparent dark:border-white/10 shadow-inset-sm flex items-center justify-between">
+                <span className="text-[#64748B] dark:text-[#94A3B8] font-medium">Settlement Date:</span>
+                <span className="font-mono text-[#172033] dark:text-[#F8FAFC]">{selectedPayment.date || "Recorded at settlement"}</span>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#E8EDF4] shadow-inset-sm flex items-center justify-between">
-                <span className="text-[#64748B] font-medium">Payment Protocol:</span>
-                <span className="font-semibold text-[#172033]">PayPal Orders v2 (intent: CAPTURE)</span>
+              <div className="p-3 rounded-xl bg-[#E8EDF4] dark:bg-[#0D121D] border border-transparent dark:border-white/10 shadow-inset-sm flex items-center justify-between">
+                <span className="text-[#64748B] dark:text-[#94A3B8] font-medium">Payment Protocol:</span>
+                <span className="font-semibold text-[#172033] dark:text-[#F8FAFC]">PayPal Orders v2 (intent: CAPTURE)</span>
               </div>
             </div>
 

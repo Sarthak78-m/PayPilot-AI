@@ -319,11 +319,11 @@ export default function AIInvoiceGeneratePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold text-[#172033] tracking-tight">
+            <h1 className="text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight">
               AI Invoice Generator
             </h1>
           </div>
-          <p className="text-xs text-[#64748B] mt-0.5">
+          <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
             Describe client work in plain English to extract structured line items and billing details.
           </p>
         </div>
@@ -344,7 +344,7 @@ export default function AIInvoiceGeneratePage() {
 
       {/* Session Expired (401) Alert */}
       {is401 && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-raised-sm">
+        <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-raised-sm">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
             <span className="font-semibold">
@@ -364,11 +364,11 @@ export default function AIInvoiceGeneratePage() {
 
       {/* Persistence Success Banner */}
       {isSaved && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2 shadow-raised-sm animate-pulse">
-          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2 shadow-raised-sm animate-pulse">
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <div className="flex-1">
             <p className="font-bold">Invoice created and saved successfully!</p>
-            <p className="text-emerald-700">Redirecting to your invoice listing...</p>
+            <p className="text-emerald-700 dark:text-emerald-300">Redirecting to your invoice listing...</p>
           </div>
         </div>
       )}
@@ -378,7 +378,7 @@ export default function AIInvoiceGeneratePage() {
         <div className="space-y-6">
           {/* Generation Error Alert */}
           {!is401 && generationError && (
-            <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center justify-between gap-3 shadow-raised-sm">
+            <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300 flex items-center justify-between gap-3 shadow-raised-sm">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
                 <span>{generationError}</span>
@@ -396,14 +396,14 @@ export default function AIInvoiceGeneratePage() {
           )}
 
           <Card variant="raised-lg" className="p-6 space-y-5">
-            <div className="border-b border-[#CBD5E1]/40 pb-3">
+            <div className="border-b border-[#CBD5E1]/40 dark:border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-[#2563EB]" />
-                <h2 className="text-base font-bold text-[#172033]">
+                <h2 className="text-base font-bold text-[#172033] dark:text-[#F8FAFC]">
                   Describe Your Transaction
                 </h2>
               </div>
-              <p className="text-xs text-[#64748B] mt-1">
+              <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-1">
                 Enter client name, amount, scope of work, settlement currency, and due date in plain language.
               </p>
             </div>
@@ -411,7 +411,7 @@ export default function AIInvoiceGeneratePage() {
             <div className="space-y-2">
               <label
                 htmlFor="invoice-prompt"
-                className="text-xs font-semibold uppercase tracking-wider text-[#172033]"
+                className="text-xs font-semibold uppercase tracking-wider text-[#172033] dark:text-[#F8FAFC]"
               >
                 Invoice Prompt Description *
               </label>
@@ -425,9 +425,9 @@ export default function AIInvoiceGeneratePage() {
                 }}
                 disabled={isGenerating}
                 placeholder="e.g. Bill Acme Corp $4,500 USD for Q4 cybersecurity audit and penetration testing. Send to billing@acme.com, payment due on Dec 31, 2026."
-                className="w-full bg-[#E8EDF4] text-[#172033] placeholder-[#94A3B8] text-sm rounded-xl p-3.5 shadow-inset-sm transition-all duration-150 focus:outline-none border border-[#D1D8E2] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] resize-y"
+                className="w-full bg-[#E8EDF4] dark:bg-[#0D121D] text-[#172033] dark:text-[#F8FAFC] placeholder-[#94A3B8] text-sm rounded-xl p-3.5 shadow-inset-sm transition-all duration-150 focus:outline-none border border-[#D1D8E2] dark:border-white/10 focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB] resize-y"
               />
-              <div className="flex justify-between items-center text-[11px] text-[#64748B]">
+              <div className="flex justify-between items-center text-[11px] text-[#64748B] dark:text-[#94A3B8]">
                 <span>The assistant strictly extracts stated facts and will not fabricate missing details.</span>
                 <span>{prompt.length} / 5000 chars</span>
               </div>
@@ -435,7 +435,7 @@ export default function AIInvoiceGeneratePage() {
 
             {/* Example Prompt Shortcuts */}
             <div className="space-y-2 pt-1">
-              <span className="text-xs font-semibold text-[#172033] block">
+              <span className="text-xs font-semibold text-[#172033] dark:text-[#F8FAFC] block">
                 Quick Example Prompts:
               </span>
               <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
@@ -445,7 +445,7 @@ export default function AIInvoiceGeneratePage() {
                     type="button"
                     onClick={() => handleSelectExample(ex)}
                     disabled={isGenerating}
-                    className="text-left text-xs bg-[#E8EDF4] hover:bg-[#DCE3EC] text-[#172033] px-3 py-2 rounded-xl border border-[#CBD5E1]/60 shadow-raised-sm hover:shadow-raised transition-all disabled:opacity-50"
+                    className="text-left text-xs bg-[#E8EDF4] dark:bg-[#161F33] hover:bg-[#DCE3EC] dark:hover:bg-[#1E293B] text-[#172033] dark:text-[#F8FAFC] px-3 py-2 rounded-xl border border-[#CBD5E1]/60 dark:border-white/10 shadow-raised-sm hover:shadow-raised transition-all disabled:opacity-50"
                   >
                     &ldquo;{ex}&rdquo;
                   </button>
@@ -454,7 +454,7 @@ export default function AIInvoiceGeneratePage() {
             </div>
 
             {/* Action Bar */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#CBD5E1]/40">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#CBD5E1]/40 dark:border-white/10">
               <Link href="/invoices">
                 <Button variant="secondary" size="md" disabled={isGenerating}>
                   Cancel
@@ -487,7 +487,7 @@ export default function AIInvoiceGeneratePage() {
       {step === "review" && (
         <form onSubmit={handleConfirmAndSave} noValidate className="space-y-6">
           {/* Status Banners */}
-          <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-xs text-blue-800 flex items-start gap-3 shadow-raised-sm">
+          <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-3 shadow-raised-sm">
             <Sparkles className="h-5 w-5 shrink-0 text-blue-600 mt-0.5" />
             <div className="flex-1 space-y-1">
               <div className="flex items-center gap-2">
@@ -496,7 +496,7 @@ export default function AIInvoiceGeneratePage() {
                   Unsaved Draft
                 </Badge>
               </div>
-              <p className="text-blue-700">
+              <p className="text-blue-700 dark:text-blue-300">
                 Review and modify the extracted fields below. The invoice will only be saved when you explicitly confirm.
               </p>
             </div>
@@ -504,11 +504,11 @@ export default function AIInvoiceGeneratePage() {
 
           {/* Missing Fields Indicator */}
           {missingFields.length > 0 && (
-            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-3 shadow-raised-sm">
+            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3 shadow-raised-sm">
               <AlertCircle className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
               <div className="space-y-1">
                 <p className="font-bold">Incomplete Information Detected</p>
-                <p className="text-amber-800">
+                <p className="text-amber-800 dark:text-amber-300">
                   The description was missing key details:{" "}
                   <span className="font-semibold underline">
                     {missingFields.join(", ")}
@@ -521,17 +521,17 @@ export default function AIInvoiceGeneratePage() {
 
           {/* Clarification Notes */}
           {clarificationNotes && (
-            <div className="p-3.5 rounded-xl bg-[#E8EDF4] border border-[#CBD5E1]/60 text-xs text-[#172033] flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-[#E8EDF4] dark:bg-[#111726] border border-[#CBD5E1]/60 dark:border-white/10 text-xs text-[#172033] dark:text-[#F8FAFC] flex items-center gap-2">
               <Badge variant="primary" size="sm">
                 AI Note
               </Badge>
-              <span className="text-[#64748B]">{clarificationNotes}</span>
+              <span className="text-[#64748B] dark:text-[#94A3B8]">{clarificationNotes}</span>
             </div>
           )}
 
           {/* Persistence Error Banner */}
           {!is401 && persistError && (
-            <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2 shadow-raised-sm">
+            <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300 flex items-center gap-2 shadow-raised-sm">
               <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
               <span className="font-medium">{persistError}</span>
             </div>
@@ -539,8 +539,8 @@ export default function AIInvoiceGeneratePage() {
 
           {/* Section 1: Customer Information */}
           <Card variant="raised-md" className="p-6 space-y-4">
-            <div className="border-b border-[#CBD5E1]/40 pb-3">
-              <h2 className="text-sm font-bold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+            <div className="border-b border-[#CBD5E1]/40 dark:border-white/10 pb-3">
+              <h2 className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
                 <User className="h-4 w-4 text-[#2563EB]" />
                 1. Customer Information
               </h2>
@@ -584,8 +584,8 @@ export default function AIInvoiceGeneratePage() {
 
           {/* Section 2: Invoice Details */}
           <Card variant="raised-md" className="p-6 space-y-4">
-            <div className="border-b border-[#CBD5E1]/40 pb-3">
-              <h2 className="text-sm font-bold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+            <div className="border-b border-[#CBD5E1]/40 dark:border-white/10 pb-3">
+              <h2 className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
                 <FileText className="h-4 w-4 text-[#2563EB]" />
                 2. Invoice Details
               </h2>
@@ -613,8 +613,8 @@ export default function AIInvoiceGeneratePage() {
 
           {/* Section 3: Amount & Currency */}
           <Card variant="raised-md" className="p-6 space-y-4">
-            <div className="border-b border-[#CBD5E1]/40 pb-3">
-              <h2 className="text-sm font-bold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+            <div className="border-b border-[#CBD5E1]/40 dark:border-white/10 pb-3">
+              <h2 className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
                 <span className="font-bold text-[#2563EB]">$</span>
                 3. Amount & Settlement Currency
               </h2>
@@ -660,8 +660,8 @@ export default function AIInvoiceGeneratePage() {
 
           {/* Section 4: Payment Due Date */}
           <Card variant="raised-md" className="p-6 space-y-4">
-            <div className="border-b border-[#CBD5E1]/40 pb-3">
-              <h2 className="text-sm font-bold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+            <div className="border-b border-[#CBD5E1]/40 dark:border-white/10 pb-3">
+              <h2 className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-[#2563EB]" />
                 4. Payment Due Date
               </h2>
@@ -684,31 +684,31 @@ export default function AIInvoiceGeneratePage() {
           </Card>
 
           {/* Section 5: Live Summary Preview Card */}
-          <Card variant="raised-sm" className="p-5 bg-[#E8EDF4]/60 border border-[#CBD5E1]/60">
+          <Card variant="raised-sm" className="p-5 bg-[#E8EDF4]/60 dark:bg-[#111726]/60 border border-[#CBD5E1]/60 dark:border-white/10">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
                     Invoice Preview
                   </span>
                   <Badge variant="neutral" size="sm" dot>
                     Initial Status: Draft
                   </Badge>
                 </div>
-                <p className="text-sm font-bold text-[#172033]">
+                <p className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC]">
                   {extractedData.customer_name.trim() || "Customer Unspecified"}
                 </p>
-                <p className="text-xs text-[#64748B]">
+                <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
                   {extractedData.customer_email.trim() || "No recipient email set"}
                   {extractedData.due_date ? ` • Due on ${extractedData.due_date}` : " • Due on receipt"}
                 </p>
               </div>
 
               <div className="text-left sm:text-right">
-                <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider block">
+                <span className="text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider block">
                   Total Receivable
                 </span>
-                <span className="text-2xl font-extrabold text-[#172033] font-mono">
+                <span className="text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] font-mono">
                   {formattedAmountPreview()}
                 </span>
               </div>
