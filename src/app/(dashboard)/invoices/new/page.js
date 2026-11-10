@@ -233,11 +233,11 @@ export default function NewInvoicePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold text-[#172033] tracking-tight">
+            <h1 className="text-2xl font-extrabold text-[#172033] dark:text-[#F8FAFC] tracking-tight">
               Create New Invoice
             </h1>
           </div>
-          <p className="text-xs text-[#64748B] mt-0.5">
+          <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
             Set up an invoice draft with client information, billing amount, and due date.
           </p>
         </div>
@@ -251,7 +251,7 @@ export default function NewInvoicePage() {
 
       {/* Session Expired (401) Alert */}
       {is401 && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-raised-sm">
+        <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-raised-sm">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
             <span className="font-semibold">{generalError}</span>
@@ -269,7 +269,7 @@ export default function NewInvoicePage() {
 
       {/* General Error Banner */}
       {!is401 && generalError && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2 shadow-raised-sm">
+        <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300 flex items-center gap-2 shadow-raised-sm">
           <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
           <span className="font-medium">{generalError}</span>
         </div>
@@ -277,11 +277,11 @@ export default function NewInvoicePage() {
 
       {/* Success Notification */}
       {success && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2 shadow-raised-sm animate-pulse">
-          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2 shadow-raised-sm animate-pulse">
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <div className="flex-1">
             <p className="font-bold">Invoice created successfully!</p>
-            <p className="text-emerald-700">Redirecting to your invoice listing...</p>
+            <p className="text-emerald-700 dark:text-emerald-300">Redirecting to your invoice listing...</p>
           </div>
         </div>
       )}
@@ -290,12 +290,12 @@ export default function NewInvoicePage() {
       <form onSubmit={handleSubmit} noValidate className="space-y-6">
         {/* Section 1: Customer Information */}
         <Card variant="raised-md" className="p-6 space-y-4">
-          <div className="border-b border-[#CBD5E1]/40 pb-3">
-            <h2 className="text-sm font-bold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+          <div className="border-b border-[#CBD5E1]/40 dark:border-white/10 pb-3">
+            <h2 className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
               <User className="h-4 w-4 text-[#2563EB]" />
               1. Customer Information
             </h2>
-            <p className="text-xs text-[#64748B] mt-0.5">
+            <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
               Specify the recipient individual or corporate entity for this invoice.
             </p>
           </div>
@@ -333,12 +333,12 @@ export default function NewInvoicePage() {
 
         {/* Section 2: Invoice Details */}
         <Card variant="raised-md" className="p-6 space-y-4">
-          <div className="border-b border-[#CBD5E1]/40 pb-3">
-            <h2 className="text-sm font-bold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+          <div className="border-b border-[#CBD5E1]/40 dark:border-white/10 pb-3">
+            <h2 className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
               <FileText className="h-4 w-4 text-[#2563EB]" />
               2. Invoice Details
             </h2>
-            <p className="text-xs text-[#64748B] mt-0.5">
+            <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
               Clearly summarize the work completed, services rendered, or items billed.
             </p>
           </div>
@@ -361,12 +361,12 @@ export default function NewInvoicePage() {
 
         {/* Section 3: Amount and Currency */}
         <Card variant="raised-md" className="p-6 space-y-4">
-          <div className="border-b border-[#CBD5E1]/40 pb-3">
-            <h2 className="text-sm font-bold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+          <div className="border-b border-[#CBD5E1]/40 dark:border-white/10 pb-3">
+            <h2 className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
               <span className="font-bold text-[#2563EB]">$</span>
               3. Amount & Currency
             </h2>
-            <p className="text-xs text-[#64748B] mt-0.5">
+            <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
               Enter the total receivable balance and select the settlement currency.
             </p>
           </div>
@@ -407,12 +407,12 @@ export default function NewInvoicePage() {
 
         {/* Section 4: Payment Due Date */}
         <Card variant="raised-md" className="p-6 space-y-4">
-          <div className="border-b border-[#CBD5E1]/40 pb-3">
-            <h2 className="text-sm font-bold text-[#172033] uppercase tracking-wider flex items-center gap-2">
+          <div className="border-b border-[#CBD5E1]/40 dark:border-white/10 pb-3">
+            <h2 className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
               <Calendar className="h-4 w-4 text-[#2563EB]" />
               4. Payment Due Date
             </h2>
-            <p className="text-xs text-[#64748B] mt-0.5">
+            <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
               Set an agreed deadline for client payment (optional).
             </p>
           </div>
@@ -434,7 +434,7 @@ export default function NewInvoicePage() {
         </Card>
 
         {/* Section 5: Review & Live Summary Card */}
-        <Card variant="raised-sm" className="p-5 bg-[#E8EDF4]/60 border border-[#CBD5E1]/60">
+        <Card variant="raised-sm" className="p-5 bg-[#E8EDF4]/60 dark:bg-[#111726]/60 border border-[#CBD5E1]/60 dark:border-white/10">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
