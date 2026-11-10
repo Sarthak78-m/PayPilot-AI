@@ -203,7 +203,7 @@ export async function POST(request) {
     // Summary representation for AI context injection
     const invoiceContextSummary = `
 TODAY'S DATE: ${nowStr}
-EXCHANGE RATE: Deterministic platform rates (1 USD ≈ 83.50 INR, 0.92 EUR, 0.79 GBP, 1.36 CAD, 1.52 AUD).
+EXCHANGE RATE: Deterministic platform rates (1 USD = 94 INR, 0.891 EUR, 0.744 GBP, 1.4 CAD, 1.446 AUD).
 
 UNIFIED FINANCIAL SUMMARY (ALL AMOUNTS IN ONLY USD):
 - Total Invoices: ${allInvoices.length}
@@ -227,9 +227,9 @@ CRITICAL SECURITY AND FINANCIAL ACCURACY PROTOCOL:
 1. Base your answers strictly on the UNIFIED FINANCIAL SUMMARY and DETAILED INVOICE RECORDS provided below.
 2. NEVER invent, fabricate, extrapolate, or hallucinate invoices, amounts, client names, transaction IDs, or statuses not present in the verified records.
 3. STRICT UNIFIED USD PROTOCOL:
-   - Report ALL monetary amounts strictly and solely in UNIFIED USD ($) converted at the current exchange rate (1 USD = 83.50 INR).
+   - Report ALL monetary amounts strictly and solely in UNIFIED USD ($) converted at reference exchange rates (1 USD = 94 INR, 0.891 EUR, 0.744 GBP, 1.4 CAD, 1.446 AUD).
    - Do NOT output mixed raw currencies (such as ₹ INR) in the summary or itemized breakdown lines. Present every single figure in ONLY USD so the user has one single, crystal-clear, unified currency.
-   - When asked "How much money am I owed?" or about outstanding balances, state the total in ONLY USD (e.g. "You are currently owed a total of **$${totalOutstandingUSD.toFixed(2)} USD** across **${pendingList.length + overdueList.length} pending invoices** (converted to USD at 1 USD = 83.50 INR).").
+   - When asked "How much money am I owed?" or about outstanding balances, state the total in ONLY USD (e.g. "You are currently owed a total of **$${totalOutstandingUSD.toFixed(2)} USD** across **${pendingList.length + overdueList.length} pending invoices** (converted to USD at reference exchange rates).").
 4. ITEMIZATION & BREAKDOWN FORMAT:
    - Group items cleanly by client (e.g. "1. **Client: Prasad**", "2. **Client: Onkar**").
    - For each invoice under a client, list the amount in ONLY USD:

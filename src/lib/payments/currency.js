@@ -29,15 +29,15 @@ const PROCESSING_FEE_RATES = {
 
 /**
  * Deterministic reference exchange rates (relative to USD = 1.0).
- * Used when multi-currency checkout is enabled (e.g. INR input charged as USD).
+ * Standard platform rates: 1 USD = 94 INR, 0.891 EUR, 0.744 GBP, 1.4 CAD, 1.446 AUD.
  */
-const BASE_USD_EXCHANGE_RATES = {
+export const BASE_USD_EXCHANGE_RATES = {
   USD: 1.0,
-  EUR: 0.92,
-  GBP: 0.79,
-  CAD: 1.36,
-  AUD: 1.52,
-  INR: 83.5,
+  EUR: 0.891,
+  GBP: 0.744,
+  CAD: 1.4,
+  AUD: 1.446,
+  INR: 94.0,
 };
 
 /**

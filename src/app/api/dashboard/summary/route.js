@@ -5,6 +5,7 @@ import {
   SUPPORTED_CURRENCIES,
   convertCurrency,
   normalizeCurrency,
+  BASE_USD_EXCHANGE_RATES,
 } from "@/lib/payments/currency";
 
 export const dynamic = "force-dynamic";
@@ -207,22 +208,14 @@ export async function GET(request) {
       ct.formattedConvertedDue = formatCurrencyDisplay(convDue.convertedAmount, "USD");
       ct.formattedConvertedPaid = formatCurrencyDisplay(convPaid.convertedAmount, "USD");
       ct.formattedConvertedTotal = formatCurrencyDisplay(convTotal.convertedAmount, "USD");
-      ct.exchangeRateText = ct.currency === "USD" ? "Baseline Currency (1:1)" : `1 USD ≈ 83.50 ${ct.currency}`;
+      ct.exchangeRateText = ct.currency === "USD" ? "Baseline Currency (1:1)" : `1 USD ≈ ${BASE_USD_EXCHANGE_RATES[ct.currency] || 1.0} ${ct.currency}`;
     });
 
     // Baseline unified platform currency is strictly USD
-    const isUSDUnified =
-      !requestedCurrency ||
-      requestedCurrency === "ALL" ||
-      requestedCurrency === "USD";
-
-    const activeCurrency = isUSDUnified
-      ? "USD"
-      : availableCurrencies.includes(requestedCurrency)
-      ? requestedCurrency
-      : "USD";
-
-    let displayCurrency = activeCurrency;
+    // Baseline unified platform currency is strictly USD
+    const isUSDUnified = true;
+    const activeCurrency = "USD";
+    let displayCurrency = "USD";
     let filteredInvoices = [];
     let filteredPayments = [];
 
@@ -365,35 +358,61 @@ export async function GET(request) {
       },
     };
 
-    // Format top 5 recent invoices for display
-    const recentInvoices = filteredInvoices.slice(0, 5).map((inv) => ({
-      id: inv.id ? `#${inv.id.slice(0, 8)}` : "—",
-      rawId: inv.id,
-      customer: inv.customer_name || "Untitled Client",
-      clientEmail: inv.customer_email || "",
-      amount: Number(inv.amount) || 0,
-      currency: inv.currency || "USD",
-      formattedAmount: formatCurrencyDisplay(inv.amount, inv.currency || "USD"),
-      issueDate: inv.created_at ? inv.created_at.split("T")[0] : "",
-      dueDate: inv.due_date || "On receipt",
-      status: (inv.status || "draft").toLowerCase(),
-      description: inv.description || "",
-    }));
+    // Format top 5 recent invoices for display (unified in USD)
+    const recentInvoices = filteredInvoices.slice(0, 5).map((inv) => {
+      const rawAmt = Number(inv.amount) || 0;
+      const invCurr = (inv.currency || "USD").toUpperCase();
+      const conv = convertCurrency({
+        amount: rawAmt,
+        fromCurrency: invCurr,
+        toCurrency: "USD",
+      });
+      const usdVal = conv.convertedAmount;
 
-    // Format recent settlements
+      return {
+        id: inv.id ? `#${inv.id.slice(0, 8)}` : "—",
+        rawId: inv.id,
+        customer: inv.customer_name || "Untitled Client",
+        clientEmail: inv.customer_email || "",
+        amount: usdVal,
+        currency: "USD",
+        originalAmount: rawAmt,
+        originalCurrency: invCurr,
+        formattedAmount: formatCurrencyDisplay(usdVal, "USD"),
+        formattedOriginalAmount: formatCurrencyDisplay(rawAmt, invCurr),
+        isConverted: invCurr !== "USD",
+        issueDate: inv.created_at ? inv.created_at.split("T")[0] : "",
+        dueDate: inv.due_date || "On receipt",
+        status: (inv.status || "draft").toLowerCase(),
+        description: inv.description || "",
+      };
+    });
+
+    // Format recent settlements (unified in USD)
     const invMap = new Map(allInvoices.map((i) => [i.id, i]));
     const recentPayments = filteredPayments.slice(0, 4).map((p) => {
       const matchedInv = p.invoice_id ? invMap.get(p.invoice_id) : null;
       const payeeName = p.recipient_name || p.recipient_email || matchedInv?.customer_name || "Client";
-      const paymentCur = p.currency || matchedInv?.currency || "USD";
-      const paymentAmt = Number(p.amount || p.total_amount) || 0;
+      const paymentCur = (p.currency || matchedInv?.currency || "USD").toUpperCase();
+      const rawPaymentAmt = Number(p.amount || p.total_amount) || 0;
+      const conv = convertCurrency({
+        amount: rawPaymentAmt,
+        fromCurrency: paymentCur,
+        toCurrency: "USD",
+      });
+      const usdPaymentAmt = conv.convertedAmount;
+
       return {
         id: p.id ? `#${p.id.slice(0, 8)}` : (p.internal_transaction_id || "—"),
         customer: payeeName,
         invoiceId: p.invoice_id ? `#${p.invoice_id.slice(0, 8)}` : (p.internal_transaction_id || "Direct Payment"),
-        amount: paymentAmt,
-        currency: paymentCur,
-        formattedAmount: formatCurrencyDisplay(paymentAmt, paymentCur),
+        amount: usdPaymentAmt,
+        currency: "USD",
+        originalAmount: rawPaymentAmt,
+        originalCurrency: paymentCur,
+        formattedAmount: formatCurrencyDisplay(usdPaymentAmt, "USD"),
+        formattedOriginalAmount: formatCurrencyDisplay(rawPaymentAmt, paymentCur),
+        isConverted: paymentCur !== "USD",
         date: p.created_at ? p.created_at.split("T")[0] : "",
         method: "PayPal Sandbox",
         status: (p.status || "completed").toLowerCase(),
@@ -548,9 +567,9 @@ export async function GET(request) {
           "1Y": months12,
           ALL: months12,
         },
-        availableCurrencies,
-        activeCurrency,
-        displayCurrency,
+        availableCurrencies: ["USD"],
+        activeCurrency: "USD",
+        displayCurrency: "USD",
         byCurrency: Object.values(currencyTotals),
       },
     });

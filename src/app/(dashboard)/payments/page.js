@@ -781,7 +781,7 @@ export default function PaymentsPage() {
               {selectedPayment.isConverted && (
                 <div className="text-xs text-[#64748B] pt-0.5">
                   Original Invoice: <strong className="text-[#172033] font-mono">{selectedPayment.formattedOriginalAmount}</strong>
-                  <span className="ml-1 text-[10px] text-blue-600 font-semibold">(1 USD = 83.50 INR)</span>
+                  <span className="ml-1 text-[10px] text-blue-600 font-semibold">(1 USD = 94 INR)</span>
                 </div>
               )}
               <div className="flex items-center justify-center gap-1.5 pt-1">

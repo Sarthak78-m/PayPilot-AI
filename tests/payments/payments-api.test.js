@@ -245,9 +245,9 @@ describe("Payments API Contract & Aggregations (GET /api/payments)", () => {
     });
 
     // Instead of raw sum $824.99 (which added ₹799.99 INR directly to $25 USD):
-    // 499.99 INR / 83.5 = ~5.99 USD
-    // 300.00 INR / 83.5 = ~3.59 USD
-    // Total pending in USD is ~34.58 USD
+    // 499.99 INR / 94 = ~5.32 USD
+    // 300.00 INR / 94 = ~3.19 USD
+    // Total pending in USD is ~33.51 USD
     assert.ok(pendingUsd < 40.0, `Expected pending amount converted to USD to be ~34.58, got ${pendingUsd}`);
     assert.ok(pendingUsd > 30.0, `Expected pending amount converted to USD to be ~34.58, got ${pendingUsd}`);
     assert.equal(completedUsd, 15.0);

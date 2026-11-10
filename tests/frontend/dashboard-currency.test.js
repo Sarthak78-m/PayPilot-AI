@@ -74,7 +74,7 @@ describe("Dashboard Multi-Currency & Due Payment Feature", () => {
   });
 
   it("3. Multi-Currency conversion provides honest consolidated totals without corrupting raw numbers", () => {
-    // 15.00 USD converted to INR
+    // 15.00 USD converted to INR at 1 USD = 94 INR
     const converted = convertCurrency({
       amount: 15.0,
       fromCurrency: "USD",
@@ -82,9 +82,15 @@ describe("Dashboard Multi-Currency & Due Payment Feature", () => {
     });
 
     assert.equal(converted.requiresConversion, true);
-    // 15.00 USD * 83.5 = 1252.50 INR
-    assert.equal(converted.convertedAmount, 1252.5);
+    // 15.00 USD * 94 = 1410.0 INR
+    assert.equal(converted.convertedAmount, 1410.0);
     assert.equal(converted.targetCurrency, "INR");
+
+    // Test other specified exchange rates
+    assert.equal(convertCurrency({ amount: 100, fromCurrency: "USD", toCurrency: "EUR" }).convertedAmount, 89.1);
+    assert.equal(convertCurrency({ amount: 100, fromCurrency: "USD", toCurrency: "GBP" }).convertedAmount, 74.4);
+    assert.equal(convertCurrency({ amount: 100, fromCurrency: "USD", toCurrency: "CAD" }).convertedAmount, 140.0);
+    assert.equal(convertCurrency({ amount: 100, fromCurrency: "USD", toCurrency: "AUD" }).convertedAmount, 144.6);
   });
 
   it("4. Normalizes currency strings safely and defaults to USD", () => {
@@ -95,16 +101,17 @@ describe("Dashboard Multi-Currency & Due Payment Feature", () => {
     assert.equal(normalizeCurrency("INVALID"), "USD");
   });
 
-  it("5. Converts multi-currency portfolio into unified USD outstanding balance using 1 USD = 83.50 INR", () => {
+  it("5. Converts multi-currency portfolio into unified USD outstanding balance using 1 USD = 94 INR", () => {
     const inrConv = convertCurrency({
       amount: 799.99,
       fromCurrency: "INR",
       toCurrency: "USD",
     });
-    assert.equal(inrConv.convertedAmount, 9.58);
+    // 799.99 / 94 = 8.51 USD
+    assert.equal(inrConv.convertedAmount, 8.51);
 
     const totalUSD = Math.round((inrConv.convertedAmount + 25.0) * 100) / 100;
-    assert.equal(totalUSD, 34.58);
-    assert.equal(formatCurrencyDisplay(totalUSD, "USD"), "$34.58");
+    assert.equal(totalUSD, 33.51);
+    assert.equal(formatCurrencyDisplay(totalUSD, "USD"), "$33.51");
   });
 });
