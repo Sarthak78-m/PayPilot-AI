@@ -1,5 +1,6 @@
 import "./globals.css";
 import { ThemeProvider } from "@/lib/context/theme-context";
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata = {
   title: "PayPilot AI — Smart Invoicing & Payment Collection",
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
         <ThemeProvider>
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
